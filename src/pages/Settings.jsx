@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from "@/api/base44Client";
+import { User as UserService } from "@/api/entities/User";
+import { supabase } from "@/api/supabaseClient";
 import { useTheme } from "@/components/utils/ThemeProvider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -64,7 +65,7 @@ export default function SettingsPage() {
   const loadUserSettings = async () => {
     setIsLoading(true);
     try {
-      const userData = await base44.auth.me();
+      const userData = await UserService.me();
       setUser(userData);
       
       setSettings({
@@ -98,7 +99,7 @@ export default function SettingsPage() {
     setSaveSuccess(false);
     
     try {
-      await base44.auth.updateMe({
+      await UserService.updateMe({
         full_name: settings.full_name,
         job_title: settings.job_title,
         department: settings.department,
@@ -137,7 +138,7 @@ export default function SettingsPage() {
   };
 
   const handleLogout = () => {
-    base44.auth.logout();
+    supabase.auth.signOut();
   };
 
   if (isLoading) {

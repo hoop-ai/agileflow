@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { base44 } from "@/api/base44Client";
+import { User } from '@/api/entities/User';
 
 const ThemeContext = createContext({
   theme: 'light',
@@ -20,7 +20,7 @@ export function ThemeProvider({ children }) {
 
   const loadTheme = async () => {
     try {
-      const user = await base44.auth.me();
+      const user = await User.me();
       const savedTheme = user.theme || 'light';
       setThemeState(savedTheme);
       applyTheme(savedTheme);
@@ -34,10 +34,8 @@ export function ThemeProvider({ children }) {
 
   const applyTheme = (newTheme) => {
     const root = document.documentElement;
-    
-    // Remove both classes first
     root.classList.remove('dark', 'light');
-    
+
     if (newTheme === 'dark') {
       root.classList.add('dark');
       root.style.colorScheme = 'dark';
@@ -46,28 +44,18 @@ export function ThemeProvider({ children }) {
       root.style.colorScheme = 'light';
     } else if (newTheme === 'auto') {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (prefersDark) {
-        root.classList.add('dark');
-        root.style.colorScheme = 'dark';
-      } else {
-        root.classList.add('light');
-        root.style.colorScheme = 'light';
-      }
+      root.classList.add(prefersDark ? 'dark' : 'light');
+      root.style.colorScheme = prefersDark ? 'dark' : 'light';
     }
-    
-    // Force a repaint
+
     void document.body.offsetHeight;
   };
 
   const setTheme = async (newTheme) => {
-    console.log('Setting theme to:', newTheme);
     setThemeState(newTheme);
     applyTheme(newTheme);
-    
-    // Save to user settings
     try {
-      await base44.auth.updateMe({ theme: newTheme });
-      console.log('Theme saved to backend:', newTheme);
+      await User.updateMe({ theme: newTheme });
     } catch (error) {
       console.error('Error saving theme:', error);
     }

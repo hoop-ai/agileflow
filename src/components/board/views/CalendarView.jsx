@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIconLucide, Users, MapPin, Clock } from "lucide-react";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns';
-import { base44 } from "@/api/base44Client";
+import { CalendarEvent as CalendarEventService } from "@/api/entities/CalendarEvent";
 import { motion } from "framer-motion";
 
 import TaskEditModal from "../TaskEditModal";
@@ -204,7 +204,7 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem 
 
   const loadCalendarEvents = async () => {
     try {
-      const events = await base44.entities.CalendarEvent.list('-start_date');
+      const events = await CalendarEventService.list('-start_date');
       setCalendarEvents(events);
     } catch (error) {
       console.error('Error loading calendar events:', error);
@@ -214,7 +214,7 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem 
 
   const handleCreateEvent = async (eventData) => {
     try {
-      await base44.entities.CalendarEvent.create(eventData);
+      await CalendarEventService.create(eventData);
       await loadCalendarEvents();
       setShowCreateEventModal(false);
       setSelectedDate(null);
@@ -225,7 +225,7 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem 
 
   const handleDeleteEvent = async (eventId) => {
     try {
-      await base44.entities.CalendarEvent.delete(eventId);
+      await CalendarEventService.delete(eventId);
       await loadCalendarEvents();
     } catch (error) {
       console.error('Error deleting event:', error);

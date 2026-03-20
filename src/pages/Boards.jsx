@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { Board } from "@/api/entities/Board";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -40,7 +40,7 @@ export default function Boards() {
 
   const loadBoards = async () => {
     setIsLoading(true);
-    const data = await base44.entities.Board.list("-updated_date");
+    const data = await Board.list("-updated_date");
     setBoards(data);
     setIsLoading(false);
   };
@@ -60,7 +60,7 @@ export default function Boards() {
   };
 
   const handleCreateBoard = async (boardData) => {
-    const newBoard = await base44.entities.Board.create(boardData);
+    const newBoard = await Board.create(boardData);
     setBoards(prev => [newBoard, ...prev].sort((a,b) => new Date(b.updated_date) - new Date(a.updated_date)));
     setShowCreateModal(false);
   };
@@ -72,7 +72,7 @@ export default function Boards() {
 
   const handleUpdateBoard = async (boardId, updatedData) => {
     try {
-      await base44.entities.Board.update(boardId, updatedData);
+      await Board.update(boardId, updatedData);
       setBoards(prevBoards => 
         prevBoards.map(b => 
           b.id === boardId ? { ...b, ...updatedData, updated_date: new Date().toISOString() } : b
@@ -88,7 +88,7 @@ export default function Boards() {
 
   const handleDeleteBoard = async (boardId) => {
     try {
-      await base44.entities.Board.delete(boardId);
+      await Board.delete(boardId);
       setBoards(prev => prev.filter(board => board.id !== boardId));
     } catch (error) {
       console.error("Error deleting board:", error);

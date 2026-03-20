@@ -8,7 +8,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, AlertCircle, MapPin, Users } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { Item } from "@/api/entities/Item";
+import { Board } from "@/api/entities/Board";
+import { CalendarEvent } from "@/api/entities/CalendarEvent";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, isPast } from 'date-fns';
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -32,9 +34,9 @@ export default function CalendarModal({ isOpen, onClose }) {
     setIsLoading(true);
     try {
       const [itemsData, boardsData, eventsData] = await Promise.all([
-        base44.entities.Item.list("-updated_date"),
-        base44.entities.Board.list("-updated_date"),
-        base44.entities.CalendarEvent.list("-start_date")
+        Item.list("-updated_date"),
+        Board.list("-updated_date"),
+        CalendarEvent.list("-start_date")
       ]);
       setItems(itemsData);
       setBoards(boardsData);

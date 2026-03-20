@@ -1,0 +1,37 @@
+import { supabase } from '../supabaseClient';
+
+function parseSortField(sortField) {
+  if (!sortField) return { column: 'created_date', ascending: false };
+  const ascending = !sortField.startsWith('-');
+  const column = sortField.replace(/^-/, '');
+  return { column, ascending };
+}
+
+export const CalendarEvent = {
+  async list(sortField, limit) {
+    const { column, ascending } = parseSortField(sortField);
+    let query = supabase.from('calendar_events').select('*').order(column, { ascending });
+    if (limit) query = query.limit(limit);
+    const { data, error } = await query;
+    if (error) throw error;
+    return data;
+  },
+
+  async create(eventData) {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data, error } = await supabase.from('calendar_events').insert({ ...eventData, user_id: user.id }).select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  async update(id, updates) {
+    const { data, error } = await supabase.from('calendar_events').update(updates).eq('id', id).select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  async delete(id) {
+    const { error } = await supabase.from('calendar_events').delete().eq('id', id);
+    if (error) throw error;
+  }
+};

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { Board } from "@/api/entities/Board";
+import { UserStory } from "@/api/entities/UserStory";
+import { Sprint } from "@/api/entities/Sprint";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,21 +36,21 @@ export default function BacklogPage() {
 
   const { data: boards = [], isLoading: loadingBoards } = useQuery({
     queryKey: ['boards'],
-    queryFn: () => base44.entities.Board.list('-updated_date', 50),
+    queryFn: () => Board.list('-updated_date', 50),
   });
 
   const { data: stories = [], isLoading: loadingStories } = useQuery({
     queryKey: ['userStories'],
-    queryFn: () => base44.entities.UserStory.list('-created_date', 100),
+    queryFn: () => UserStory.list('-created_date', 100),
   });
 
   const { data: sprints = [] } = useQuery({
     queryKey: ['sprints'],
-    queryFn: () => base44.entities.Sprint.list('-start_date', 20),
+    queryFn: () => Sprint.list('-start_date', 20),
   });
 
   const createStoryMutation = useMutation({
-    mutationFn: (data) => base44.entities.UserStory.create(data),
+    mutationFn: (data) => UserStory.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userStories'] });
       setShowCreateModal(false);
@@ -56,14 +58,14 @@ export default function BacklogPage() {
   });
 
   const updateStoryMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.UserStory.update(id, data),
+    mutationFn: ({ id, data }) => UserStory.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userStories'] });
     },
   });
 
   const deleteStoryMutation = useMutation({
-    mutationFn: (id) => base44.entities.UserStory.delete(id),
+    mutationFn: (id) => UserStory.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userStories'] });
       setSelectedStory(null);

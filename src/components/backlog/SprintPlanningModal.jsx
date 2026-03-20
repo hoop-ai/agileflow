@@ -14,7 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, Target } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { Sprint } from "@/api/entities/Sprint";
+import { UserStory } from "@/api/entities/UserStory";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function SprintPlanningModal({ isOpen, onClose, stories, boards }) {
@@ -32,12 +33,12 @@ export default function SprintPlanningModal({ isOpen, onClose, stories, boards }
 
   const createSprintMutation = useMutation({
     mutationFn: async (data) => {
-      const sprint = await base44.entities.Sprint.create(data);
+      const sprint = await Sprint.create(data);
       
       // Update selected stories with sprint_id
       const updatePromises = Array.from(selectedStories).map(storyId => {
         const story = stories.find(s => s.id === storyId);
-        return base44.entities.UserStory.update(storyId, {
+        return UserStory.update(storyId, {
           ...story,
           sprint_id: sprint.id,
           status: 'ready'

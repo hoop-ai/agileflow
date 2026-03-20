@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
-import { Board } from "@/entities/Board";
-import { Item } from "@/entities/Item";
+import { Board } from "@/api/entities/Board";
+import { Item } from "@/api/entities/Item";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";

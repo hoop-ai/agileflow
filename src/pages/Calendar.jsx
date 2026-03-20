@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { CalendarEvent } from "@/api/entities/CalendarEvent";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +57,7 @@ export default function CalendarPage() {
   const loadEvents = async () => {
     setIsLoading(true);
     try {
-      const eventsData = await base44.entities.CalendarEvent.list('-start_date');
+      const eventsData = await CalendarEvent.list('-start_date');
       setEvents(eventsData);
     } catch (error) {
       console.error("Error loading events:", error);
@@ -67,7 +67,7 @@ export default function CalendarPage() {
 
   const handleCreateEvent = async (eventData) => {
     try {
-      await base44.entities.CalendarEvent.create(eventData);
+      await CalendarEvent.create(eventData);
       await loadEvents();
       setShowCreateModal(false);
       setSelectedDate(null);
@@ -78,7 +78,7 @@ export default function CalendarPage() {
 
   const handleDeleteEvent = async (eventId) => {
     try {
-      await base44.entities.CalendarEvent.delete(eventId);
+      await CalendarEvent.delete(eventId);
       await loadEvents();
       setSelectedEvent(null);
     } catch (error) {

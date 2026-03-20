@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { User } from "@/api/entities/User";
+import { supabase } from "@/api/supabaseClient";
 import { ThemeProvider } from "@/components/utils/ThemeProvider";
 import AIAssistant from "@/components/utils/AIAssistant";
 import { 
@@ -74,7 +75,7 @@ function LayoutContent({ children, currentPageName }) {
 
   const loadUser = async () => {
     try {
-      const user = await base44.auth.me();
+      const user = await User.me();
       setCurrentUser(user);
     } catch (error) {
       console.error('Error loading user:', error);
@@ -169,7 +170,7 @@ function LayoutContent({ children, currentPageName }) {
                   <DropdownMenuItem asChild className="dark:hover:bg-gray-700 dark:text-gray-300">
                     <Link to={createPageUrl("Settings")}>Settings</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => base44.auth.logout()} className="dark:hover:bg-gray-700 dark:text-gray-300"> 
+                  <DropdownMenuItem onClick={() => supabase.auth.signOut()} className="dark:hover:bg-gray-700 dark:text-gray-300"> 
                     Sign out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -253,7 +254,7 @@ function LayoutContent({ children, currentPageName }) {
                     onClick={() => {
                         setMobileMenuOpen(false);
                         if (item.name === 'Sign out') {
-                            base44.auth.logout();
+                            supabase.auth.signOut();
                         }
                     }}
                     className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700"

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Board } from "@/entities/Board";
-import { Item } from "@/entities/Item";
+import { Board } from "@/api/entities/Board";
+import { Item } from "@/api/entities/Item";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";

@@ -46,7 +46,7 @@ export default function PerformancePage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <h3 className="font-semibold text-lg mb-4">Expected Capacity (Base44 Platform)</h3>
+                  <h3 className="font-semibold text-lg mb-4">Expected Capacity (Supabase Platform)</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-4 bg-blue-50 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
@@ -92,7 +92,7 @@ export default function PerformancePage() {
                         </div>
                         <div>
                           <h4 className="font-medium mb-1">0-100 Users (Current)</h4>
-                          <p className="text-sm text-gray-600">Standard base44 infrastructure, client-side caching</p>
+                          <p className="text-sm text-gray-600">Standard Supabase infrastructure, client-side caching</p>
                         </div>
                       </div>
                     </div>

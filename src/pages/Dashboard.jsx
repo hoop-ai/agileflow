@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from "react";
-import { Board } from "@/entities/Board";
-import { Item } from "@/entities/Item";
-import { User } from "@/entities/User";
+import { Board } from "@/api/entities/Board";
+import { Item } from "@/api/entities/Item";
+import { User } from "@/api/entities/User";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { base44 } from "@/api/base44Client";
+import { invokeLLM } from "@/api/openrouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -37,28 +37,12 @@ export default function AIAssistant() {
     setIsLoading(true);
 
     try {
-      const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are an AI assistant for AgileFlow, an Agile/Scrum project management application. 
-
-The app includes:
-- Dashboard: Overview of all boards, tasks, and activities
-- Boards: Create and manage project boards with customizable columns and groups
-- Backlog: Manage user stories and sprint planning
-- Calendar: View and schedule team events and deadlines
-- Analytics: Track performance metrics and insights
-- Settings: Customize theme, notifications, and preferences
-
-User question: ${userMessage}
-
-Provide a helpful, concise response. If the user asks how to do something, explain the steps clearly.`,
-        response_json_schema: null
-      });
-
+      const response = await invokeLLM(userMessage);
       setMessages(prev => [...prev, { role: 'assistant', content: response }]);
     } catch (error) {
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'Sorry, I encountered an error. Please try again.' 
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Please try again.'
       }]);
     }
 
