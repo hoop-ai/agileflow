@@ -46,7 +46,8 @@ export default function BoardHeader({
   onViewChange,
   onShowAnalytics,
   onShowIntegrations,
-  onShowAutomations
+  onShowAutomations,
+  onUpdateBoard
 }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
@@ -83,9 +84,16 @@ export default function BoardHeader({
 
   const boardColor = board?.color || '#0073EA';
 
-  const handleSaveTitle = () => {
+  const handleSaveTitle = async () => {
     setIsEditing(false);
-    console.log('Saving title:', editedTitle);
+    if (editedTitle.trim() && editedTitle !== board?.title && onUpdateBoard) {
+      try {
+        await onUpdateBoard({ title: editedTitle.trim() });
+      } catch (error) {
+        console.error('Error saving title:', error);
+        setEditedTitle(board?.title || '');
+      }
+    }
   };
 
   const handleToggleFavorite = () => {

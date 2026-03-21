@@ -35,10 +35,11 @@ export const User = {
   },
 
   async search(query) {
+    const sanitized = query.replace(/[%_\\]/g, '\\$&');
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .or(`full_name.ilike.%${query}%,email.ilike.%${query}%`)
+      .or(`full_name.ilike.%${sanitized}%,email.ilike.%${sanitized}%`)
       .limit(20);
     if (error) throw error;
     return data;

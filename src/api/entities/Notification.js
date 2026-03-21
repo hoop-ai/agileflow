@@ -46,7 +46,7 @@ export const Notification = {
     const { data: { user } } = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from('notifications')
-      .insert({ ...notificationData, user_id: notificationData.user_id || user.id })
+      .insert({ ...notificationData, user_id: user.id })
       .select()
       .single();
     if (error) throw error;

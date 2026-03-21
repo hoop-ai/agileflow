@@ -54,7 +54,8 @@ export default function AnalyticsPage() {
   const totalTasks = filteredItems.length;
   const completedTasks = filteredItems.filter(item => {
     const statusColumn = boards.find(b => b.id === item.board_id)?.columns?.find(col => col.type === 'status');
-    return item.data?.[statusColumn?.id] === 'Done';
+    const status = statusColumn ? item.data?.[statusColumn.id] : item.data?.status;
+    return status?.toLowerCase() === 'done' || status?.toLowerCase() === 'completed';
   }).length;
   
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -68,7 +69,7 @@ export default function AnalyticsPage() {
     const dueDate = item.data?.[dueDateColumn?.id];
     const status = item.data?.[statusColumn?.id];
     
-    if (!dueDate || status === 'Done') return false;
+    if (!dueDate || status?.toLowerCase() === 'done' || status?.toLowerCase() === 'completed') return false;
     return isBefore(new Date(dueDate), new Date());
   }).length;
 
@@ -76,7 +77,10 @@ export default function AnalyticsPage() {
   const boardStats = filteredBoards.map(board => {
     const boardItems = filteredItems.filter(item => item.board_id === board.id);
     const statusColumn = board.columns?.find(col => col.type === 'status');
-    const completed = boardItems.filter(item => item.data?.[statusColumn?.id] === 'Done').length;
+    const completed = boardItems.filter(item => {
+      const status = statusColumn ? item.data?.[statusColumn.id] : item.data?.status;
+      return status?.toLowerCase() === 'done' || status?.toLowerCase() === 'completed';
+    }).length;
     const total = boardItems.length;
     
     return {
@@ -107,13 +111,13 @@ export default function AnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 bg-[#F5F6F8] min-h-screen">
+      <div className="p-6 bg-[#F5F6F8] dark:bg-gray-900 min-h-screen">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {Array(4).fill(0).map((_, i) => (
-                <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
+                <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
               ))}
             </div>
           </div>
@@ -123,13 +127,13 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="p-6 bg-[#F5F6F8] min-h-screen">
+    <div className="p-6 bg-[#F5F6F8] dark:bg-gray-900 min-h-screen transition-colors">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-[#323338]">Analytics Dashboard</h1>
-            <p className="text-[#676879] mt-2">Insights and metrics across your boards and tasks</p>
+            <h1 className="text-3xl font-bold text-[#323338] dark:text-white">Analytics Dashboard</h1>
+            <p className="text-[#676879] dark:text-gray-400 mt-2">Insights and metrics across your boards and tasks</p>
           </div>
           
           <div className="flex gap-3">

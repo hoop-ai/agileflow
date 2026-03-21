@@ -67,7 +67,7 @@ export default function Dashboard() {
   const pendingTasks = items.filter(item => !item.data?.status || item.data?.status !== 'done').length;
 
   return (
-    <div className="p-4 md:p-8 bg-[#F5F6F8] min-h-screen">
+    <div className="p-4 md:p-8 bg-[#F5F6F8] dark:bg-gray-900 min-h-screen transition-colors">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Hero Section - Made more compact */}
         <motion.div 
@@ -75,7 +75,7 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           className="relative overflow-hidden"
         >
-          <div className="bg-gradient-to-br from-white via-white to-blue-50/30 rounded-2xl p-6 md:p-8 shadow-sm border border-white/60">
+          <div className="bg-gradient-to-br from-white via-white to-blue-50/30 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800/80 rounded-2xl p-6 md:p-8 shadow-sm border border-white/60 dark:border-gray-700">
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -85,7 +85,7 @@ export default function Dashboard() {
                   <h1 className="text-2xl md:text-3xl font-bold text-[#323338] leading-tight">
                     {getGreeting()}, {user?.full_name?.split(' ')[0] || 'there'}!
                   </h1>
-                  <p className="text-[#676879] text-base mt-1">
+                  <p className="text-[#676879] dark:text-gray-400 text-base mt-1">
                     Ready to make today productive? {pendingTasks > 0 && `You have ${pendingTasks} tasks waiting.`}
                   </p>
                 </div>

@@ -421,7 +421,7 @@ export default function BoardPage() {
     <div className="bg-[#F5F6F8] min-h-screen">
       <div className="max-w-full">
         <div className="sticky top-0 z-20 bg-[#F5F6F8] pb-4">
-          <BoardHeader 
+          <BoardHeader
             board={board}
             items={items}
             itemsCount={items.length}
@@ -431,6 +431,10 @@ export default function BoardPage() {
             onShowAnalytics={() => setShowAnalytics(true)}
             onShowIntegrations={() => setShowIntegrations(true)}
             onShowAutomations={() => setShowAutomations(true)}
+            onUpdateBoard={async (updates) => {
+              const updated = await Board.update(boardId, updates);
+              setBoard(updated);
+            }}
           />
         </div>
 

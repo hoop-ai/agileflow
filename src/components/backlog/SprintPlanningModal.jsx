@@ -183,7 +183,7 @@ export default function SprintPlanningModal({ isOpen, onClose, stories, boards }
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold">
-                    {Math.round((totalPoints / sprintData.capacity) * 100)}%
+                    {sprintData.capacity > 0 ? Math.round((totalPoints / sprintData.capacity) * 100) : 0}%
                   </p>
                   <p className="text-xs text-gray-600">capacity</p>
                 </div>

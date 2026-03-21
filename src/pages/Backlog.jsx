@@ -114,18 +114,18 @@ export default function BacklogPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-900 p-6 transition-colors">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
               <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
                 <ListOrdered className="w-6 h-6 text-white" />
               </div>
               Product Backlog
             </h1>
-            <p className="text-gray-600 mt-2">Prioritize and manage user stories</p>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">Prioritize and manage user stories</p>
           </div>
           
           <div className="flex gap-3">
@@ -360,29 +360,29 @@ const StoryCard = ({ story, onClick, isDragging }) => {
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <Badge className={priorityColors[story.priority]} variant="outline">
-              {story.priority}
+            <Badge className={priorityColors[story.priority] || priorityColors.medium} variant="outline">
+              {story.priority || 'medium'}
             </Badge>
-            {story.story_points && (
+            {story.story_points != null && story.story_points > 0 && (
               <Badge variant="secondary" className="bg-purple-100 text-purple-800">
                 {story.story_points} SP
               </Badge>
             )}
-            {story.status !== 'backlog' && (
-              <Badge className={statusColors[story.status]}>
+            {story.status && story.status !== 'backlog' && (
+              <Badge className={statusColors[story.status] || statusColors.backlog}>
                 {story.status.replace('_', ' ')}
               </Badge>
             )}
           </div>
           
-          <h3 className="font-semibold text-gray-900 mb-1">{story.title}</h3>
-          <p className="text-sm text-gray-600 line-clamp-2">{story.description}</p>
-          
-          <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
-            {story.acceptance_criteria && (
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{story.title || 'Untitled Story'}</h3>
+          {story.description && <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{story.description}</p>}
+
+          <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 dark:text-gray-400">
+            {Array.isArray(story.acceptance_criteria) && story.acceptance_criteria.length > 0 && (
               <span className="flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3" />
-                {story.acceptance_criteria.filter(c => c.completed).length}/{story.acceptance_criteria.length} criteria
+                {story.acceptance_criteria.filter(c => c?.completed).length}/{story.acceptance_criteria.length} criteria
               </span>
             )}
             {story.assigned_to && (
