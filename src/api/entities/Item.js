@@ -37,6 +37,8 @@ export const Item = {
   },
 
   async create(itemData) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Authentication required');
     const { data, error } = await supabase.from('items').insert(itemData).select().single();
     if (error) throw error;
     return data;

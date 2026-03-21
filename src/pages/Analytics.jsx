@@ -4,6 +4,7 @@ import { Item } from "@/api/entities/Item";
 import { Sprint } from "@/api/entities/Sprint";
 import { UserStory } from "@/api/entities/UserStory";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -50,6 +51,7 @@ function getPriorityColor(priority) {
 }
 
 export default function AnalyticsPage() {
+  const { toast } = useToast();
   const [boards, setBoards] = useState([]);
   const [items, setItems] = useState([]);
   const [sprints, setSprints] = useState([]);
@@ -78,6 +80,11 @@ export default function AnalyticsPage() {
       setStories(storiesData);
     } catch (error) {
       console.error("Error loading analytics data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load analytics data. Please try again.",
+        variant: "destructive",
+      });
     }
     setIsLoading(false);
   };

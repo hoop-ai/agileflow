@@ -2,9 +2,12 @@ import { supabase } from '../supabaseClient';
 
 export const Notification = {
   async list(limit = 50) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Authentication required');
     let query = supabase
       .from('notifications')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_date', { ascending: false });
     if (limit) query = query.limit(limit);
     const { data, error } = await query;
@@ -13,9 +16,12 @@ export const Notification = {
   },
 
   async unreadCount() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return 0;
     const { count, error } = await supabase
       .from('notifications')
       .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
       .eq('is_read', false);
     if (error) throw error;
     return count || 0;

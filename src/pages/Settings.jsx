@@ -3,6 +3,7 @@ import { User as UserService } from "@/api/entities/User";
 import { supabase } from "@/api/supabaseClient";
 import { useTheme } from "@/components/utils/ThemeProvider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +25,7 @@ import {
 import { motion } from "framer-motion";
 
 export default function SettingsPage() {
+  const { toast } = useToast();
   const { theme: currentTheme, setTheme: updateTheme } = useTheme();
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -91,6 +93,11 @@ export default function SettingsPage() {
       });
     } catch (error) {
       console.error('Error loading user settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load your settings. Please try again.",
+        variant: "destructive",
+      });
     }
     setIsLoading(false);
   };
@@ -128,7 +135,11 @@ export default function SettingsPage() {
       await loadUserSettings();
     } catch (error) {
       console.error('Error saving settings:', error);
-      alert('Failed to save settings. Please try again.');
+      toast({
+        title: "Save failed",
+        description: "Could not save your settings. Please try again.",
+        variant: "destructive",
+      });
     }
 
     setIsSaving(false);

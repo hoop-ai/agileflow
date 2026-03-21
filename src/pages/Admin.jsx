@@ -3,6 +3,7 @@ import { User as UserService } from '@/api/entities/User';
 import { Board } from '@/api/entities/Board';
 import { useAuth } from '@/lib/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +30,7 @@ import {
 import { motion } from 'framer-motion';
 
 export default function AdminPage() {
+  const { toast } = useToast();
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [boards, setBoards] = useState([]);
@@ -65,6 +67,11 @@ export default function AdminPage() {
       });
     } catch (error) {
       console.error('Error loading admin data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load admin data. Please try again.",
+        variant: "destructive",
+      });
     }
     setIsLoading(false);
   };
@@ -78,7 +85,11 @@ export default function AdminPage() {
       await loadData();
     } catch (error) {
       console.error('Error updating role:', error);
-      alert('Failed to update user role.');
+      toast({
+        title: "Update failed",
+        description: "Could not update the user role. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 

@@ -10,8 +10,10 @@ function parseSortField(sortField) {
 
 export const Board = {
   async list(sortField, limit) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Authentication required');
     const { column, ascending } = parseSortField(sortField);
-    let query = supabase.from('boards').select('*').order(column, { ascending });
+    let query = supabase.from('boards').select('*').eq('user_id', user.id).order(column, { ascending });
     if (limit) query = query.limit(limit);
     const { data, error } = await query;
     if (error) throw error;
@@ -38,6 +40,7 @@ export const Board = {
 
   async create(boardData) {
     const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Authentication required');
     const { data, error } = await supabase.from('boards').insert({ ...boardData, user_id: user.id }).select().single();
     if (error) throw error;
     return data;

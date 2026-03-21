@@ -5,6 +5,7 @@ import { Sprint } from "@/api/entities/Sprint";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { 
@@ -26,6 +27,7 @@ import StoryDetailModal from "../components/backlog/StoryDetailModal";
 import SprintPlanningModal from "../components/backlog/SprintPlanningModal";
 
 export default function BacklogPage() {
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPlanningModal, setShowPlanningModal] = useState(false);
@@ -55,12 +57,28 @@ export default function BacklogPage() {
       queryClient.invalidateQueries({ queryKey: ['userStories'] });
       setShowCreateModal(false);
     },
+    onError: (error) => {
+      console.error("Error creating story:", error);
+      toast({
+        title: "Creation failed",
+        description: "Could not create the user story. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   const updateStoryMutation = useMutation({
     mutationFn: ({ id, data }) => UserStory.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userStories'] });
+    },
+    onError: (error) => {
+      console.error("Error updating story:", error);
+      toast({
+        title: "Update failed",
+        description: "Could not update the user story. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -69,6 +87,14 @@ export default function BacklogPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userStories'] });
       setSelectedStory(null);
+    },
+    onError: (error) => {
+      console.error("Error deleting story:", error);
+      toast({
+        title: "Delete failed",
+        description: "Could not delete the user story. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 

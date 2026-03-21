@@ -6,3 +6,5 @@ export { UserStory } from './UserStory';
 export { Sprint } from './Sprint';
 export { Notification } from './Notification';
 export { TeamMember } from './TeamMember';
+export { UserPreferences } from './UserPreferences';
+export { ActivityLog } from './ActivityLog';

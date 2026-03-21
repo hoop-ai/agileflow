@@ -4,9 +4,10 @@ import { Board } from "@/api/entities/Board";
 import { Item } from "@/api/entities/Item";
 import { User } from "@/api/entities/User";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { 
+import {
   Folder,
   BarChart3,
   ArrowRight,
@@ -20,6 +21,7 @@ import ActivityFeed from "../components/dashboard/ActivityFeed";
 import QuickActions from "../components/dashboard/QuickActions";
 
 export default function Dashboard() {
+  const { toast } = useToast();
   const [boards, setBoards] = useState([]);
   const [items, setItems] = useState([]);
   const [user, setUser] = useState(null);
@@ -43,6 +45,11 @@ export default function Dashboard() {
       setUser(userData);
     } catch (error) {
       console.error("Error loading dashboard data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard data. Please try again.",
+        variant: "destructive",
+      });
     }
     setIsLoading(false);
   };
@@ -54,6 +61,11 @@ export default function Dashboard() {
       setBoards(prev => [newBoard, ...prev]);
     } catch (error) {
       console.error("Error creating board:", error);
+      toast({
+        title: "Creation failed",
+        description: "Could not create the board. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -82,7 +94,7 @@ export default function Dashboard() {
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-[#323338] leading-tight">
+                  <h1 className="text-2xl md:text-3xl font-bold text-[#323338] dark:text-white leading-tight">
                     {getGreeting()}, {user?.full_name?.split(' ')[0] || 'there'}!
                   </h1>
                   <p className="text-[#676879] dark:text-gray-400 text-base mt-1">

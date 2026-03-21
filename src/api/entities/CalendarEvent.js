@@ -9,8 +9,10 @@ function parseSortField(sortField) {
 
 export const CalendarEvent = {
   async list(sortField, limit) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Authentication required');
     const { column, ascending } = parseSortField(sortField);
-    let query = supabase.from('calendar_events').select('*').order(column, { ascending });
+    let query = supabase.from('calendar_events').select('*').eq('user_id', user.id).order(column, { ascending });
     if (limit) query = query.limit(limit);
     const { data, error } = await query;
     if (error) throw error;
@@ -24,8 +26,10 @@ export const CalendarEvent = {
   },
 
   async filter(filters, sortField) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Authentication required');
     const { column, ascending } = parseSortField(sortField);
-    let query = supabase.from('calendar_events').select('*');
+    let query = supabase.from('calendar_events').select('*').eq('user_id', user.id);
     Object.entries(filters).forEach(([key, value]) => {
       query = query.eq(key, value);
     });

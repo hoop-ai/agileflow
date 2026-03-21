@@ -30,10 +30,18 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
     visibility: 'private'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [titleError, setTitleError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title.trim()) return;
+    setError('');
+    setTitleError('');
+
+    if (!formData.title.trim()) {
+      setTitleError('Board title is required');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -99,10 +107,13 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
 
       await onSubmit(boardData);
       setFormData({ title: '', description: '', color: '#0073EA', visibility: 'private' });
-    } catch (error) {
-      console.error('Error creating board:', error);
+      setError('');
+    } catch (err) {
+      console.error('Error creating board:', err);
+      setError(err?.message || 'Failed to create board. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   return (
@@ -122,11 +133,15 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
             <Input
               id="title"
               value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              onChange={(e) => {
+                setFormData(prev => ({ ...prev, title: e.target.value }));
+                if (titleError) setTitleError('');
+              }}
               placeholder="Enter board title..."
-              className="rounded-xl border-[#E1E5F3] h-12 focus:ring-2 focus:ring-[#0073EA]/20"
+              className={`rounded-xl h-12 focus:ring-2 focus:ring-[#0073EA]/20 ${titleError ? 'border-red-500 focus:ring-red-200' : 'border-[#E1E5F3]'}`}
               required
             />
+            {titleError && <p className="text-sm text-red-500 mt-1">{titleError}</p>}
           </div>
 
           <div className="space-y-2">
@@ -187,6 +202,12 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
               </SelectContent>
             </Select>
           </div>
+
+          {error && (
+            <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-3">
+              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-4">
             <Button

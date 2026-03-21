@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,20 +10,44 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { UserPlus, Mail, X, Users } from "lucide-react";
+import { UserPlus, Mail, X, Users, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useToast } from "@/components/ui/use-toast";
+import { User } from "@/api/entities/User";
+import { Board } from "@/api/entities/Board";
+import { TeamMember } from "@/api/entities/TeamMember";
 
 export default function InviteTeamModal({ isOpen, onClose }) {
   const [emails, setEmails] = useState([]);
   const [currentEmail, setCurrentEmail] = useState('');
   const [role, setRole] = useState('editor');
-  const [message, setMessage] = useState('');
+  const [selectedBoardId, setSelectedBoardId] = useState('');
+  const [boards, setBoards] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [results, setResults] = useState([]);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (isOpen) {
+      loadBoards();
+      setResults([]);
+    }
+  }, [isOpen]);
+
+  const loadBoards = async () => {
+    try {
+      const data = await Board.list();
+      setBoards(data || []);
+      if (data?.length > 0) setSelectedBoardId(data[0].id);
+    } catch (error) {
+      console.error('Failed to load boards:', error);
+    }
+  };
 
   const addEmail = () => {
-    if (currentEmail && currentEmail.includes('@') && !emails.includes(currentEmail)) {
-      setEmails([...emails, currentEmail]);
+    const trimmed = currentEmail.trim().toLowerCase();
+    if (trimmed && trimmed.includes('@') && !emails.includes(trimmed)) {
+      setEmails([...emails, trimmed]);
       setCurrentEmail('');
     }
   };
@@ -40,48 +64,130 @@ export default function InviteTeamModal({ isOpen, onClose }) {
   };
 
   const handleSendInvites = async () => {
-    if (emails.length === 0) return;
-    
+    if (emails.length === 0 || !selectedBoardId) return;
+
     setIsLoading(true);
-    try {
-      // Here you would integrate with your actual invitation system
-      console.log('Sending invites to:', emails, 'with role:', role, 'message:', message);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Reset form
-      setEmails([]);
-      setCurrentEmail('');
-      setRole('editor');
-      setMessage('');
-      onClose();
-    } catch (error) {
-      console.error('Error sending invites:', error);
+    const inviteResults = [];
+
+    for (const email of emails) {
+      try {
+        // Look up the user by email
+        const users = await User.search(email);
+        const matchedUser = users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
+
+        if (!matchedUser) {
+          inviteResults.push({ email, status: 'not_found' });
+          continue;
+        }
+
+        // Check if already a team member on this board
+        const existingMembers = await TeamMember.listByBoard(selectedBoardId);
+        const alreadyMember = existingMembers?.some(m => m.user_id === matchedUser.id);
+
+        if (alreadyMember) {
+          inviteResults.push({ email, status: 'already_member' });
+          continue;
+        }
+
+        // Add as team member
+        await TeamMember.add(selectedBoardId, matchedUser.id, role);
+        inviteResults.push({ email, status: 'success' });
+      } catch (error) {
+        console.error(`Failed to invite ${email}:`, error);
+        inviteResults.push({ email, status: 'error', message: error.message });
+      }
     }
+
+    setResults(inviteResults);
+
+    const successCount = inviteResults.filter(r => r.status === 'success').length;
+    const notFoundCount = inviteResults.filter(r => r.status === 'not_found').length;
+
+    if (successCount > 0) {
+      toast({
+        title: `${successCount} member${successCount > 1 ? 's' : ''} added`,
+        description: 'They now have access to the board.',
+      });
+    }
+    if (notFoundCount > 0) {
+      toast({
+        title: `${notFoundCount} email${notFoundCount > 1 ? 's' : ''} not found`,
+        description: 'They need to sign up first before they can be invited.',
+        variant: 'destructive',
+      });
+    }
+
     setIsLoading(false);
+    // Clear only successfully added emails
+    setEmails(inviteResults.filter(r => r.status !== 'success').map(r => r.email));
+  };
+
+  const handleClose = () => {
+    setEmails([]);
+    setCurrentEmail('');
+    setRole('editor');
+    setResults([]);
+    onClose();
   };
 
   const roleOptions = [
-    { value: 'admin', label: 'Admin', description: 'Full access to everything' },
+    { value: 'owner', label: 'Owner', description: 'Full access, can manage members' },
     { value: 'editor', label: 'Editor', description: 'Can edit and create content' },
-    { value: 'viewer', label: 'Viewer', description: 'Can view and comment only' }
+    { value: 'viewer', label: 'Viewer', description: 'Can view content only' }
   ];
 
+  const getResultIcon = (status) => {
+    switch (status) {
+      case 'success': return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'not_found': return <AlertCircle className="w-4 h-4 text-amber-500" />;
+      case 'already_member': return <Users className="w-4 h-4 text-blue-500" />;
+      default: return <AlertCircle className="w-4 h-4 text-red-500" />;
+    }
+  };
+
+  const getResultText = (status) => {
+    switch (status) {
+      case 'success': return 'Added to board';
+      case 'not_found': return 'No account found — they need to sign up first';
+      case 'already_member': return 'Already a member of this board';
+      default: return 'Failed to invite';
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-lg dark:bg-slate-900 dark:border-slate-700">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-[#323338] flex items-center gap-2">
+          <DialogTitle className="text-2xl font-bold text-[#323338] dark:text-slate-100 flex items-center gap-2">
             <UserPlus className="w-6 h-6 text-[#0073EA]" />
             Invite Team Members
           </DialogTitle>
         </DialogHeader>
-        
-        <div className="space-y-6 py-4">
+
+        <div className="space-y-5 py-4">
+          {/* Board Selection */}
+          <div className="space-y-2">
+            <Label className="text-[#323338] dark:text-slate-200 font-medium">Select Board</Label>
+            <Select value={selectedBoardId} onValueChange={setSelectedBoardId}>
+              <SelectTrigger className="rounded-xl border-[#E1E5F3] dark:border-slate-600 dark:bg-slate-800 h-12">
+                <SelectValue placeholder="Choose a board..." />
+              </SelectTrigger>
+              <SelectContent>
+                {boards.map((board) => (
+                  <SelectItem key={board.id} value={board.id}>
+                    <span>{board.icon} {board.title}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {boards.length === 0 && (
+              <p className="text-sm text-amber-600 dark:text-amber-400">Create a board first to invite members.</p>
+            )}
+          </div>
+
           {/* Email Input */}
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-[#323338] font-medium">
+            <Label htmlFor="email" className="text-[#323338] dark:text-slate-200 font-medium">
               Email Addresses
             </Label>
             <div className="flex gap-2">
@@ -92,7 +198,7 @@ export default function InviteTeamModal({ isOpen, onClose }) {
                 onChange={(e) => setCurrentEmail(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Enter email address..."
-                className="flex-1 rounded-xl border-[#E1E5F3] h-12 focus:ring-2 focus:ring-[#0073EA]/20"
+                className="flex-1 rounded-xl border-[#E1E5F3] dark:border-slate-600 dark:bg-slate-800 h-12 focus:ring-2 focus:ring-[#0073EA]/20"
               />
               <Button
                 onClick={addEmail}
@@ -102,7 +208,7 @@ export default function InviteTeamModal({ isOpen, onClose }) {
                 Add
               </Button>
             </div>
-            
+
             {/* Email Tags */}
             {emails.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-3">
@@ -113,7 +219,7 @@ export default function InviteTeamModal({ isOpen, onClose }) {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Badge className="bg-[#E1E5F3] text-[#323338] hover:bg-[#D1D5DB] flex items-center gap-1 px-3 py-1">
+                    <Badge className="bg-[#E1E5F3] dark:bg-slate-700 text-[#323338] dark:text-slate-200 hover:bg-[#D1D5DB] flex items-center gap-1 px-3 py-1">
                       <Mail className="w-3 h-3" />
                       {email}
                       <button
@@ -131,9 +237,9 @@ export default function InviteTeamModal({ isOpen, onClose }) {
 
           {/* Role Selection */}
           <div className="space-y-2">
-            <Label className="text-[#323338] font-medium">Role & Permissions</Label>
+            <Label className="text-[#323338] dark:text-slate-200 font-medium">Role & Permissions</Label>
             <Select value={role} onValueChange={setRole}>
-              <SelectTrigger className="rounded-xl border-[#E1E5F3] h-12">
+              <SelectTrigger className="rounded-xl border-[#E1E5F3] dark:border-slate-600 dark:bg-slate-800 h-12">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -141,7 +247,7 @@ export default function InviteTeamModal({ isOpen, onClose }) {
                   <SelectItem key={option.value} value={option.value}>
                     <div className="flex flex-col">
                       <span className="font-medium">{option.label}</span>
-                      <span className="text-xs text-gray-500">{option.description}</span>
+                      <span className="text-xs text-gray-500 dark:text-slate-400">{option.description}</span>
                     </div>
                   </SelectItem>
                 ))}
@@ -149,32 +255,32 @@ export default function InviteTeamModal({ isOpen, onClose }) {
             </Select>
           </div>
 
-          {/* Personal Message */}
-          <div className="space-y-2">
-            <Label htmlFor="message" className="text-[#323338] font-medium">
-              Personal Message (Optional)
-            </Label>
-            <Textarea
-              id="message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Add a personal note to your invitation..."
-              className="rounded-xl border-[#E1E5F3] min-h-20 focus:ring-2 focus:ring-[#0073EA]/20"
-            />
-          </div>
+          {/* Invite Results */}
+          {results.length > 0 && (
+            <div className="space-y-2 p-4 bg-[#F5F6F8] dark:bg-slate-800 rounded-xl">
+              <span className="text-sm font-medium text-[#323338] dark:text-slate-200">Results</span>
+              {results.map((result) => (
+                <div key={result.email} className="flex items-center gap-2 text-sm py-1">
+                  {getResultIcon(result.status)}
+                  <span className="font-medium text-[#323338] dark:text-slate-300">{result.email}</span>
+                  <span className="text-[#676879] dark:text-slate-400">— {getResultText(result.status)}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Preview */}
-          {emails.length > 0 && (
-            <div className="p-4 bg-[#F5F6F8] rounded-xl">
+          {emails.length > 0 && results.length === 0 && (
+            <div className="p-4 bg-[#F5F6F8] dark:bg-slate-800 rounded-xl">
               <div className="flex items-center gap-2 mb-2">
-                <Users className="w-4 h-4 text-[#676879]" />
-                <span className="text-sm font-medium text-[#323338]">
+                <Users className="w-4 h-4 text-[#676879] dark:text-slate-400" />
+                <span className="text-sm font-medium text-[#323338] dark:text-slate-200">
                   Inviting {emails.length} member{emails.length > 1 ? 's' : ''}
                 </span>
               </div>
-              <div className="text-xs text-[#676879]">
-                They will be added as <strong>{roleOptions.find(r => r.value === role)?.label}</strong> 
-                {' '}and can start collaborating immediately.
+              <div className="text-xs text-[#676879] dark:text-slate-400">
+                They will be added as <strong>{roleOptions.find(r => r.value === role)?.label}</strong>
+                {' '}to the selected board. They must have an existing account.
               </div>
             </div>
           )}
@@ -183,18 +289,24 @@ export default function InviteTeamModal({ isOpen, onClose }) {
         <div className="flex justify-end gap-3 pt-4">
           <Button
             variant="outline"
-            onClick={onClose}
-            className="rounded-xl h-12 px-6"
+            onClick={handleClose}
+            className="rounded-xl h-12 px-6 dark:border-slate-600"
           >
-            Cancel
+            {results.length > 0 ? 'Done' : 'Cancel'}
           </Button>
-          <Button
-            onClick={handleSendInvites}
-            disabled={emails.length === 0 || isLoading}
-            className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-xl h-12 px-6 font-medium"
-          >
-            {isLoading ? 'Sending...' : `Send ${emails.length} Invite${emails.length > 1 ? 's' : ''}`}
-          </Button>
+          {results.length === 0 && (
+            <Button
+              onClick={handleSendInvites}
+              disabled={emails.length === 0 || !selectedBoardId || isLoading}
+              className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-xl h-12 px-6 font-medium"
+            >
+              {isLoading ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Inviting...</>
+              ) : (
+                `Invite ${emails.length} Member${emails.length > 1 ? 's' : ''}`
+              )}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

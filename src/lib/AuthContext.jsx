@@ -17,11 +17,15 @@ export const AuthProvider = ({ children }) => {
       if (session?.user) {
         setUser(session.user);
         setIsAuthenticated(true);
+        setAuthError(null);
         await loadProfile(session.user.id);
       } else {
         setUser(null);
         setProfile(null);
         setIsAuthenticated(false);
+        if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+          setAuthError({ type: 'auth_required' });
+        }
       }
       setIsLoadingAuth(false);
     });
@@ -36,6 +40,8 @@ export const AuthProvider = ({ children }) => {
         setUser(session.user);
         setIsAuthenticated(true);
         await loadProfile(session.user.id);
+      } else {
+        setAuthError({ type: 'auth_required' });
       }
     } catch (error) {
       console.error('Session check failed:', error);

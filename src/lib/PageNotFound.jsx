@@ -1,75 +1,113 @@
-import { useLocation } from 'react-router-dom';
-import { User } from '@/api/entities/User';
-import { useQuery } from '@tanstack/react-query';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Home, ArrowLeft, Search } from 'lucide-react';
 
+const KNOWN_PAGES = [
+  { name: 'Dashboard', path: '/Dashboard', description: 'Project overview and metrics' },
+  { name: 'Boards', path: '/Boards', description: 'Kanban boards and task management' },
+  { name: 'Backlog', path: '/Backlog', description: 'Sprint planning and user stories' },
+  { name: 'Analytics', path: '/Analytics', description: 'Charts and performance data' },
+  { name: 'Calendar', path: '/Calendar', description: 'Events and scheduling' },
+  { name: 'Settings', path: '/Settings', description: 'Account and app preferences' },
+];
 
-export default function PageNotFound({}) {
-    const location = useLocation();
-    const pageName = location.pathname.substring(1);
+function getErrorHint(pathname) {
+  const path = pathname.toLowerCase().replace(/^\//, '');
+  if (!path) return null;
 
-    const { data: authData, isFetched } = useQuery({
-        queryKey: ['user'],
-        queryFn: async () => {
-            try {
-                const user = await User.me();
-                return { user, isAuthenticated: true };
-            } catch (error) {
-                return { user: null, isAuthenticated: false };
-            }
-        }
-    });
-    
-    return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
-            <div className="max-w-md w-full">
-                <div className="text-center space-y-6">
-                    {/* 404 Error Code */}
-                    <div className="space-y-2">
-                        <h1 className="text-7xl font-light text-slate-300">404</h1>
-                        <div className="h-0.5 w-16 bg-slate-200 mx-auto"></div>
-                    </div>
-                    
-                    {/* Main Message */}
-                    <div className="space-y-3">
-                        <h2 className="text-2xl font-medium text-slate-800">
-                            Page Not Found
-                        </h2>
-                        <p className="text-slate-600 leading-relaxed">
-                            The page <span className="font-medium text-slate-700">"{pageName}"</span> could not be found in this application.
-                        </p>
-                    </div>
-                    
-                    {/* Admin Note */}
-                    {isFetched && authData.isAuthenticated && authData.user?.role === 'admin' && (
-                        <div className="mt-8 p-4 bg-slate-100 rounded-lg border border-slate-200">
-                            <div className="flex items-start space-x-3">
-                                <div className="flex-shrink-0 w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center mt-0.5">
-                                    <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-                                </div>
-                                <div className="text-left space-y-1">
-                                    <p className="text-sm font-medium text-slate-700">Admin Note</p>
-                                    <p className="text-sm text-slate-600 leading-relaxed">
-                                        This could mean that the AI hasn't implemented this page yet. Ask it to implement it in the chat.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    
-                    {/* Action Button */}
-                    <div className="pt-6">
-                        <button 
-                            onClick={() => window.location.href = '/'} 
-                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
-                        >
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                            </svg>
-                            Go Home
-                        </button>
-                    </div>
-                </div>
+  // Check for close matches (typos)
+  const match = KNOWN_PAGES.find(p =>
+    p.name.toLowerCase().startsWith(path.slice(0, 3)) ||
+    path.startsWith(p.name.toLowerCase().slice(0, 3))
+  );
+  if (match) {
+    return `Did you mean "${match.name}"?`;
+  }
+
+  // Check for common patterns
+  if (path.includes('board') && path !== 'boards' && path !== 'board') {
+    return 'Board pages require an ID parameter — try visiting Boards first.';
+  }
+
+  return null;
+}
+
+export default function PageNotFound() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const pageName = decodeURIComponent(location.pathname.substring(1)) || 'unknown';
+  const hint = getErrorHint(location.pathname);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 dark:bg-slate-950">
+      <div className="max-w-lg w-full">
+        <div className="text-center space-y-8">
+          {/* Illustration */}
+          <div className="relative mx-auto w-48 h-48">
+            <div className="absolute inset-0 rounded-full bg-blue-50 dark:bg-blue-950/30" />
+            <div className="absolute inset-4 rounded-full bg-blue-100/60 dark:bg-blue-900/20 flex items-center justify-center">
+              <span className="text-8xl font-bold bg-gradient-to-br from-blue-400 to-blue-600 dark:from-blue-300 dark:to-blue-500 bg-clip-text text-transparent select-none">
+                404
+              </span>
             </div>
+          </div>
+
+          {/* Message */}
+          <div className="space-y-3">
+            <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">
+              Page not found
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
+              There's no page at <span className="font-medium text-slate-700 dark:text-slate-300 break-all">/{pageName}</span>.
+              It may have been moved or the URL might be incorrect.
+            </p>
+          </div>
+
+          {/* Hint */}
+          {hint && (
+            <div className="mx-auto max-w-sm p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
+              <div className="flex items-center gap-2 justify-center">
+                <Search className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                <p className="text-sm text-amber-700 dark:text-amber-300">{hint}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Go Back
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-lg transition-colors"
+            >
+              <Home className="w-4 h-4" />
+              Go to Dashboard
+            </button>
+          </div>
+
+          {/* Quick Links */}
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+            <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">Or jump to:</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {KNOWN_PAGES.map(page => (
+                <button
+                  key={page.path}
+                  onClick={() => navigate(page.path)}
+                  title={page.description}
+                  className="px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                >
+                  {page.name}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-    )
+      </div>
+    </div>
+  );
 }
