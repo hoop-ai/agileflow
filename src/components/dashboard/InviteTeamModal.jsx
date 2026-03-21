@@ -156,10 +156,10 @@ export default function InviteTeamModal({ isOpen, onClose }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg dark:bg-slate-900 dark:border-slate-700">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-[#323338] dark:text-slate-100 flex items-center gap-2">
-            <UserPlus className="w-6 h-6 text-[#0073EA]" />
+          <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <UserPlus className="w-6 h-6 text-primary" />
             Invite Team Members
           </DialogTitle>
         </DialogHeader>
@@ -167,9 +167,9 @@ export default function InviteTeamModal({ isOpen, onClose }) {
         <div className="space-y-5 py-4">
           {/* Board Selection */}
           <div className="space-y-2">
-            <Label className="text-[#323338] dark:text-slate-200 font-medium">Select Board</Label>
+            <Label className="text-foreground font-medium">Select Board</Label>
             <Select value={selectedBoardId} onValueChange={setSelectedBoardId}>
-              <SelectTrigger className="rounded-xl border-[#E1E5F3] dark:border-slate-600 dark:bg-slate-800 h-12">
+              <SelectTrigger className="rounded-xl border-border h-12">
                 <SelectValue placeholder="Choose a board..." />
               </SelectTrigger>
               <SelectContent>
@@ -187,7 +187,7 @@ export default function InviteTeamModal({ isOpen, onClose }) {
 
           {/* Email Input */}
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-[#323338] dark:text-slate-200 font-medium">
+            <Label htmlFor="email" className="text-foreground font-medium">
               Email Addresses
             </Label>
             <div className="flex gap-2">
@@ -198,12 +198,12 @@ export default function InviteTeamModal({ isOpen, onClose }) {
                 onChange={(e) => setCurrentEmail(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Enter email address..."
-                className="flex-1 rounded-xl border-[#E1E5F3] dark:border-slate-600 dark:bg-slate-800 h-12 focus:ring-2 focus:ring-[#0073EA]/20"
+                className="flex-1 rounded-xl border-border h-12 focus:ring-2 focus:ring-primary/20"
               />
               <Button
                 onClick={addEmail}
                 disabled={!currentEmail || !currentEmail.includes('@')}
-                className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-xl h-12 px-4"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 px-4"
               >
                 Add
               </Button>
@@ -219,7 +219,7 @@ export default function InviteTeamModal({ isOpen, onClose }) {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Badge className="bg-[#E1E5F3] dark:bg-slate-700 text-[#323338] dark:text-slate-200 hover:bg-[#D1D5DB] flex items-center gap-1 px-3 py-1">
+                    <Badge className="bg-border text-foreground hover:bg-muted flex items-center gap-1 px-3 py-1">
                       <Mail className="w-3 h-3" />
                       {email}
                       <button
@@ -237,9 +237,9 @@ export default function InviteTeamModal({ isOpen, onClose }) {
 
           {/* Role Selection */}
           <div className="space-y-2">
-            <Label className="text-[#323338] dark:text-slate-200 font-medium">Role & Permissions</Label>
+            <Label className="text-foreground font-medium">Role & Permissions</Label>
             <Select value={role} onValueChange={setRole}>
-              <SelectTrigger className="rounded-xl border-[#E1E5F3] dark:border-slate-600 dark:bg-slate-800 h-12">
+              <SelectTrigger className="rounded-xl border-border h-12">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -247,7 +247,7 @@ export default function InviteTeamModal({ isOpen, onClose }) {
                   <SelectItem key={option.value} value={option.value}>
                     <div className="flex flex-col">
                       <span className="font-medium">{option.label}</span>
-                      <span className="text-xs text-gray-500 dark:text-slate-400">{option.description}</span>
+                      <span className="text-xs text-muted-foreground">{option.description}</span>
                     </div>
                   </SelectItem>
                 ))}
@@ -257,13 +257,13 @@ export default function InviteTeamModal({ isOpen, onClose }) {
 
           {/* Invite Results */}
           {results.length > 0 && (
-            <div className="space-y-2 p-4 bg-[#F5F6F8] dark:bg-slate-800 rounded-xl">
-              <span className="text-sm font-medium text-[#323338] dark:text-slate-200">Results</span>
+            <div className="space-y-2 p-4 bg-muted rounded-xl">
+              <span className="text-sm font-medium text-foreground">Results</span>
               {results.map((result) => (
                 <div key={result.email} className="flex items-center gap-2 text-sm py-1">
                   {getResultIcon(result.status)}
-                  <span className="font-medium text-[#323338] dark:text-slate-300">{result.email}</span>
-                  <span className="text-[#676879] dark:text-slate-400">— {getResultText(result.status)}</span>
+                  <span className="font-medium text-foreground">{result.email}</span>
+                  <span className="text-muted-foreground">— {getResultText(result.status)}</span>
                 </div>
               ))}
             </div>
@@ -271,14 +271,14 @@ export default function InviteTeamModal({ isOpen, onClose }) {
 
           {/* Preview */}
           {emails.length > 0 && results.length === 0 && (
-            <div className="p-4 bg-[#F5F6F8] dark:bg-slate-800 rounded-xl">
+            <div className="p-4 bg-muted rounded-xl">
               <div className="flex items-center gap-2 mb-2">
-                <Users className="w-4 h-4 text-[#676879] dark:text-slate-400" />
-                <span className="text-sm font-medium text-[#323338] dark:text-slate-200">
+                <Users className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">
                   Inviting {emails.length} member{emails.length > 1 ? 's' : ''}
                 </span>
               </div>
-              <div className="text-xs text-[#676879] dark:text-slate-400">
+              <div className="text-xs text-muted-foreground">
                 They will be added as <strong>{roleOptions.find(r => r.value === role)?.label}</strong>
                 {' '}to the selected board. They must have an existing account.
               </div>
@@ -290,7 +290,7 @@ export default function InviteTeamModal({ isOpen, onClose }) {
           <Button
             variant="outline"
             onClick={handleClose}
-            className="rounded-xl h-12 px-6 dark:border-slate-600"
+            className="rounded-xl h-12 px-6"
           >
             {results.length > 0 ? 'Done' : 'Cancel'}
           </Button>
@@ -298,7 +298,7 @@ export default function InviteTeamModal({ isOpen, onClose }) {
             <Button
               onClick={handleSendInvites}
               disabled={emails.length === 0 || !selectedBoardId || isLoading}
-              className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-xl h-12 px-6 font-medium"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 px-6 font-medium"
             >
               {isLoading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Inviting...</>

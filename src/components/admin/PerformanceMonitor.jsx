@@ -53,7 +53,7 @@ export default function PerformanceMonitor() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h2 className="text-2xl font-bold text-[#323338] mb-2">Performance Monitor</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Performance Monitor</h2>
         <p className="text-gray-600">Real-time system metrics and health status</p>
       </div>
 

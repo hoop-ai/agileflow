@@ -114,14 +114,14 @@ export default function NewColumnModal({ isOpen, onClose, onSubmit }) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-[#323338]">
+          <DialogTitle className="text-2xl font-bold text-foreground">
             Add New Column
           </DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="column-title" className="text-[#323338] font-medium">
+            <Label htmlFor="column-title" className="text-foreground font-medium">
               Column Title *
             </Label>
             <Input
@@ -129,18 +129,18 @@ export default function NewColumnModal({ isOpen, onClose, onSubmit }) {
               value={columnData.title}
               onChange={(e) => setColumnData(prev => ({ ...prev, title: e.target.value }))}
               placeholder="e.g., Priority, Budget"
-              className="rounded-xl border-[#E1E5F3] h-12 focus:ring-2 focus:ring-[#0073EA]/20"
+              className="rounded-xl border-border h-12"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="column-type" className="text-[#323338] font-medium">Column Type</Label>
+            <Label htmlFor="column-type" className="text-foreground font-medium">Column Type</Label>
             <Select
               value={columnData.type}
               onValueChange={(value) => setColumnData(prev => ({ ...prev, type: value }))}
             >
-              <SelectTrigger id="column-type" className="rounded-xl border-[#E1E5F3] h-12">
+              <SelectTrigger id="column-type" className="rounded-xl border-border h-12">
                 <SelectValue placeholder="Select column type" />
               </SelectTrigger>
               <SelectContent>
@@ -156,12 +156,12 @@ export default function NewColumnModal({ isOpen, onClose, onSubmit }) {
           {/* Dropdown Options Configuration */}
           {columnData.type === 'dropdown' && (
             <div className="space-y-3">
-              <Label className="text-[#323338] font-medium">Dropdown Options</Label>
+              <Label className="text-foreground font-medium">Dropdown Options</Label>
               
               {/* Existing Options */}
               <div className="space-y-2 max-h-32 overflow-y-auto">
                 {dropdownOptions.map((option, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                  <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-lg">
                     <div 
                       className="w-3 h-3 rounded-full flex-shrink-0"
                       style={{ backgroundColor: option.color }}
@@ -186,7 +186,7 @@ export default function NewColumnModal({ isOpen, onClose, onSubmit }) {
                   value={newOptionLabel}
                   onChange={(e) => setNewOptionLabel(e.target.value)}
                   placeholder="Add option..."
-                  className="flex-1 h-9 rounded-lg border-[#E1E5F3]"
+                  className="flex-1 h-9 rounded-lg border-border"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -198,7 +198,7 @@ export default function NewColumnModal({ isOpen, onClose, onSubmit }) {
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="h-9 w-9 rounded-lg border-[#E1E5F3]"
+                  className="h-9 w-9 rounded-lg border-border"
                   onClick={handleAddOption}
                 >
                   <Plus className="w-4 h-4" />
@@ -219,7 +219,7 @@ export default function NewColumnModal({ isOpen, onClose, onSubmit }) {
             <Button
               type="submit"
               disabled={!columnData.title.trim() || isSubmitting}
-              className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-xl h-12 px-6 font-medium"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 px-6 font-medium"
             >
               {isSubmitting ? 'Adding...' : 'Add Column'}
             </Button>

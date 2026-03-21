@@ -163,7 +163,7 @@ export default function TaskEditModal({ isOpen, onClose, task, board, onUpdate, 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-[#323338] flex items-center justify-between">
+          <DialogTitle className="text-2xl font-bold text-foreground flex items-center justify-between">
             Edit Task
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="w-5 h-5" />
@@ -174,7 +174,7 @@ export default function TaskEditModal({ isOpen, onClose, task, board, onUpdate, 
         <div className="space-y-6 py-4">
           {/* Task Title */}
           <div className="space-y-2">
-            <Label className="text-[#323338] font-medium text-base">Task Title</Label>
+            <Label className="text-foreground font-medium text-base">Task Title</Label>
             <Input
               value={formData.title || ''}
               onChange={(e) => setFormData({...formData, title: e.target.value})}
@@ -187,7 +187,7 @@ export default function TaskEditModal({ isOpen, onClose, task, board, onUpdate, 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {board.columns?.filter(col => col.id !== 'task').map((column) => (
               <div key={column.id} className="space-y-2">
-                <Label className="text-[#323338] font-medium">{column.title}</Label>
+                <Label className="text-foreground font-medium">{column.title}</Label>
                 {renderField(column)}
               </div>
             ))}
@@ -206,7 +206,7 @@ export default function TaskEditModal({ isOpen, onClose, task, board, onUpdate, 
               <Button variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button onClick={handleSave} className="bg-[#0073EA] hover:bg-[#0056B3]">
+              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                 Save Changes
               </Button>
             </div>

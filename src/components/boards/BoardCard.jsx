@@ -38,7 +38,7 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit }) 
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: index * 0.05 }}
       >
-        <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-200 group rounded-lg overflow-hidden">
+        <Card className="border border-border hover:shadow-sm transition-all duration-200 group rounded-lg overflow-hidden">
           <div className="flex items-center">
             <div
               className="w-1.5 h-16 flex-shrink-0" // Thicker color strip for list view
@@ -88,7 +88,7 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit }) 
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md" onClick={(e) => {e.preventDefault(); e.stopPropagation();}}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:bg-muted rounded-md" onClick={(e) => {e.preventDefault(); e.stopPropagation();}}>
                         <MoreHorizontal className="w-3.5 h-3.5" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -121,7 +121,7 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit }) 
       className="h-full"
     >
       <Card
-        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300 group h-full flex flex-col rounded-xl overflow-hidden"
+        className="border border-border hover:shadow-sm transition-all duration-300 group h-full flex flex-col rounded-xl overflow-hidden"
       >
         <div 
             className="h-2 w-full" // Top color bar
@@ -163,7 +163,7 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit }) 
             {board.description || 'No description provided.'}
           </p>
           
-          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mt-auto pt-4 border-t border-border">
             <div className="flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5" />
               <span>{formatDistanceToNow(new Date(board.updated_date), { addSuffix: true })}</span>
@@ -174,15 +174,15 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit }) 
             </div> */}
           </div>
         </Link>
-        <div className="p-2 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+        <div className="p-2 border-t border-border bg-muted/50">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="w-full justify-center text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-200/70 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200">
+                <Button variant="ghost" size="sm" className="w-full justify-center text-xs text-muted-foreground hover:bg-muted hover:text-foreground">
                   <MoreHorizontal className="w-4 h-4 mr-1.5" /> Options
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-gray-800 shadow-lg rounded-md dark:border-gray-700">
-                <DropdownMenuItem onClick={handleEdit} className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+              <DropdownMenuContent align="end" className="w-56 shadow-sm rounded-md">
+                <DropdownMenuItem onClick={handleEdit} className="text-foreground hover:bg-muted">
                   <Edit3 className="w-3.5 h-3.5 mr-2" />
                   Edit Board
                 </DropdownMenuItem>
