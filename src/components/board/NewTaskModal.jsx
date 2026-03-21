@@ -36,14 +36,14 @@ export default function NewTaskModal({ isOpen, onClose, board, onSubmit }) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-[#323338]">
+          <DialogTitle className="text-2xl font-bold text-foreground">
             Create New Task
           </DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-[#323338] font-medium">
+            <Label htmlFor="title" className="text-foreground font-medium">
               Task Title *
             </Label>
             <Input
@@ -51,18 +51,18 @@ export default function NewTaskModal({ isOpen, onClose, board, onSubmit }) {
               value={taskData.title}
               onChange={(e) => setTaskData(prev => ({ ...prev, title: e.target.value }))}
               placeholder="Enter task title..."
-              className="rounded-xl border-[#E1E5F3] h-12 focus:ring-2 focus:ring-[#0073EA]/20"
+              className="rounded-xl border-border h-12"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[#323338] font-medium">Group</Label>
+            <Label className="text-foreground font-medium">Group</Label>
             <Select
               value={taskData.groupId}
               onValueChange={(value) => setTaskData(prev => ({ ...prev, groupId: value }))}
             >
-              <SelectTrigger className="rounded-xl border-[#E1E5F3] h-12">
+              <SelectTrigger className="rounded-xl border-border h-12">
                 <SelectValue placeholder="Select group" />
               </SelectTrigger>
               <SelectContent>
@@ -93,7 +93,7 @@ export default function NewTaskModal({ isOpen, onClose, board, onSubmit }) {
             <Button
               type="submit"
               disabled={!taskData.title.trim() || !taskData.groupId || isSubmitting}
-              className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-xl h-12 px-6 font-medium"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 px-6 font-medium"
             >
               {isSubmitting ? 'Creating...' : 'Create Task'}
             </Button>

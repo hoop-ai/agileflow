@@ -45,14 +45,14 @@ export default function NewGroupModal({ isOpen, onClose, onSubmit }) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-[#323338]">
+          <DialogTitle className="text-2xl font-bold text-foreground">
             Add New Group
           </DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="group-title" className="text-[#323338] font-medium">
+            <Label htmlFor="group-title" className="text-foreground font-medium">
               Group Title *
             </Label>
             <Input
@@ -60,13 +60,13 @@ export default function NewGroupModal({ isOpen, onClose, onSubmit }) {
               value={groupData.title}
               onChange={(e) => setGroupData(prev => ({ ...prev, title: e.target.value }))}
               placeholder="e.g., To Do, In Progress"
-              className="rounded-xl border-[#E1E5F3] h-12 focus:ring-2 focus:ring-[#0073EA]/20"
+              className="rounded-xl border-border h-12"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[#323338] font-medium">Group Color</Label>
+            <Label className="text-foreground font-medium">Group Color</Label>
             <div className="flex gap-2 flex-wrap">
               {colorOptions.map((color) => (
                 <button
@@ -74,8 +74,8 @@ export default function NewGroupModal({ isOpen, onClose, onSubmit }) {
                   type="button"
                   onClick={() => setGroupData(prev => ({ ...prev, color: color.value }))}
                   className={`w-8 h-8 rounded-lg border-2 transition-all ${
-                    groupData.color === color.value 
-                      ? 'border-[#323338] scale-110' 
+                    groupData.color === color.value
+                      ? 'border-foreground scale-110'
                       : 'border-transparent hover:scale-105'
                   }`}
                   style={{ backgroundColor: color.value }}
@@ -96,7 +96,7 @@ export default function NewGroupModal({ isOpen, onClose, onSubmit }) {
             <Button
               type="submit"
               disabled={!groupData.title.trim() || isSubmitting}
-              className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-xl h-12 px-6 font-medium"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 px-6 font-medium"
             >
               {isSubmitting ? 'Adding...' : 'Add Group'}
             </Button>

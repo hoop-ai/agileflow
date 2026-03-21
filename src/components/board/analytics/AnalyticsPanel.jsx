@@ -105,7 +105,7 @@ export default function AnalyticsPanel({ board, items, onClose }) {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white">
+          <Card className="bg-red-500 text-white">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Clock className="w-5 h-5" />

@@ -26,16 +26,16 @@ export default function PersonFilter({ items, selectedPeople, onChange, onClose 
       exit={{ opacity: 0, y: -10 }}
       className="absolute top-full left-0 mt-2 z-50"
     >
-      <Card className="w-64 shadow-lg border-[#E1E5F3]">
+      <Card className="w-64 shadow-sm border-border">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-lg font-bold text-[#323338]">Filter by Person</CardTitle>
-          <button onClick={onClose} className="text-[#676879] hover:text-[#323338]">
+          <CardTitle className="text-lg font-bold text-foreground">Filter by Person</CardTitle>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X className="w-4 h-4" />
           </button>
         </CardHeader>
         <CardContent className="space-y-3">
           {allPeople.length === 0 ? (
-            <div className="text-center py-4 text-[#676879]">
+            <div className="text-center py-4 text-muted-foreground">
               <User className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">No people assigned yet</p>
             </div>
@@ -51,7 +51,7 @@ export default function PersonFilter({ items, selectedPeople, onChange, onClose 
                   htmlFor={`person-${person}`}
                   className="flex items-center gap-2 text-sm cursor-pointer flex-1"
                 >
-                  <div className="w-6 h-6 bg-[#0073EA] rounded-full flex items-center justify-center">
+                  <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
                     <span className="text-white text-xs font-medium">
                       {person.charAt(0).toUpperCase()}
                     </span>
@@ -63,10 +63,10 @@ export default function PersonFilter({ items, selectedPeople, onChange, onClose 
           )}
           
           {selectedPeople.length > 0 && (
-            <div className="pt-3 border-t border-[#E1E5F3]">
+            <div className="pt-3 border-t border-border">
               <button
                 onClick={() => onChange([])}
-                className="text-sm text-[#E2445C] hover:underline"
+                className="text-sm text-destructive hover:underline"
               >
                 Clear selection
               </button>
