@@ -79,11 +79,19 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const isRegistrationEnabled = import.meta.env.VITE_REGISTRATION_ENABLED !== 'false';
+
   const signup = async (email, password, fullName) => {
+    if (!isRegistrationEnabled) {
+      throw new Error('Registration is currently closed. Contact your administrator for access.');
+    }
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } }
+      options: {
+        data: { full_name: fullName },
+        emailRedirectTo: `${window.location.origin}/`
+      }
     });
     if (error) throw error;
     return data;
@@ -96,7 +104,12 @@ export const AuthProvider = ({ children }) => {
         redirectTo: `${window.location.origin}/`
       }
     });
-    if (error) throw error;
+    if (error) {
+      if (error.message?.includes('provider') || error.message?.includes('Unsupported')) {
+        throw new Error(`${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in is not configured yet. Please use email instead.`);
+      }
+      throw error;
+    }
     return data;
   };
 
@@ -133,6 +146,7 @@ export const AuthProvider = ({ children }) => {
       isAuthenticated,
       isLoadingAuth,
       isLoadingPublicSettings: false,
+      isRegistrationEnabled,
       authError,
       appPublicSettings: null,
       login,

@@ -1,23 +1,25 @@
--- Safe schema - uses IF NOT EXISTS so it won't error on existing tables
+-- Safe schema - handles existing tables, adds missing columns
 -- Run this in Supabase SQL Editor
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Users profile table (extends Supabase auth.users)
+-- ============================================================
+-- TABLES (IF NOT EXISTS)
+-- ============================================================
+
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name TEXT,
   email TEXT,
   avatar TEXT,
-  role TEXT DEFAULT 'member' CHECK (role IN ('admin', 'member', 'viewer')),
+  role TEXT DEFAULT 'member',
   theme TEXT DEFAULT 'light',
   settings JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Boards table
 CREATE TABLE IF NOT EXISTS public.boards (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
@@ -32,7 +34,6 @@ CREATE TABLE IF NOT EXISTS public.boards (
   updated_date TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Items table (tasks within boards)
 CREATE TABLE IF NOT EXISTS public.items (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   board_id UUID REFERENCES public.boards(id) ON DELETE CASCADE NOT NULL,
@@ -45,7 +46,6 @@ CREATE TABLE IF NOT EXISTS public.items (
   updated_date TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Calendar Events table
 CREATE TABLE IF NOT EXISTS public.calendar_events (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
@@ -62,7 +62,6 @@ CREATE TABLE IF NOT EXISTS public.calendar_events (
   updated_date TIMESTAMPTZ DEFAULT NOW()
 );
 
--- User Stories table (backlog)
 CREATE TABLE IF NOT EXISTS public.user_stories (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
@@ -79,7 +78,6 @@ CREATE TABLE IF NOT EXISTS public.user_stories (
   updated_date TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Sprints table
 CREATE TABLE IF NOT EXISTS public.sprints (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
@@ -97,30 +95,27 @@ CREATE TABLE IF NOT EXISTS public.sprints (
   updated_date TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Notifications table
 CREATE TABLE IF NOT EXISTS public.notifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
   message TEXT,
-  type TEXT DEFAULT 'info' CHECK (type IN ('info', 'success', 'warning', 'error', 'task', 'mention', 'sprint')),
+  type TEXT DEFAULT 'info',
   is_read BOOLEAN DEFAULT false,
   link TEXT,
   created_date TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Team members table (for board sharing)
 CREATE TABLE IF NOT EXISTS public.team_members (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   board_id UUID REFERENCES public.boards(id) ON DELETE CASCADE NOT NULL,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  role TEXT DEFAULT 'editor' CHECK (role IN ('owner', 'editor', 'viewer')),
+  role TEXT DEFAULT 'editor',
   invited_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   created_date TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(board_id, user_id)
 );
 
--- User preferences table
 CREATE TABLE IF NOT EXISTS public.user_preferences (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
@@ -129,10 +124,10 @@ CREATE TABLE IF NOT EXISTS public.user_preferences (
   due_date_reminders BOOLEAN DEFAULT true,
   due_date_reminder_hours INTEGER DEFAULT 24,
   sprint_update_notifications BOOLEAN DEFAULT true,
-  sprint_update_frequency TEXT DEFAULT 'daily' CHECK (sprint_update_frequency IN ('realtime', 'daily', 'weekly', 'never')),
+  sprint_update_frequency TEXT DEFAULT 'daily',
   mention_notifications BOOLEAN DEFAULT true,
   assignment_notifications BOOLEAN DEFAULT true,
-  default_board_view TEXT DEFAULT 'table' CHECK (default_board_view IN ('table', 'kanban', 'timeline', 'calendar')),
+  default_board_view TEXT DEFAULT 'table',
   items_per_page INTEGER DEFAULT 25,
   show_completed_items BOOLEAN DEFAULT true,
   compact_mode BOOLEAN DEFAULT false,
@@ -144,7 +139,6 @@ CREATE TABLE IF NOT EXISTS public.user_preferences (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Activity log table
 CREATE TABLE IF NOT EXISTS public.activity_log (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
@@ -156,7 +150,122 @@ CREATE TABLE IF NOT EXISTS public.activity_log (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Foreign key from user_stories to sprints (skip if exists)
+-- ============================================================
+-- ADD MISSING COLUMNS to existing tables (safe - skips if exists)
+-- ============================================================
+
+DO $$ BEGIN
+  -- profiles
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='profiles' AND column_name='role') THEN
+    ALTER TABLE public.profiles ADD COLUMN role TEXT DEFAULT 'member';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='profiles' AND column_name='theme') THEN
+    ALTER TABLE public.profiles ADD COLUMN theme TEXT DEFAULT 'light';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='profiles' AND column_name='settings') THEN
+    ALTER TABLE public.profiles ADD COLUMN settings JSONB DEFAULT '{}'::jsonb;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='profiles' AND column_name='avatar') THEN
+    ALTER TABLE public.profiles ADD COLUMN avatar TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='profiles' AND column_name='updated_at') THEN
+    ALTER TABLE public.profiles ADD COLUMN updated_at TIMESTAMPTZ DEFAULT NOW();
+  END IF;
+
+  -- boards
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='boards' AND column_name='icon') THEN
+    ALTER TABLE public.boards ADD COLUMN icon TEXT DEFAULT '📋';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='boards' AND column_name='columns') THEN
+    ALTER TABLE public.boards ADD COLUMN columns JSONB DEFAULT '[]'::jsonb;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='boards' AND column_name='groups') THEN
+    ALTER TABLE public.boards ADD COLUMN groups JSONB DEFAULT '[]'::jsonb;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='boards' AND column_name='settings') THEN
+    ALTER TABLE public.boards ADD COLUMN settings JSONB DEFAULT '{}'::jsonb;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='boards' AND column_name='color') THEN
+    ALTER TABLE public.boards ADD COLUMN color TEXT DEFAULT '#0073EA';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='boards' AND column_name='description') THEN
+    ALTER TABLE public.boards ADD COLUMN description TEXT;
+  END IF;
+
+  -- items
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='items' AND column_name='description') THEN
+    ALTER TABLE public.items ADD COLUMN description TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='items' AND column_name='data') THEN
+    ALTER TABLE public.items ADD COLUMN data JSONB DEFAULT '{}'::jsonb;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='items' AND column_name='order_index') THEN
+    ALTER TABLE public.items ADD COLUMN order_index INTEGER DEFAULT 0;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='items' AND column_name='group_id') THEN
+    ALTER TABLE public.items ADD COLUMN group_id TEXT;
+  END IF;
+
+  -- calendar_events
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='calendar_events' AND column_name='location') THEN
+    ALTER TABLE public.calendar_events ADD COLUMN location TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='calendar_events' AND column_name='attendees') THEN
+    ALTER TABLE public.calendar_events ADD COLUMN attendees JSONB DEFAULT '[]'::jsonb;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='calendar_events' AND column_name='all_day') THEN
+    ALTER TABLE public.calendar_events ADD COLUMN all_day BOOLEAN DEFAULT false;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='calendar_events' AND column_name='event_type') THEN
+    ALTER TABLE public.calendar_events ADD COLUMN event_type TEXT DEFAULT 'other';
+  END IF;
+
+  -- user_stories
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='user_stories' AND column_name='acceptance_criteria') THEN
+    ALTER TABLE public.user_stories ADD COLUMN acceptance_criteria JSONB DEFAULT '[]'::jsonb;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='user_stories' AND column_name='assigned_to') THEN
+    ALTER TABLE public.user_stories ADD COLUMN assigned_to TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='user_stories' AND column_name='board_id') THEN
+    ALTER TABLE public.user_stories ADD COLUMN board_id UUID REFERENCES public.boards(id) ON DELETE SET NULL;
+  END IF;
+
+  -- sprints
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='sprints' AND column_name='board_id') THEN
+    ALTER TABLE public.sprints ADD COLUMN board_id UUID REFERENCES public.boards(id) ON DELETE SET NULL;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='sprints' AND column_name='goal') THEN
+    ALTER TABLE public.sprints ADD COLUMN goal TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='sprints' AND column_name='capacity') THEN
+    ALTER TABLE public.sprints ADD COLUMN capacity INTEGER DEFAULT 40;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='sprints' AND column_name='committed_points') THEN
+    ALTER TABLE public.sprints ADD COLUMN committed_points INTEGER DEFAULT 0;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='sprints' AND column_name='completed_points') THEN
+    ALTER TABLE public.sprints ADD COLUMN completed_points INTEGER DEFAULT 0;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='sprints' AND column_name='velocity') THEN
+    ALTER TABLE public.sprints ADD COLUMN velocity INTEGER DEFAULT 0;
+  END IF;
+
+  -- notifications
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='notifications' AND column_name='link') THEN
+    ALTER TABLE public.notifications ADD COLUMN link TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='notifications' AND column_name='is_read') THEN
+    ALTER TABLE public.notifications ADD COLUMN is_read BOOLEAN DEFAULT false;
+  END IF;
+
+  -- team_members
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='team_members' AND column_name='invited_by') THEN
+    ALTER TABLE public.team_members ADD COLUMN invited_by UUID REFERENCES auth.users(id) ON DELETE SET NULL;
+  END IF;
+END $$;
+
+-- Foreign key from user_stories to sprints
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_user_stories_sprint') THEN
     ALTER TABLE public.user_stories
@@ -165,7 +274,10 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- Enable RLS on all tables
+-- ============================================================
+-- ROW LEVEL SECURITY
+-- ============================================================
+
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.boards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.items ENABLE ROW LEVEL SECURITY;
@@ -177,7 +289,6 @@ ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_preferences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activity_log ENABLE ROW LEVEL SECURITY;
 
--- Drop and recreate all policies (safe to re-run)
 -- Profiles
 DROP POLICY IF EXISTS "Users can view any profile" ON public.profiles;
 DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
@@ -296,6 +407,10 @@ DROP POLICY IF EXISTS "Users can create activity entries" ON public.activity_log
 CREATE POLICY "Users can view own activity" ON public.activity_log FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can create activity entries" ON public.activity_log FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+-- ============================================================
+-- FUNCTIONS & TRIGGERS
+-- ============================================================
+
 -- Auto-create profile on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
@@ -314,7 +429,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Recreate trigger
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
@@ -345,7 +459,10 @@ CREATE TRIGGER update_sprints_updated_date BEFORE UPDATE ON public.sprints FOR E
 CREATE TRIGGER update_profiles_updated_date BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.update_updated_date();
 CREATE TRIGGER update_user_preferences_updated_date BEFORE UPDATE ON public.user_preferences FOR EACH ROW EXECUTE FUNCTION public.update_updated_date();
 
--- Indexes (IF NOT EXISTS)
+-- ============================================================
+-- INDEXES
+-- ============================================================
+
 CREATE INDEX IF NOT EXISTS idx_items_board_id ON public.items(board_id);
 CREATE INDEX IF NOT EXISTS idx_user_stories_sprint_id ON public.user_stories(sprint_id);
 CREATE INDEX IF NOT EXISTS idx_user_stories_board_id ON public.user_stories(board_id);

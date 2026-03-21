@@ -123,7 +123,7 @@ export default function StoryDetailModal({ isOpen, onClose, story, onUpdate, onD
 
           <TabsContent value="details" className="space-y-6 mt-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
+              <label className="text-sm font-medium text-foreground mb-2 block">
                 Description
               </label>
               {isEditing ? (
@@ -133,43 +133,43 @@ export default function StoryDetailModal({ isOpen, onClose, story, onUpdate, onD
                   rows={6}
                 />
               ) : (
-                <p className="text-gray-600 whitespace-pre-wrap">{story.description}</p>
+                <p className="text-muted-foreground whitespace-pre-wrap">{story.description}</p>
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-2">
+                  <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
                     <User className="w-4 h-4" />
                     Assigned To
                   </label>
-                  <p className="text-gray-600">{story.assigned_to || 'Unassigned'}</p>
+                  <p className="text-muted-foreground">{story.assigned_to || 'Unassigned'}</p>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-2">
+                  <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
                     <Target className="w-4 h-4" />
                     Story Points
                   </label>
-                  <p className="text-gray-600">{story.story_points || 'Not estimated'}</p>
+                  <p className="text-muted-foreground">{story.story_points || 'Not estimated'}</p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-2">
+                  <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
                     <Clock className="w-4 h-4" />
                     Status
                   </label>
-                  <p className="text-gray-600 capitalize">{story.status.replace('_', ' ')}</p>
+                  <p className="text-muted-foreground capitalize">{story.status.replace('_', ' ')}</p>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <label className="text-sm font-medium text-foreground mb-2 block">
                     Created
                   </label>
-                  <p className="text-gray-600">
+                  <p className="text-muted-foreground">
                     {format(new Date(story.created_date), 'PPP')}
                   </p>
                 </div>
@@ -178,7 +178,7 @@ export default function StoryDetailModal({ isOpen, onClose, story, onUpdate, onD
 
             {story.tags && story.tags.length > 0 && (
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                <label className="text-sm font-medium text-foreground mb-2 block">
                   Tags
                 </label>
                 <div className="flex gap-2 flex-wrap">
@@ -191,16 +191,16 @@ export default function StoryDetailModal({ isOpen, onClose, story, onUpdate, onD
           </TabsContent>
 
           <TabsContent value="criteria" className="space-y-4 mt-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-blue-900">
+                <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
                   Completion Progress
                 </span>
-                <span className="text-sm font-semibold text-blue-900">
+                <span className="text-sm font-semibold text-blue-900 dark:text-blue-100">
                   {completedCriteria}/{totalCriteria} ({Math.round(completionPercentage)}%)
                 </span>
               </div>
-              <div className="w-full bg-blue-200 rounded-full h-2">
+              <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
                 <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${completionPercentage}%` }}
@@ -213,21 +213,21 @@ export default function StoryDetailModal({ isOpen, onClose, story, onUpdate, onD
                 story.acceptance_criteria.map((criteria) => (
                   <div
                     key={criteria.id}
-                    className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
                   >
                     <Checkbox
                       checked={criteria.completed}
                       onCheckedChange={() => toggleCriteria(criteria.id)}
                       className="mt-1"
                     />
-                    <span className={`flex-1 ${criteria.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                    <span className={`flex-1 ${criteria.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
                       {criteria.description}
                     </span>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <AlertCircle className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                <div className="text-center py-8 text-muted-foreground">
+                  <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-40" />
                   <p>No acceptance criteria defined</p>
                 </div>
               )}
@@ -242,7 +242,7 @@ export default function StoryDetailModal({ isOpen, onClose, story, onUpdate, onD
                 </div>
                 <div>
                   <p className="text-sm font-medium">{story.created_by} created this story</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     {format(new Date(story.created_date), 'PPP p')}
                   </p>
                 </div>
@@ -255,7 +255,7 @@ export default function StoryDetailModal({ isOpen, onClose, story, onUpdate, onD
                   </div>
                   <div>
                     <p className="text-sm font-medium">Story updated</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       {format(new Date(story.updated_date), 'PPP p')}
                     </p>
                   </div>

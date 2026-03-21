@@ -3,6 +3,9 @@
 ## Overview
 React + Vite project management app (Monday.com-style) built on **Supabase** (PostgreSQL + Auth). Features Kanban boards, sprints, backlog management, analytics, calendar, and an AI assistant powered by OpenRouter.
 
+## Changelog
+See `.claude/docs/CHANGELOG.md` for the full development timeline — what was built, fixed, and deployed, with dates and context.
+
 ## Product Requirements
 See `.claude/docs/PRD.md` for the full PRD — feature specs, data models, use cases, acceptance criteria, and implementation priorities. Derived from the Capstone Report (`.claude/docs/Copy of CapstoneReportTemplate_updated.md`).
 

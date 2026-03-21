@@ -42,6 +42,28 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
+const AVATAR_COLORS = [
+  'bg-blue-600 text-white',
+  'bg-emerald-600 text-white',
+  'bg-violet-600 text-white',
+  'bg-amber-600 text-white',
+  'bg-rose-600 text-white',
+  'bg-cyan-600 text-white',
+  'bg-indigo-600 text-white',
+  'bg-pink-600 text-white',
+  'bg-teal-600 text-white',
+  'bg-orange-600 text-white',
+];
+
+function getAvatarColor(name) {
+  if (!name) return 'bg-muted text-muted-foreground';
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
 const navigationItems = [
   { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutGrid },
   { title: "Boards", url: createPageUrl("Boards"), icon: Folder },
@@ -386,7 +408,7 @@ function LayoutContent({ children, currentPageName }) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="rounded-full h-9 w-9 p-0">
-                    <div className="w-8 h-8 bg-muted text-muted-foreground rounded-full flex items-center justify-center">
+                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", getAvatarColor(currentUser?.full_name))}>
                       <span className="font-semibold text-xs">{userInitials}</span>
                     </div>
                   </Button>
@@ -473,7 +495,7 @@ function LayoutContent({ children, currentPageName }) {
             <div className="pt-3 pb-3 border-t border-border">
               <div className="flex items-center px-5">
                 <div className="flex-shrink-0">
-                  <div className="w-10 h-10 bg-muted text-muted-foreground rounded-full flex items-center justify-center">
+                  <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", getAvatarColor(currentUser?.full_name))}>
                     <span className="font-semibold text-sm">{userInitials}</span>
                   </div>
                 </div>

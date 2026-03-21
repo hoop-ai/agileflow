@@ -168,13 +168,13 @@ export default function CalendarModal({ isOpen, onClose }) {
                     ${isSameMonth(date, currentDate) ? 'bg-card border-border' : 'bg-muted border-border'}
                     ${isToday(date) ? 'ring-2 ring-primary ring-opacity-50' : ''}
                     ${isSelected ? 'bg-primary text-primary-foreground' : ''}
-                    ${hasOverdue ? 'border-red-300 bg-red-50' : ''}
+                    ${hasOverdue ? 'border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-950' : ''}
                   `}
                   onClick={() => setSelectedDate(date)}
                 >
                   <div className="flex justify-between items-start mb-1">
                     <span className={`text-sm font-semibold ${
-                      isSelected ? 'text-white' :
+                      isSelected ? 'text-primary-foreground' :
                       isToday(date) ? 'text-primary' :
                       !isSameMonth(date, currentDate) ? 'text-muted-foreground' :
                       'text-foreground'
@@ -184,7 +184,7 @@ export default function CalendarModal({ isOpen, onClose }) {
                     {totalCount > 0 && (
                       <Badge 
                         variant="secondary" 
-                        className={`text-xs ${isSelected ? 'bg-white/20 text-white' : ''}`}
+                        className={`text-xs ${isSelected ? 'bg-primary-foreground/20 text-primary-foreground' : ''}`}
                       >
                         {totalCount}
                       </Badge>
@@ -197,8 +197,8 @@ export default function CalendarModal({ isOpen, onClose }) {
                       <div
                         key={`event-${event.id}`}
                         className={`text-xs p-1 rounded truncate ${
-                          isSelected 
-                            ? 'bg-white/20 text-white' 
+                          isSelected
+                            ? 'bg-primary-foreground/20 text-primary-foreground'
                             : 'text-white'
                         }`}
                         style={{ 
@@ -218,10 +218,10 @@ export default function CalendarModal({ isOpen, onClose }) {
                         <div
                           key={`item-${item.id}`}
                           className={`text-xs p-1 rounded truncate ${
-                            isSelected 
-                              ? 'bg-white/20 text-white' 
-                              : isItemOverdue 
-                              ? 'bg-red-100 text-red-800' 
+                            isSelected
+                              ? 'bg-primary-foreground/20 text-primary-foreground'
+                              : isItemOverdue
+                              ? 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'
                               : 'bg-muted text-foreground'
                           }`}
                           title={item.title}
@@ -257,7 +257,7 @@ export default function CalendarModal({ isOpen, onClose }) {
               <div className="space-y-2">
                 {/* Calendar Events */}
                 {selectedDateEvents.map(event => (
-                  <div key={`event-${event.id}`} className="flex items-center justify-between p-3 bg-white rounded-lg border-l-4" style={{ borderColor: event.color }}>
+                  <div key={`event-${event.id}`} className="flex items-center justify-between p-3 bg-card rounded-lg border-l-4" style={{ borderColor: event.color }}>
                     <div className="flex items-center gap-3">
                       <CalendarIcon className="w-5 h-5" style={{ color: event.color }} />
                       <div>
@@ -295,7 +295,7 @@ export default function CalendarModal({ isOpen, onClose }) {
                   const isItemOverdue = isOverdue(item, selectedDate);
                   
                   return (
-                    <div key={`item-${item.id}`} className="flex items-center justify-between p-3 bg-white rounded-lg">
+                    <div key={`item-${item.id}`} className="flex items-center justify-between p-3 bg-card rounded-lg">
                       <div className="flex items-center gap-3">
                         <div 
                           className="w-3 h-3 rounded-full"
@@ -308,7 +308,7 @@ export default function CalendarModal({ isOpen, onClose }) {
                       </div>
                       <div className="flex items-center gap-2">
                         {isItemOverdue && (
-                          <Badge className="bg-red-100 text-red-800 border-red-200">
+                          <Badge className="bg-red-100 text-red-800 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800">
                             <AlertCircle className="w-3 h-3 mr-1" />
                             Overdue
                           </Badge>

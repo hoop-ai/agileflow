@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
@@ -35,6 +36,28 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+const AVATAR_COLORS = [
+  'bg-blue-600 text-white',
+  'bg-emerald-600 text-white',
+  'bg-violet-600 text-white',
+  'bg-amber-600 text-white',
+  'bg-rose-600 text-white',
+  'bg-cyan-600 text-white',
+  'bg-indigo-600 text-white',
+  'bg-pink-600 text-white',
+  'bg-teal-600 text-white',
+  'bg-orange-600 text-white',
+];
+
+function getAvatarColor(name) {
+  if (!name) return 'bg-muted text-muted-foreground';
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
 
 export default function BoardHeader({
   board,
@@ -280,7 +303,7 @@ export default function BoardHeader({
                       <Tooltip key={user.id}>
                         <TooltipTrigger asChild>
                           <div
-                            className={`w-8 h-8 rounded-full border-2 border-background flex items-center justify-center text-foreground text-xs font-medium relative bg-muted`}
+                            className={cn("w-8 h-8 rounded-full border-2 border-background flex items-center justify-center text-xs font-medium relative", getAvatarColor(user.name))}
                           >
                             {user.avatar}
                             {user.online && (
@@ -311,7 +334,7 @@ export default function BoardHeader({
                       {collaborators.map((user) => (
                         <div key={user.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent transition-colors duration-150">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground text-xs relative">
+                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium relative", getAvatarColor(user.name))}>
                               {user.avatar}
                               {user.online && (
                                 <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full border border-background" />

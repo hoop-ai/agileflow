@@ -52,7 +52,7 @@ export default function PersonFilter({ items, selectedPeople, onChange, onClose 
                   className="flex items-center gap-2 text-sm cursor-pointer flex-1"
                 >
                   <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-medium">
+                    <span className="text-primary-foreground text-xs font-medium">
                       {person.charAt(0).toUpperCase()}
                     </span>
                   </div>

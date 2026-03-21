@@ -57,10 +57,10 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit }) 
                     />
                   </div>
                   <div className="flex-grow min-w-0">
-                    <h3 className="font-semibold text-gray-800 dark:text-gray-100 group-hover:text-[${boardColor}] transition-colors text-sm truncate">
+                    <h3 className="font-semibold text-foreground group-hover:text-[${boardColor}] transition-colors text-sm truncate">
                       {board.title}
                     </h3>
-                    <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5 truncate">
+                    <p className="text-muted-foreground text-xs mt-0.5 truncate">
                       {board.description || 'No description'}
                     </p>
                   </div>
@@ -82,7 +82,7 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit }) 
                     {board.visibility}
                   </Badge>
                   <div className="text-right hidden sm:block">
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-muted-foreground">
                       {formatDistanceToNow(new Date(board.updated_date), { addSuffix: true })}
                     </p>
                   </div>
@@ -155,11 +155,11 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit }) 
             </Badge>
           </div>
           
-          <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-lg mb-2 group-hover:text-[${boardColor}] transition-colors">
+          <h3 className="font-semibold text-foreground text-lg mb-2 group-hover:text-[${boardColor}] transition-colors">
             {board.title}
           </h3>
 
-          <p className="text-gray-600 dark:text-gray-400 text-sm mb-5 line-clamp-2 flex-grow">
+          <p className="text-muted-foreground text-sm mb-5 line-clamp-2 flex-grow">
             {board.description || 'No description provided.'}
           </p>
           
