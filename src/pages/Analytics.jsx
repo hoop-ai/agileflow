@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   BarChart3, TrendingUp, Target, Clock, Activity,
   CheckCircle2, Download, Users, Zap, ArrowUpDown,
-  AlertCircle, RefreshCw, GitCompareArrows
+  AlertCircle, RefreshCw
 } from "lucide-react";
 import { subDays, isAfter, isBefore } from 'date-fns';
 import {

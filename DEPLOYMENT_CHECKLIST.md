@@ -65,14 +65,16 @@ This document lists everything **you** need to do manually to get AgileFlow work
 
 ### 4.1 Configure Redirect URLs
 - [ ] Go to Supabase Dashboard > Authentication > URL Configuration
-- [ ] Set **Site URL** to your production URL (e.g., `https://your-app.vercel.app`)
-- [ ] Add **Redirect URLs**:
-  - `https://your-app.vercel.app/`
-  - `https://your-app.vercel.app/login`
-  - `https://your-app.vercel.app/login?reset=true`
-  - `http://localhost:5173/` (for local dev)
-  - `http://localhost:5173/login` (for local dev)
-  - `http://localhost:5173/login?reset=true` (for local dev)
+- [ ] Set **Site URL** to: `https://agileflow-one.vercel.app`
+- [ ] Add **Redirect URLs** (all of these must be in the allowlist):
+  - `https://agileflow-one.vercel.app/`
+  - `https://agileflow-one.vercel.app/login`
+  - `https://agileflow-one.vercel.app/login?verified=true`
+  - `https://agileflow-one.vercel.app/login?reset=true`
+  - `http://localhost:5173/`
+  - `http://localhost:5173/login`
+  - `http://localhost:5173/login?verified=true`
+  - `http://localhost:5173/login?reset=true`
 
 ---
 

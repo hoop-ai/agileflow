@@ -25,6 +25,9 @@ export default function LoginPage() {
     if (searchParams.get('reset') === 'true') {
       setMode('reset');
     }
+    if (searchParams.get('verified') === 'true') {
+      setSuccess('Email verified successfully! You can now log in.');
+    }
   }, [searchParams]);
 
   const handleSubmit = async (e) => {
