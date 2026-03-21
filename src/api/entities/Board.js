@@ -1,11 +1,23 @@
-// src/api/entities/Board.js
 import { supabase } from '../supabaseClient';
+
+const BOARD_COLUMNS = [
+  'title', 'description', 'color', 'icon', 'columns', 'groups',
+  'settings', 'visibility', 'user_id'
+];
 
 function parseSortField(sortField) {
   if (!sortField) return { column: 'created_date', ascending: false };
   const ascending = !sortField.startsWith('-');
   const column = sortField.replace(/^-/, '');
   return { column, ascending };
+}
+
+function pickValidColumns(data) {
+  const cleaned = {};
+  for (const key of BOARD_COLUMNS) {
+    if (key in data) cleaned[key] = data[key];
+  }
+  return cleaned;
 }
 
 export const Board = {
@@ -41,13 +53,15 @@ export const Board = {
   async create(boardData) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Authentication required');
-    const { data, error } = await supabase.from('boards').insert({ ...boardData, user_id: user.id }).select().single();
+    const cleaned = pickValidColumns({ ...boardData, user_id: user.id });
+    const { data, error } = await supabase.from('boards').insert(cleaned).select().single();
     if (error) throw error;
     return data;
   },
 
   async update(id, updates) {
-    const { data, error } = await supabase.from('boards').update(updates).eq('id', id).select().single();
+    const cleaned = pickValidColumns(updates);
+    const { data, error } = await supabase.from('boards').update(cleaned).eq('id', id).select().single();
     if (error) throw error;
     return data;
   },

@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS public.boards (
   description TEXT,
   color TEXT DEFAULT '#0073EA',
   icon TEXT DEFAULT '📋',
+  visibility TEXT DEFAULT 'private',
   columns JSONB DEFAULT '[]'::jsonb,
   groups JSONB DEFAULT '[]'::jsonb,
   settings JSONB DEFAULT '{}'::jsonb,
@@ -190,6 +191,9 @@ DO $$ BEGIN
   END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='boards' AND column_name='description') THEN
     ALTER TABLE public.boards ADD COLUMN description TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='boards' AND column_name='visibility') THEN
+    ALTER TABLE public.boards ADD COLUMN visibility TEXT DEFAULT 'private';
   END IF;
 
   -- items
