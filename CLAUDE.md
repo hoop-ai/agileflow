@@ -52,6 +52,12 @@ src/
 └── pages.config.js   # Page routing config (auto-generated, only edit mainPage)
 supabase/
 └── schema.sql        # Database schema with RLS policies (run in Supabase SQL Editor)
+tests/
+├── e2e/              # Playwright end-to-end tests
+├── unit/             # Vitest unit tests (entities/, utils/)
+├── accessibility/    # axe-core WCAG audits
+├── responsive/       # Viewport breakpoint tests
+└── workflows/        # Testing workflow documentation
 ```
 
 ## CRITICAL: No AI Fingerprints
@@ -108,6 +114,27 @@ See `.claude/docs/verification-plan.md` for the full Software Verification Plan 
 
 See `.claude/docs/validation-plan.md` for the Software Validation Plan (SVaP) — performance targets, responsive design checks, accessibility, browser compatibility, and acceptance criteria.
 
+#### Test Infrastructure
+- **Unit tests**: Vitest + Testing Library (`tests/unit/`)
+- **E2E tests**: Playwright (`tests/e2e/`)
+- **Accessibility**: axe-core + Playwright (`tests/accessibility/`)
+- **Responsive**: Playwright viewports (`tests/responsive/`)
+- **Workflow docs**: Step-by-step testing guides (`tests/workflows/`)
+
+#### After Implementing a Feature
+Always verify your work. Dispatch the `feature-verifier` agent or manually:
+1. Run unit tests for changed modules: `npx vitest run tests/unit/entities/Board.test.js`
+2. Run relevant e2e tests: `npx playwright test tests/e2e/boards.spec.js`
+3. Run accessibility check: `npx playwright test tests/accessibility/`
+4. Run `npm run build` to verify no build breaks
+
+#### Test Conventions
+- Unit test files: `tests/unit/<area>/<Module>.test.js`
+- E2E test files: `tests/e2e/<feature>.spec.js`
+- Mock Supabase client in unit tests, never hit real DB
+- E2E tests skip gracefully when auth credentials aren't configured (check `TEST_USER_EMAIL` env var)
+- Tests are on-demand — run when AI implements features or user requests
+
 ### Feature Completeness (PRD Phases)
 The PRD (`.claude/docs/PRD.md` Section 9) tracks implementation progress across 5 phases:
 - **Phase 1** (Core Platform): ✅ Complete
@@ -162,12 +189,21 @@ The PRD (`.claude/docs/PRD.md` Section 9) tracks implementation progress across 
 
 ## Commands
 ```bash
-npm run dev        # Start dev server
-npm run build      # Production build
-npm run lint       # Lint (errors only)
-npm run lint:fix   # Lint and auto-fix
-npm run typecheck  # TypeScript type checking
-npm run preview    # Preview production build
+npm run dev            # Start dev server
+npm run build          # Production build
+npm run lint           # Lint (errors only)
+npm run lint:fix       # Lint and auto-fix
+npm run typecheck      # TypeScript type checking
+npm run preview        # Preview production build
+
+# Testing
+npm run test           # Run unit tests (Vitest)
+npm run test:watch     # Run unit tests in watch mode
+npm run test:e2e       # Run e2e tests (Playwright, needs dev server)
+npm run test:a11y      # Run accessibility audit
+npm run test:responsive # Run responsive design tests
+npm run test:all       # Run all tests (unit + e2e)
+npm run test:coverage  # Run unit tests with coverage report
 ```
 
 ## Environment
@@ -195,9 +231,25 @@ VITE_OPENROUTER_API_KEY=<your-openrouter-api-key>
 
 ## Subagents
 See `.claude/agents/` for specialized agents:
+
+### Development Agents
 - `ui-component-builder.md` — Build/modify UI components following shadcn + Radix patterns
 - `board-feature-dev.md` — Develop board-related features (columns, cells, views, DnD)
 - `page-builder.md` — Create new pages with routing integration
 - `analytics-dev.md` — Build charts, dashboards, and data visualizations
 - `bug-fixer.md` — Systematic debugging with project-aware context
 - `style-reviewer.md` — Review styling for consistency, dark mode, responsiveness
+
+### Testing Agents
+- `e2e-tester.md` — Run Playwright e2e tests for specific features or full suite
+- `accessibility-tester.md` — Run axe-core WCAG 2.1 AA audits across all pages
+- `responsive-tester.md` — Test responsive design across mobile/tablet/desktop breakpoints
+- `regression-tester.md` — Run full test suite (unit + e2e + a11y + responsive)
+- `feature-verifier.md` — Meta-agent: verify a newly implemented feature end-to-end
+
+### Testing Workflows
+See `tests/workflows/` for step-by-step guides:
+- `feature-verification.md` — Verify a single feature after implementation
+- `regression-testing.md` — Full regression test procedure
+- `accessibility-audit.md` — Complete WCAG accessibility audit guide
+- `performance-audit.md` — Bundle size, Lighthouse metrics, optimization guide

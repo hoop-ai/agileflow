@@ -20,10 +20,13 @@ export const AuthProvider = ({ children }) => {
         setAuthError(null);
         await loadProfile(session.user.id);
       } else {
+        const wasAuthenticated = isAuthenticated;
         setUser(null);
         setProfile(null);
         setIsAuthenticated(false);
-        if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+        if (event === 'TOKEN_REFRESHED' && wasAuthenticated) {
+          setAuthError({ type: 'session_expired' });
+        } else if (event === 'SIGNED_OUT') {
           setAuthError({ type: 'auth_required' });
         }
       }
