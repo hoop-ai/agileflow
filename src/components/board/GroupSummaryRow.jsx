@@ -82,7 +82,7 @@ export default function GroupSummaryRow({ items, columns, groupId, dragHandleWid
         return {
           type: 'date_range',
           content: (
-            <div className="flex items-center gap-1 text-xs text-gray-600">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Calendar className="w-3 h-3" />
               {dates.length === 1 
                 ? format(earliestDate, 'MMM d')
@@ -103,10 +103,10 @@ export default function GroupSummaryRow({ items, columns, groupId, dragHandleWid
         return {
           type: 'number_summary',
           content: (
-            <div className="flex items-center gap-1 text-xs text-gray-600">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Hash className="w-3 h-3" />
               <span>Σ {sum.toLocaleString()}</span>
-              <span className="text-gray-400">|</span>
+              <span className="text-muted-foreground">|</span>
               <span>⌀ {avg.toFixed(1)}</span>
             </div>
           )
@@ -123,7 +123,7 @@ export default function GroupSummaryRow({ items, columns, groupId, dragHandleWid
         return {
           type: 'budget_summary',
           content: (
-            <div className="flex items-center gap-1 text-xs text-gray-600">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <DollarSign className="w-3 h-3" />
               <span>{currency} {total.toLocaleString()}</span>
             </div>
@@ -136,7 +136,7 @@ export default function GroupSummaryRow({ items, columns, groupId, dragHandleWid
         return {
           type: 'people_summary',
           content: (
-            <div className="flex items-center gap-1 text-xs text-gray-600">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Users className="w-3 h-3" />
               <span>{people.length} people</span>
             </div>
@@ -152,7 +152,7 @@ export default function GroupSummaryRow({ items, columns, groupId, dragHandleWid
         return {
           type: 'checkbox_summary',
           content: (
-            <div className="flex items-center gap-1 text-xs text-gray-600">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <CheckCircle2 className="w-3 h-3" />
               <span>{checkedCount}/{totalCount} ({percentage}%)</span>
             </div>
@@ -176,7 +176,7 @@ export default function GroupSummaryRow({ items, columns, groupId, dragHandleWid
                 </Badge>
               ))}
               {Object.keys(optionCounts).length > 3 && (
-                <span className="text-xs text-gray-400">+{Object.keys(optionCounts).length - 3}</span>
+                <span className="text-xs text-muted-foreground">+{Object.keys(optionCounts).length - 3}</span>
               )}
             </div>
           )
@@ -188,7 +188,7 @@ export default function GroupSummaryRow({ items, columns, groupId, dragHandleWid
         return {
           type: 'text_summary',
           content: (
-            <div className="flex items-center gap-1 text-xs text-gray-600">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <span>{values.length} items</span>
             </div>
           )
@@ -199,17 +199,17 @@ export default function GroupSummaryRow({ items, columns, groupId, dragHandleWid
 
   return (
     <div 
-      className="flex items-stretch bg-gray-50 border-b border-[#E1E5F3] min-h-[40px] text-xs"
+      className="flex items-stretch bg-muted border-b border-border min-h-[40px] text-xs"
       style={{ minWidth: `${totalMinWidth}px` }}
     >
       {/* Sticky Left: Drag Handle */}
       <div
-        className="flex-shrink-0 bg-gray-50 flex items-center justify-center"
-        style={{ 
-          width: dragHandleWidth, 
-          position: 'sticky', 
-          left: 0, 
-          zIndex: 1 
+        className="flex-shrink-0 bg-muted flex items-center justify-center"
+        style={{
+          width: dragHandleWidth,
+          position: 'sticky',
+          left: 0,
+          zIndex: 1
         }}
       >
         {/* Intentionally empty or add a very subtle indicator if needed */}
@@ -217,12 +217,12 @@ export default function GroupSummaryRow({ items, columns, groupId, dragHandleWid
 
       {/* Sticky Left: Checkbox */}
       <div 
-        className="flex-shrink-0 bg-gray-50 flex items-center justify-center"
-        style={{ 
-          width: checkboxWidth, 
-          position: 'sticky', 
-          left: dragHandleWidth, 
-          zIndex: 1 
+        className="flex-shrink-0 bg-muted flex items-center justify-center"
+        style={{
+          width: checkboxWidth,
+          position: 'sticky',
+          left: dragHandleWidth,
+          zIndex: 1
         }}
       >
          {/* Intentionally empty or add a very subtle indicator if needed */}
@@ -230,10 +230,9 @@ export default function GroupSummaryRow({ items, columns, groupId, dragHandleWid
 
       {/* Summary Cells */}
       {columns.map((column) => {
-        let cellStyle = { 
-          width: column.width || 150, 
+        let cellStyle = {
+          width: column.width || 150,
           minWidth: column.width || 150,
-          backgroundColor: '#f9fafb'
         };
         
         // Make Task column sticky
@@ -264,7 +263,7 @@ export default function GroupSummaryRow({ items, columns, groupId, dragHandleWid
         return (
           <div
             key={column.id}
-            className="px-3 py-2 border-l border-[#E1E5F3] flex items-center"
+            className="px-3 py-2 border-l border-border flex items-center"
             style={cellStyle}
           >
             {summary.content}
@@ -273,11 +272,11 @@ export default function GroupSummaryRow({ items, columns, groupId, dragHandleWid
       })}
 
       {/* Flexible spacer */}
-      <div className="flex-1 min-w-0 bg-gray-50" />
+      <div className="flex-1 min-w-0 bg-muted" />
 
       {/* Sticky Right: Action Column Space */}
       <div 
-        className="flex-shrink-0 bg-gray-50"
+        className="flex-shrink-0 bg-muted"
         style={{ 
           width: actionColumnWidth, 
           position: 'sticky', 

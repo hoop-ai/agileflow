@@ -50,7 +50,7 @@ const automationTemplates = [
 
 const AutomationRecipeCard = ({ recipe, isActive, onToggle }) => {
   return (
-    <Card className="hover:shadow-lg transition-shadow duration-200 border-[#E1E5F3]">
+    <Card className="hover:shadow-sm transition-shadow duration-200 border-border">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -58,7 +58,7 @@ const AutomationRecipeCard = ({ recipe, isActive, onToggle }) => {
               <recipe.icon className="w-5 h-5 text-white" />
             </div>
             <div>
-              <CardTitle className="text-base font-bold text-[#323338]">{recipe.name}</CardTitle>
+              <CardTitle className="text-base font-bold text-foreground">{recipe.name}</CardTitle>
               <Badge variant="outline" className="text-xs mt-1">{recipe.category}</Badge>
             </div>
           </div>
@@ -70,9 +70,9 @@ const AutomationRecipeCard = ({ recipe, isActive, onToggle }) => {
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-[#676879] mb-3">{recipe.description}</p>
+        <p className="text-sm text-muted-foreground mb-3">{recipe.description}</p>
         <div className="flex justify-end">
-          <Button variant="ghost" size="sm" className="text-[#0073EA] hover:bg-[#0073EA]/10">
+          <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10">
             <Settings className="w-3 h-3 mr-1" />
             Customize
           </Button>
@@ -100,13 +100,13 @@ export default function AutomationsPanel({ board, onClose }) {
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-card rounded-2xl shadow-sm max-w-4xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
+        <div className="p-6 border-b border-border flex justify-between items-center sticky top-0 bg-card z-10">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Automations Center</h2>
-            <p className="text-gray-600">Automate repetitive tasks for {board?.title}</p>
+            <h2 className="text-2xl font-bold text-foreground">Automations Center</h2>
+            <p className="text-muted-foreground">Automate repetitive tasks for {board?.title}</p>
           </div>
           <button
             onClick={onClose}
@@ -128,7 +128,7 @@ export default function AutomationsPanel({ board, onClose }) {
           </div>
           
           <div className="mb-6">
-            <Button className="bg-[#0073EA] hover:bg-[#0056B3] text-white">
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
               <Plus className="w-4 h-4 mr-2" />
               Create Custom Automation
             </Button>

@@ -18,7 +18,7 @@ const popularIntegrations = [
 
 const IntegrationCard = ({ integration, isConnected, onToggle }) => {
   return (
-    <Card className="hover:shadow-lg transition-shadow duration-200 border-[#E1E5F3]">
+    <Card className="hover:shadow-sm transition-shadow duration-200 border-border">
       <CardHeader className="flex flex-row items-start justify-between pb-3">
         <div className="flex items-center gap-3">
           <div 
@@ -28,7 +28,7 @@ const IntegrationCard = ({ integration, isConnected, onToggle }) => {
             <integration.icon className="w-5 h-5 text-white" />
           </div>
           <div>
-            <CardTitle className="text-base font-bold text-[#323338]">{integration.name}</CardTitle>
+            <CardTitle className="text-base font-bold text-foreground">{integration.name}</CardTitle>
             <Badge variant="outline" className="text-xs mt-1">{integration.category}</Badge>
           </div>
         </div>
@@ -39,9 +39,9 @@ const IntegrationCard = ({ integration, isConnected, onToggle }) => {
         />
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-[#676879] mb-3">{integration.description}</p>
+        <p className="text-sm text-muted-foreground mb-3">{integration.description}</p>
         <div className="flex justify-end">
-          <Button variant="ghost" size="sm" className="text-[#0073EA] hover:bg-[#0073EA]/10">
+          <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10">
             <Settings className="w-3 h-3 mr-1" />
             Configure
           </Button>
@@ -69,13 +69,13 @@ export default function IntegrationsPanel({ board, onClose }) {
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-card rounded-2xl shadow-sm max-w-4xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
+        <div className="p-6 border-b border-border flex justify-between items-center sticky top-0 bg-card z-10">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Integrations Center</h2>
-            <p className="text-gray-600">Connect your favorite tools to {board?.title}</p>
+            <h2 className="text-2xl font-bold text-foreground">Integrations Center</h2>
+            <p className="text-muted-foreground">Connect your favorite tools to {board?.title}</p>
           </div>
           <button
             onClick={onClose}

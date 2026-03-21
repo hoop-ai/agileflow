@@ -29,7 +29,7 @@ export default function DateCell({ value, onUpdate }) {
         onChange={(e) => setEditValue(e.target.value)}
         onBlur={handleSave}
         onKeyDown={handleKeyPress}
-        className="border-none bg-transparent p-0 h-auto focus:ring-0 text-[#323338]"
+        className="border-none bg-transparent p-0 h-auto focus:ring-0 text-foreground"
         autoFocus
       />
     );
@@ -38,7 +38,7 @@ export default function DateCell({ value, onUpdate }) {
   if (!value) {
     return (
       <div
-        className="cursor-pointer text-[#676879] hover:bg-[#E1E5F3] hover:rounded px-2 py-1 -mx-2 -my-1 transition-colors flex items-center gap-2"
+        className="cursor-pointer text-muted-foreground hover:bg-accent hover:rounded px-2 py-1 -mx-2 -my-1 transition-colors flex items-center gap-2"
         onClick={() => setIsEditing(true)}
       >
         <Calendar className="w-4 h-4" />
@@ -52,7 +52,7 @@ export default function DateCell({ value, onUpdate }) {
   return (
     <div
       className={`cursor-pointer hover:opacity-80 transition-opacity px-2 py-1 -mx-2 -my-1 rounded text-sm ${
-        isOverdue ? 'bg-[#E2445C]/10 text-[#E2445C]' : 'text-[#323338]'
+        isOverdue ? 'bg-destructive/10 text-destructive' : 'text-foreground'
       }`}
       onClick={() => setIsEditing(true)}
     >

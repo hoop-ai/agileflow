@@ -143,9 +143,9 @@ export default function TimelineView({ board, items }) {
 
 
   return (
-    <Card className="shadow-lg border-[#E1E5F3] overflow-hidden">
-      <CardHeader className="p-3 border-b flex flex-row items-center justify-between sticky top-0 bg-white z-10">
-        <CardTitle className="text-base font-semibold text-[#323338]">{getHeaderLabel()}</CardTitle>
+    <Card className="shadow-sm border-border overflow-hidden">
+      <CardHeader className="p-3 border-b flex flex-row items-center justify-between sticky top-0 bg-card z-10">
+        <CardTitle className="text-base font-semibold text-foreground">{getHeaderLabel()}</CardTitle>
         <div className="flex items-center gap-1">
           <Button variant="outline" size="icon" className="h-8 w-8" onClick={handlePrev}><ChevronLeft className="w-4 h-4" /></Button>
           <Button variant="outline" size="sm" className="h-8" onClick={() => setCurrentDate(new Date())}>Today</Button>

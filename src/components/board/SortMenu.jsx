@@ -24,10 +24,10 @@ export default function SortMenu({ sortBy, sortDirection, columns, onChange, onC
       exit={{ opacity: 0, y: -10 }}
       className="absolute top-full left-0 mt-2 z-50"
     >
-      <Card className="w-64 shadow-lg border-[#E1E5F3]">
+      <Card className="w-64 shadow-sm border-border">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-lg font-bold text-[#323338]">Sort By</CardTitle>
-          <button onClick={onClose} className="text-[#676879] hover:text-[#323338]">
+          <CardTitle className="text-lg font-bold text-foreground">Sort By</CardTitle>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X className="w-4 h-4" />
           </button>
         </CardHeader>
@@ -37,7 +37,7 @@ export default function SortMenu({ sortBy, sortDirection, columns, onChange, onC
               key={option.id}
               variant="ghost"
               className={`w-full justify-between h-auto p-3 ${
-                sortBy === option.id ? 'bg-[#E1E5F3] text-[#0073EA]' : 'hover:bg-[#F5F6F8]'
+                sortBy === option.id ? 'bg-muted text-primary' : 'hover:bg-muted'
               }`}
               onClick={() => handleSort(option.id)}
             >

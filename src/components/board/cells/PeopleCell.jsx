@@ -27,7 +27,7 @@ export default function PeopleCell({ value, onUpdate }) {
         onChange={(e) => setEditValue(e.target.value)}
         onBlur={handleSave}
         onKeyDown={handleKeyPress}
-        className="border-none bg-transparent p-0 h-auto focus:ring-0 text-[#323338]"
+        className="border-none bg-transparent p-0 h-auto focus:ring-0 text-foreground"
         placeholder="Enter name..."
         autoFocus
       />
@@ -37,7 +37,7 @@ export default function PeopleCell({ value, onUpdate }) {
   if (!value) {
     return (
       <div
-        className="cursor-pointer text-[#676879] hover:bg-[#E1E5F3] hover:rounded px-2 py-1 -mx-2 -my-1 transition-colors flex items-center gap-2"
+        className="cursor-pointer text-muted-foreground hover:bg-accent hover:rounded px-2 py-1 -mx-2 -my-1 transition-colors flex items-center gap-2"
         onClick={() => setIsEditing(true)}
       >
         <User className="w-4 h-4" />
@@ -52,12 +52,12 @@ export default function PeopleCell({ value, onUpdate }) {
       onClick={() => setIsEditing(true)}
     >
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 bg-[#0073EA] rounded-full flex items-center justify-center">
-          <span className="text-white text-xs font-medium">
+        <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+          <span className="text-primary-foreground text-xs font-medium">
             {value.charAt(0).toUpperCase()}
           </span>
         </div>
-        <span className="text-[#323338] text-sm">{value}</span>
+        <span className="text-foreground text-sm">{value}</span>
       </div>
     </div>
   );

@@ -89,14 +89,14 @@ export default function ItemRow({
         ...draggableProvided.draggableProps.style,
         minWidth: `${totalMinWidth}px`
       }}
-      className={`flex items-stretch border-b border-[#E1E5F3] hover:bg-[#F5F6F8] transition-colors group min-h-[48px] ${
-        isDragging ? 'opacity-80 shadow-lg' : ''
+      className={`flex items-stretch border-b border-border hover:bg-muted transition-colors group min-h-[48px] ${
+        isDragging ? 'opacity-80 shadow-sm' : ''
       }`}
     >
       {/* Drag Handle */}
       <div
         {...draggableProvided.dragHandleProps}
-        className="flex-shrink-0 flex items-center justify-center cursor-grab hover:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-white group-hover:bg-[#F5F6F8]"
+        className="flex-shrink-0 flex items-center justify-center cursor-grab hover:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-card group-hover:bg-muted"
         style={{ 
             width: dragHandleWidth, 
             position: 'sticky', 
@@ -104,12 +104,12 @@ export default function ItemRow({
             zIndex: 1 
         }}
       >
-        <GripVertical className="w-3 h-3 text-[#676879]" />
+        <GripVertical className="w-3 h-3 text-muted-foreground" />
       </div>
 
       {/* Checkbox */}
       <div 
-        className="flex-shrink-0 flex items-center justify-center bg-white group-hover:bg-[#F5F6F8]"
+        className="flex-shrink-0 flex items-center justify-center bg-card group-hover:bg-muted"
         style={{ 
             width: checkboxWidth, 
             position: 'sticky', 
@@ -129,9 +129,8 @@ export default function ItemRow({
         let cellStyle = { 
             width: column.width || 150, 
             minWidth: column.width || 150,
-            backgroundColor: 'white'
         };
-        
+
         // Make Task column sticky
         if (column.id === 'task') {
           cellStyle = {
@@ -141,7 +140,6 @@ export default function ItemRow({
             position: 'sticky',
             left: dragHandleWidth + checkboxWidth,
             zIndex: 1,
-            backgroundColor: 'white'
           };
         }
         // Make Priority column sticky next to Task
@@ -153,14 +151,13 @@ export default function ItemRow({
             position: 'sticky',
             left: dragHandleWidth + checkboxWidth + taskColumnWidth,
             zIndex: 1,
-            backgroundColor: 'white'
           };
         }
         
         return (
           <div
             key={column.id}
-            className="px-3 py-2 border-l border-[#E1E5F3] flex items-center group-hover:bg-[#F5F6F8]"
+            className="px-3 py-2 border-l border-border flex items-center group-hover:bg-muted"
             style={cellStyle}
           >
             {renderCell(column)}
@@ -169,11 +166,11 @@ export default function ItemRow({
       })}
 
       {/* Flexible spacer */}
-      <div className="flex-1 min-w-0 bg-white group-hover:bg-[#F5F6F8]" />
+      <div className="flex-1 min-w-0 bg-card group-hover:bg-muted" />
 
       {/* Actions Menu - Sticky Right */}
       <div 
-        className="flex-shrink-0 flex items-center justify-center border-l border-[#E1E5F3] bg-white group-hover:bg-[#F5F6F8]"
+        className="flex-shrink-0 flex items-center justify-center border-l border-border bg-card group-hover:bg-muted"
         style={{ 
           width: actionColumnWidth, 
           position: 'sticky', 
@@ -186,9 +183,9 @@ export default function ItemRow({
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#E1E5F3]"
+              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
             >
-              <Trash2 className="w-3 h-3 text-[#676879]" />
+              <Trash2 className="w-3 h-3 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

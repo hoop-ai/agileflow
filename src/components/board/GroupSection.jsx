@@ -113,23 +113,23 @@ export default function GroupSection({
   };
 
   return (
-    <div className="border-b border-[#E1E5F3] last:border-b-0">
+    <div className="border-b border-border last:border-b-0">
       {/* Group Header */}
       <div
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#F5F6F8] transition-colors relative"
+        className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted transition-colors relative"
         onClick={() => setIsCollapsed(!isCollapsed)}
         style={{ borderLeft: `4px solid ${group.color}` }}
       >
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-[#E1E5F3]">
+          <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-muted">
             {isCollapsed ? (
               <ChevronRight className="w-4 h-4" />
             ) : (
               <ChevronDown className="w-4 h-4" />
             )}
           </Button>
-          <h3 className="font-bold text-[#323338] text-lg">{group.title}</h3>
-          <span className="text-sm text-[#676879]">({items.length})</span>
+          <h3 className="font-bold text-foreground text-lg">{group.title}</h3>
+          <span className="text-sm text-muted-foreground">({items.length})</span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -159,18 +159,18 @@ export default function GroupSection({
             <div className="overflow-x-auto relative"> {/* Horizontal scroll container */}
               {/* Column Headers */}
               <div 
-                className="flex bg-[#F5F6F8] border-b border-[#E1E5F3] sticky top-0 z-10" 
+                className="flex bg-muted border-b border-border sticky top-0 z-10" 
                 style={{ minWidth: `${totalMinWidth}px` }} // Ensure minimum width
               > 
                 {/* Sticky Left: Drag Handle */}
                 <div
-                  className="flex-shrink-0 bg-[#F5F6F8]" // Sticky background for drag handle
+                  className="flex-shrink-0 bg-muted" // Sticky background for drag handle
                   style={{ width: DRAG_HANDLE_WIDTH, position: 'sticky', left: 0, zIndex: 2 }}
                 />
 
                 {/* Sticky Left: Checkbox */}
                 <div
-                  className="flex-shrink-0 bg-[#F5F6F8]" // Sticky background for checkbox
+                  className="flex-shrink-0 bg-muted" // Sticky background for checkbox
                   style={{ width: CHECKBOX_WIDTH, position: 'sticky', left: DRAG_HANDLE_WIDTH, zIndex: 2 }}
                 />
 
@@ -181,17 +181,15 @@ export default function GroupSection({
                     stickyProps = {
                       position: 'sticky',
                       left: DRAG_HANDLE_WIDTH + CHECKBOX_WIDTH,
-                      zIndex: 2, // Higher z-index for header cells
-                      backgroundColor: '#F5F6F8', // Match header background
+                      zIndex: 2,
                       width: taskColumnWidth,
                       minWidth: taskColumnWidth
                     };
-                  } else if (column.type === 'priority') { // New sticky rule for priority column
+                  } else if (column.type === 'priority') {
                     stickyProps = {
                       position: 'sticky',
-                      left: DRAG_HANDLE_WIDTH + CHECKBOX_WIDTH + taskColumnWidth, // After drag handle, checkbox, and task column
+                      left: DRAG_HANDLE_WIDTH + CHECKBOX_WIDTH + taskColumnWidth,
                       zIndex: 2,
-                      backgroundColor: '#F5F6F8',
                       width: priorityColumnWidth,
                       minWidth: priorityColumnWidth
                     };
@@ -209,11 +207,11 @@ export default function GroupSection({
                 })}
                 
                 {/* Flexible spacer to push add column and delete button to edges */}
-                <div className="flex-1 min-w-0 bg-[#F5F6F8]" />
+                <div className="flex-1 min-w-0 bg-muted" />
                 
                 {/* Add Column Button / Delete Header Space - This div will be sticky right */}
                 <div
-                  className="flex items-center justify-center px-3 py-3 border-l border-[#E1F3] hover:bg-white transition-colors cursor-pointer bg-[#F5F6F8] flex-shrink-0"
+                  className="flex items-center justify-center px-3 py-3 border-l border-border hover:bg-card transition-colors cursor-pointer bg-muted flex-shrink-0"
                   style={{ 
                     width: ADD_COLUMN_WIDTH, 
                     position: 'sticky', 
@@ -223,23 +221,23 @@ export default function GroupSection({
                   onClick={onAddColumn}
                   title="Add new column"
                 >
-                  <Plus className="w-4 h-4 text-[#0073EA]" />
+                  <Plus className="w-4 h-4 text-primary" />
                 </div>
               </div>
 
               {/* Items */}
               <div>
                 {isLoading ? (
-                  <div className="p-8 text-center text-[#676879]">
+                  <div className="p-8 text-center text-muted-foreground">
                     Loading items...
                   </div>
                 ) : items.length === 0 && !isAddingItem ? (
                   <div className="p-8 text-center">
-                    <p className="text-[#676879] mb-4">No items in this group</p>
+                    <p className="text-muted-foreground mb-4">No items in this group</p>
                     <Button
                       onClick={() => setIsAddingItem(true)}
                       variant="outline"
-                      className="border-[#E1E5F3] rounded-lg"
+                      className="border-border rounded-lg"
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Item
@@ -278,15 +276,15 @@ export default function GroupSection({
                           {/* Add Item Row */}
                           {isAddingItem ? (
                             <div 
-                              className="flex items-center border-b border-[#E1E5F3] hover:bg-[#F5F6F8] min-h-[48px]"
+                              className="flex items-center border-b border-border hover:bg-muted min-h-[48px]"
                               style={{ minWidth: `${totalMinWidth}px` }}
                             >
                               {/* Sticky Left: Drag Handle */}
-                              <div className="flex-shrink-0" style={{ width: DRAG_HANDLE_WIDTH, position: 'sticky', left: 0, zIndex: 1, background: 'white' }}></div>
-                              
+                              <div className="flex-shrink-0" style={{ width: DRAG_HANDLE_WIDTH, position: 'sticky', left: 0, zIndex: 1 }}></div>
+
                               {/* Sticky Left: Checkbox */}
-                              <div className="flex-shrink-0" style={{ width: CHECKBOX_WIDTH, position: 'sticky', left: DRAG_HANDLE_WIDTH, zIndex: 1, background: 'white' }}></div>
-                              
+                              <div className="flex-shrink-0" style={{ width: CHECKBOX_WIDTH, position: 'sticky', left: DRAG_HANDLE_WIDTH, zIndex: 1 }}></div>
+
                               {/* Sticky Left: Task Column */}
                               <div
                                 className="flex-1 px-3 py-2"
@@ -296,7 +294,6 @@ export default function GroupSection({
                                   position: 'sticky',
                                   left: DRAG_HANDLE_WIDTH + CHECKBOX_WIDTH,
                                   zIndex: 1,
-                                  background: 'white'
                                 }}
                               >
                                 <Input
@@ -309,46 +306,45 @@ export default function GroupSection({
                                     }
                                   }}
                                   placeholder="Enter item name..."
-                                  className="border-none bg-transparent p-0 h-auto focus:ring-0 text-[#323338] font-medium"
+                                  className="border-none bg-transparent p-0 h-auto focus:ring-0 text-foreground font-medium"
                                   autoFocus
                                 />
                               </div>
-                              
+
                               {/* Regular Columns */}
                               {effectiveColumns.filter(c => c.id !== 'task').map((column) => (
                                 <div
                                   key={column.id}
-                                  className="px-3 py-2 border-l border-[#E1E5F3]"
+                                  className="px-3 py-2 border-l border-border"
                                   style={{ width: column.width || 150, minWidth: column.width || 150 }}
                                 />
                               ))}
-                              
+
                               {/* Flexible spacer */}
                               <div className="flex-1 min-w-0" />
-                              
+
                               {/* Sticky Right: Action Column Space (for alignment) */}
-                              <div 
-                                className="flex-shrink-0" 
-                                style={{ 
-                                  width: ADD_COLUMN_WIDTH, // Same as header's Add Column button space
-                                  position: 'sticky', 
-                                  right: 0, 
-                                  zIndex: 1, 
-                                  background: 'white' 
+                              <div
+                                className="flex-shrink-0"
+                                style={{
+                                  width: ADD_COLUMN_WIDTH,
+                                  position: 'sticky',
+                                  right: 0,
+                                  zIndex: 1,
                                 }}
                               ></div>
                             </div>
                           ) : (
-                            <div 
-                              className="flex items-center border-b border-[#E1E5F3] hover:bg-[#F5F6F8] min-h-[48px] group"
+                            <div
+                              className="flex items-center border-b border-border hover:bg-muted min-h-[48px] group"
                               style={{ minWidth: `${totalMinWidth}px` }}
                             >
                               {/* Sticky Left: Drag Handle */}
-                              <div className="flex-shrink-0" style={{ width: DRAG_HANDLE_WIDTH, position: 'sticky', left: 0, zIndex: 1, background: 'white' }}></div>
-                              
+                              <div className="flex-shrink-0" style={{ width: DRAG_HANDLE_WIDTH, position: 'sticky', left: 0, zIndex: 1 }}></div>
+
                               {/* Sticky Left: Checkbox */}
-                              <div className="flex-shrink-0" style={{ width: CHECKBOX_WIDTH, position: 'sticky', left: DRAG_HANDLE_WIDTH, zIndex: 1, background: 'white' }}></div>
-                              
+                              <div className="flex-shrink-0" style={{ width: CHECKBOX_WIDTH, position: 'sticky', left: DRAG_HANDLE_WIDTH, zIndex: 1 }}></div>
+
                               {/* Sticky Left: Task Column */}
                               <div
                                 className="flex-1 px-3 py-2"
@@ -358,40 +354,38 @@ export default function GroupSection({
                                   position: 'sticky',
                                   left: DRAG_HANDLE_WIDTH + CHECKBOX_WIDTH,
                                   zIndex: 1,
-                                  background: 'white'
                                 }}
                               >
                                 <Button
                                   onClick={() => setIsAddingItem(true)}
                                   variant="ghost"
-                                  className="text-[#676879] hover:text-[#0073EA] h-auto p-0 font-normal opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="text-muted-foreground hover:text-primary h-auto p-0 font-normal opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
                                   <Plus className="w-4 h-4 mr-2" />
                                   Add task
                                 </Button>
                               </div>
-                              
+
                               {/* Regular Columns */}
                               {effectiveColumns.filter(c => c.id !== 'task').map((column) => (
                                 <div
                                   key={column.id}
-                                  className="px-3 py-2 border-l border-[#E1E5F3]"
+                                  className="px-3 py-2 border-l border-border"
                                   style={{ width: column.width || 150, minWidth: column.width || 150 }}
                                 />
                               ))}
-                              
+
                               {/* Flexible spacer */}
                               <div className="flex-1 min-w-0" />
-                              
+
                               {/* Sticky Right: Action Column Space (for alignment) */}
-                              <div 
-                                className="flex-shrink-0" 
-                                style={{ 
-                                  width: ADD_COLUMN_WIDTH, // Same as header's Add Column button space
-                                  position: 'sticky', 
-                                  right: 0, 
-                                  zIndex: 1, 
-                                  background: 'white' 
+                              <div
+                                className="flex-shrink-0"
+                                style={{
+                                  width: ADD_COLUMN_WIDTH,
+                                  position: 'sticky',
+                                  right: 0,
+                                  zIndex: 1,
                                 }}
                               ></div>
                             </div>

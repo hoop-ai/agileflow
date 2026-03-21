@@ -17,7 +17,7 @@ const CalendarEvent = ({ item, board, onEdit, isTask }) => {
   
   return (
     <div 
-      className="p-1.5 mb-1 bg-white rounded-md shadow-sm border border-[#E1E5F3] hover:bg-gray-50 cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-105"
+      className="p-1.5 mb-1 bg-card rounded-md shadow-sm border border-border hover:bg-muted cursor-pointer transition-all duration-200 hover:scale-105"
       title={item.title}
       onClick={(e) => {
         e.stopPropagation();
@@ -37,7 +37,7 @@ const CalendarEvent = ({ item, board, onEdit, isTask }) => {
             style={{ backgroundColor: item.color || '#0073EA' }}
           />
         )}
-        <p className="text-xs font-medium text-[#323338] truncate">{item.title}</p>
+        <p className="text-xs font-medium text-foreground truncate">{item.title}</p>
       </div>
       {!isTask && item.start_date && !item.all_day && (
         <p className="text-[10px] text-gray-500 truncate">
@@ -56,7 +56,7 @@ const EventDetailModal = ({ event, onClose, onDelete }) => {
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-card rounded-2xl shadow-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto"
       >
         <div className="p-6 space-y-6">
           {/* Header */}
@@ -67,7 +67,7 @@ const EventDetailModal = ({ event, onClose, onDelete }) => {
                   className="w-4 h-4 rounded-full"
                   style={{ backgroundColor: event.color || '#0073EA' }}
                 />
-                <h2 className="text-2xl font-bold text-[#323338]">{event.title}</h2>
+                <h2 className="text-2xl font-bold text-foreground">{event.title}</h2>
               </div>
               <Badge className="mt-2" style={{ backgroundColor: event.color + '20', color: event.color }}>
                 {event.event_type}
@@ -84,7 +84,7 @@ const EventDetailModal = ({ event, onClose, onDelete }) => {
           <div className="flex items-start gap-3 text-sm">
             <CalendarIconLucide className="w-5 h-5 text-gray-400 mt-0.5" />
             <div>
-              <p className="font-medium text-[#323338]">
+              <p className="font-medium text-foreground">
                 {format(new Date(event.start_date), 'EEEE, MMMM d, yyyy')}
               </p>
               {!event.all_day && (
@@ -103,12 +103,12 @@ const EventDetailModal = ({ event, onClose, onDelete }) => {
             <div className="flex items-start gap-3 text-sm">
               <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
               <div>
-                <p className="font-medium text-[#323338] mb-1">Location</p>
-                <a 
+                <p className="font-medium text-foreground mb-1">Location</p>
+                <a
                   href={event.location.startsWith('http') ? event.location : `https://${event.location}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#0073EA] hover:underline break-all"
+                  className="text-primary hover:underline break-all"
                 >
                   {event.location}
                 </a>
@@ -121,7 +121,7 @@ const EventDetailModal = ({ event, onClose, onDelete }) => {
             <div className="flex items-start gap-3 text-sm">
               <Users className="w-5 h-5 text-gray-400 mt-0.5" />
               <div className="flex-1">
-                <p className="font-medium text-[#323338] mb-2">
+                <p className="font-medium text-foreground mb-2">
                   Attendees ({event.attendees.length})
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -138,7 +138,7 @@ const EventDetailModal = ({ event, onClose, onDelete }) => {
           {/* Description */}
           {event.description && (
             <div className="space-y-2">
-              <p className="font-medium text-[#323338]">Description / Agenda</p>
+              <p className="font-medium text-foreground">Description / Agenda</p>
               <p className="text-sm text-gray-600 whitespace-pre-wrap bg-gray-50 p-4 rounded-lg">
                 {event.description}
               </p>
@@ -261,7 +261,7 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem 
           <ChevronLeft className="w-4 h-4" />
         </Button>
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-semibold text-[#323338]">
+          <h2 className="text-xl font-semibold text-foreground">
             {format(currentMonth, 'MMMM yyyy')}
           </h2>
           <Button
@@ -269,7 +269,7 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem 
               setSelectedDate(new Date());
               setShowCreateEventModal(true);
             }}
-            className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg h-9 px-4 text-sm"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg h-9 px-4 text-sm"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Event
@@ -285,7 +285,7 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem 
   const renderDays = () => {
     const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     return (
-      <div className="grid grid-cols-7 text-center text-xs font-medium text-[#676879] mb-2">
+      <div className="grid grid-cols-7 text-center text-xs font-medium text-muted-foreground mb-2">
         {daysOfWeek.map(day => <div key={day} className="py-2 border-b">{day}</div>)}
       </div>
     );
@@ -317,13 +317,13 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem 
           return (
             <div
               key={day.toString()}
-              className={`p-2 border border-[#E1E5F3] min-h-[100px] relative transition-colors hover:bg-[#F9FAFB] cursor-pointer
-                ${!isSameMonth(day, monthStart) ? 'bg-[#F9FAFB] text-gray-400' : 'bg-white'}
-                ${isSameDay(day, today) ? 'ring-2 ring-[#0073EA] ring-inset' : ''}
+              className={`p-2 border border-border min-h-[100px] relative transition-colors hover:bg-muted cursor-pointer
+                ${!isSameMonth(day, monthStart) ? 'bg-muted text-muted-foreground' : 'bg-card'}
+                ${isSameDay(day, today) ? 'ring-2 ring-primary ring-inset' : ''}
               `}
               onClick={() => handleDayClick(day)}
             >
-              <span className={`text-xs font-medium ${isSameDay(day, today) ? 'text-[#0073EA]' : ''}`}>
+              <span className={`text-xs font-medium ${isSameDay(day, today) ? 'text-primary' : ''}`}>
                 {format(day, 'd')}
               </span>
               <div className="mt-1 space-y-1 overflow-y-auto max-h-[70px]">
@@ -359,7 +359,7 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem 
 
   return (
     <>
-      <Card className="shadow-lg border-[#E1E5F3]">
+      <Card className="shadow-sm border-border">
         <CardContent className="p-4">
           {renderHeader()}
           {renderDays()}

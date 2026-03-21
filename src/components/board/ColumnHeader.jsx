@@ -29,8 +29,8 @@ export default function ColumnHeader({ column, onUpdateColumn, onDeleteColumn, s
 
   if (isRenaming) {
     return (
-      <div 
-        className="flex items-center justify-between px-3 py-2 border-l border-[#E1E5F3] bg-white"
+      <div
+        className="flex items-center justify-between px-3 py-2 border-l border-border bg-card"
         style={{ width: column.width || 150, minWidth: column.width || 150, ...style }}
       >
         <Input
@@ -59,11 +59,11 @@ export default function ColumnHeader({ column, onUpdateColumn, onDeleteColumn, s
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div 
-          className="flex items-center justify-between px-3 py-3 border-l border-[#E1E5F3] group hover:bg-white transition-colors cursor-pointer"
+          className="flex items-center justify-between px-3 py-3 border-l border-border group hover:bg-card transition-colors cursor-pointer"
           style={{ width: column.width || 150, minWidth: column.width || 150, ...style }}
         >
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <span className="font-medium text-[#323338] text-sm truncate">
+            <span className="font-medium text-foreground text-sm truncate">
               {column.title}
             </span>
           </div>

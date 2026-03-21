@@ -22,10 +22,10 @@ export default function HideMenu({ columns, hiddenColumns, onChange, onClose }) 
       exit={{ opacity: 0, y: -10 }}
       className="absolute top-full left-0 mt-2 z-50"
     >
-      <Card className="w-64 shadow-lg border-[#E1E5F3]">
+      <Card className="w-64 shadow-sm border-border">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-lg font-bold text-[#323338]">Show/Hide Columns</CardTitle>
-          <button onClick={onClose} className="text-[#676879] hover:text-[#323338]">
+          <CardTitle className="text-lg font-bold text-foreground">Show/Hide Columns</CardTitle>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X className="w-4 h-4" />
           </button>
         </CardHeader>
@@ -44,11 +44,11 @@ export default function HideMenu({ columns, hiddenColumns, onChange, onClose }) 
                   className="flex items-center gap-2 text-sm cursor-pointer flex-1"
                 >
                   {isHidden ? (
-                    <EyeOff className="w-4 h-4 text-[#676879]" />
+                    <EyeOff className="w-4 h-4 text-muted-foreground" />
                   ) : (
-                    <Eye className="w-4 h-4 text-[#0073EA]" />
+                    <Eye className="w-4 h-4 text-primary" />
                   )}
-                  <span className={isHidden ? 'text-[#676879]' : 'text-[#323338]'}>
+                  <span className={isHidden ? 'text-muted-foreground' : 'text-foreground'}>
                     {column.title}
                   </span>
                 </label>
@@ -57,10 +57,10 @@ export default function HideMenu({ columns, hiddenColumns, onChange, onClose }) 
           })}
           
           {hiddenColumns.size > 0 && (
-            <div className="pt-3 border-t border-[#E1E5F3]">
+            <div className="pt-3 border-t border-border">
               <button
                 onClick={() => onChange(new Set())}
-                className="text-sm text-[#0073EA] hover:underline"
+                className="text-sm text-primary hover:underline"
               >
                 Show all columns
               </button>

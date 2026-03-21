@@ -61,13 +61,13 @@ export default function AnalyticsPanel({ board, items, onClose }) {
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-card rounded-2xl shadow-sm max-w-6xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+        <div className="p-6 border-b border-border flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Board Analytics</h2>
-            <p className="text-gray-600">Insights and statistics for {board?.title}</p>
+            <h2 className="text-2xl font-bold text-foreground">Board Analytics</h2>
+            <p className="text-muted-foreground">Insights and statistics for {board?.title}</p>
           </div>
           <button
             onClick={onClose}
@@ -79,7 +79,7 @@ export default function AnalyticsPanel({ board, items, onClose }) {
 
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Overview Cards */}
-          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+          <Card className="bg-blue-500 text-white">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Target className="w-5 h-5" />
@@ -92,7 +92,7 @@ export default function AnalyticsPanel({ board, items, onClose }) {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+          <Card className="bg-green-500 text-white">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />

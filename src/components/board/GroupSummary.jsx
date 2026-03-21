@@ -40,7 +40,7 @@ export default function GroupSummary({ items, columns }) {
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: color }}
               />
-              <span className="text-xs text-[#676879]">{count}</span>
+              <span className="text-xs text-muted-foreground">{count}</span>
             </div>
           );
         })}
@@ -48,20 +48,20 @@ export default function GroupSummary({ items, columns }) {
       
       {/* Progress */}
       <div className="flex items-center gap-2">
-        <div className="w-16 h-2 bg-[#E1E5F3] rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-[#00C875] transition-all duration-300"
+        <div className="w-16 h-2 bg-border rounded-full overflow-hidden">
+          <div
+            className="h-full bg-green-500 transition-all duration-300"
             style={{ width: `${(completedCount / totalCount) * 100}%` }}
           />
         </div>
-        <span className="text-xs text-[#676879]">
+        <span className="text-xs text-muted-foreground">
           {Math.round((completedCount / totalCount) * 100)}%
         </span>
       </div>
       
       {/* Total Budget */}
       {totalBudget > 0 && (
-        <Badge variant="outline" className="text-xs border-[#E1E5F3]">
+        <Badge variant="outline" className="text-xs border-border">
           ${totalBudget.toLocaleString()}
         </Badge>
       )}
