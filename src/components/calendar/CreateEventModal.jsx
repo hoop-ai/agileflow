@@ -14,31 +14,34 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { CalendarIcon, Clock, MapPin, Users, X, Video } from "lucide-react";
 import { format } from "date-fns";
 
+// Semantic dot colors — no hex values
 const eventTypes = [
-  { value: 'meeting', label: 'Team Meeting', color: '#0073EA' },
-  { value: 'milestone', label: 'Milestone', color: '#00C875' },
-  { value: 'deadline', label: 'Deadline', color: '#E2445C' },
-  { value: 'review', label: 'Sprint Review', color: '#A25DDC' },
-  { value: 'retrospective', label: 'Retrospective', color: '#FFCB00' },
-  { value: 'planning', label: 'Sprint Planning', color: '#579BFC' },
-  { value: 'holiday', label: 'Holiday', color: '#FF6900' },
-  { value: 'other', label: 'Other', color: '#787D80' },
+  { value: 'meeting',       label: 'Team Meeting',    dot: 'bg-blue-500'   },
+  { value: 'milestone',     label: 'Milestone',       dot: 'bg-green-500'  },
+  { value: 'deadline',      label: 'Deadline',        dot: 'bg-red-500'    },
+  { value: 'review',        label: 'Sprint Review',   dot: 'bg-purple-500' },
+  { value: 'retrospective', label: 'Retrospective',   dot: 'bg-yellow-500' },
+  { value: 'planning',      label: 'Sprint Planning', dot: 'bg-sky-500'    },
+  { value: 'holiday',       label: 'Holiday',         dot: 'bg-orange-500' },
+  { value: 'other',         label: 'Other',           dot: 'bg-muted-foreground' },
 ];
+
+const DEFAULT_EVENT_TYPE = 'meeting';
 
 export default function CreateEventModal({ isOpen, onClose, onSubmit, preselectedDate }) {
   const [eventData, setEventData] = useState({
     title: '',
     description: '',
-    event_type: 'meeting',
+    event_type: DEFAULT_EVENT_TYPE,
     start_date: preselectedDate || new Date(),
     end_date: preselectedDate || new Date(),
     all_day: false,
     location: '',
     attendees: [],
-    color: '#0073EA',
     reminder_minutes: 15
   });
   const [newAttendee, setNewAttendee] = useState('');
@@ -64,80 +67,69 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit, preselecte
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Combine date and time
+
     const startDateTime = new Date(eventData.start_date);
     const endDateTime = new Date(eventData.end_date);
-    
+
     if (!eventData.all_day) {
       const [startHour, startMin] = startTime.split(':');
       const [endHour, endMin] = endTime.split(':');
-      
       startDateTime.setHours(parseInt(startHour), parseInt(startMin));
       endDateTime.setHours(parseInt(endHour), parseInt(endMin));
     }
-    
+
     await onSubmit({
       ...eventData,
       start_date: startDateTime.toISOString(),
       end_date: endDateTime.toISOString()
     });
-    
+
     // Reset form
     setEventData({
       title: '',
       description: '',
-      event_type: 'meeting',
+      event_type: DEFAULT_EVENT_TYPE,
       start_date: new Date(),
       end_date: new Date(),
       all_day: false,
       location: '',
       attendees: [],
-      color: '#0073EA',
       reminder_minutes: 15
     });
     setStartTime('09:00');
     setEndTime('10:00');
   };
 
-  const selectedEventType = eventTypes.find(t => t.value === eventData.event_type);
+  const selectedType = eventTypes.find(t => t.value === eventData.event_type) || eventTypes[0];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-[#323338] flex items-center gap-2">
-            <CalendarIcon className="w-6 h-6 text-[#0073EA]" />
+          <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+            <CalendarIcon className="w-5 h-5 text-foreground" />
             Create Calendar Event
           </DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           {/* Event Type */}
           <div className="space-y-2">
-            <Label className="text-[#323338] font-medium">Event Type *</Label>
+            <Label className="text-foreground font-medium">Event Type *</Label>
             <Select
               value={eventData.event_type}
               onValueChange={(value) => {
-                const type = eventTypes.find(t => t.value === value);
-                setEventData(prev => ({ 
-                  ...prev, 
-                  event_type: value,
-                  color: type?.color || '#0073EA'
-                }));
+                setEventData(prev => ({ ...prev, event_type: value }));
               }}
             >
-              <SelectTrigger className="rounded-xl border-[#E1E5F3] h-12">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {eventTypes.map((type) => (
                   <SelectItem key={type.value} value={type.value}>
                     <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: type.color }}
-                      />
+                      <div className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", type.dot)} />
                       <span>{type.label}</span>
                     </div>
                   </SelectItem>
@@ -148,37 +140,33 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit, preselecte
 
           {/* Title */}
           <div className="space-y-2">
-            <Label className="text-[#323338] font-medium">Event Title *</Label>
+            <Label className="text-foreground font-medium">Event Title *</Label>
             <Input
               value={eventData.title}
               onChange={(e) => setEventData(prev => ({ ...prev, title: e.target.value }))}
               placeholder="e.g., Daily Standup, Sprint Planning..."
-              className="rounded-xl border-[#E1E5F3] h-12"
               required
             />
           </div>
 
           {/* Description */}
           <div className="space-y-2">
-            <Label className="text-[#323338] font-medium">Description / Agenda</Label>
+            <Label className="text-foreground font-medium">Description / Agenda</Label>
             <Textarea
               value={eventData.description}
               onChange={(e) => setEventData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="Add meeting agenda or event details..."
-              className="rounded-xl border-[#E1E5F3] min-h-[100px]"
+              className="min-h-[100px]"
             />
           </div>
 
           {/* Date & Time */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-[#323338] font-medium">Start Date *</Label>
+              <Label className="text-foreground font-medium">Start Date *</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start text-left font-normal h-12 rounded-xl"
-                  >
+                  <Button variant="outline" className="w-full justify-start text-left font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {format(new Date(eventData.start_date), 'PPP')}
                   </Button>
@@ -194,13 +182,10 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit, preselecte
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[#323338] font-medium">End Date *</Label>
+              <Label className="text-foreground font-medium">End Date *</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start text-left font-normal h-12 rounded-xl"
-                  >
+                  <Button variant="outline" className="w-full justify-start text-left font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {format(new Date(eventData.end_date), 'PPP')}
                   </Button>
@@ -225,7 +210,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit, preselecte
             />
             <label
               htmlFor="all-day"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              className="text-sm font-medium text-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
               All day event
             </label>
@@ -235,7 +220,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit, preselecte
           {!eventData.all_day && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-[#323338] font-medium flex items-center gap-2">
+                <Label className="text-foreground font-medium flex items-center gap-2">
                   <Clock className="w-4 h-4" />
                   Start Time
                 </Label>
@@ -243,11 +228,10 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit, preselecte
                   type="time"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="rounded-xl border-[#E1E5F3] h-12"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[#323338] font-medium flex items-center gap-2">
+                <Label className="text-foreground font-medium flex items-center gap-2">
                   <Clock className="w-4 h-4" />
                   End Time
                 </Label>
@@ -255,7 +239,6 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit, preselecte
                   type="time"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="rounded-xl border-[#E1E5F3] h-12"
                 />
               </div>
             </div>
@@ -263,7 +246,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit, preselecte
 
           {/* Location */}
           <div className="space-y-2">
-            <Label className="text-[#323338] font-medium flex items-center gap-2">
+            <Label className="text-foreground font-medium flex items-center gap-2">
               <MapPin className="w-4 h-4" />
               Location / Meeting Link
             </Label>
@@ -272,15 +255,14 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit, preselecte
                 value={eventData.location}
                 onChange={(e) => setEventData(prev => ({ ...prev, location: e.target.value }))}
                 placeholder="Meeting room or video call link..."
-                className="rounded-xl border-[#E1E5F3] h-12"
               />
               <Button
                 type="button"
                 variant="outline"
-                className="h-12 px-4"
-                onClick={() => setEventData(prev => ({ 
-                  ...prev, 
-                  location: 'https://meet.google.com/new' 
+                className="px-4"
+                onClick={() => setEventData(prev => ({
+                  ...prev,
+                  location: 'https://meet.google.com/new'
                 }))}
               >
                 <Video className="w-4 h-4" />
@@ -290,21 +272,20 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit, preselecte
 
           {/* Attendees */}
           <div className="space-y-2">
-            <Label className="text-[#323338] font-medium flex items-center gap-2">
+            <Label className="text-foreground font-medium flex items-center gap-2">
               <Users className="w-4 h-4" />
               Attendees
             </Label>
-            
-            {/* Attendee List */}
+
             {eventData.attendees.length > 0 && (
-              <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg">
+              <div className="flex flex-wrap gap-2 p-3 bg-muted rounded-lg">
                 {eventData.attendees.map((email) => (
                   <Badge key={email} variant="secondary" className="flex items-center gap-1">
                     {email}
                     <button
                       type="button"
                       onClick={() => handleRemoveAttendee(email)}
-                      className="ml-1 hover:text-red-500"
+                      className="ml-1 hover:text-destructive transition-colors"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -313,13 +294,11 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit, preselecte
               </div>
             )}
 
-            {/* Add Attendee */}
             <div className="flex gap-2">
               <Input
                 value={newAttendee}
                 onChange={(e) => setNewAttendee(e.target.value)}
                 placeholder="Enter email address..."
-                className="rounded-xl border-[#E1E5F3] h-10"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
@@ -327,12 +306,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit, preselecte
                   }
                 }}
               />
-              <Button
-                type="button"
-                onClick={handleAddAttendee}
-                variant="outline"
-                className="h-10 px-4"
-              >
+              <Button type="button" onClick={handleAddAttendee} variant="outline">
                 Add
               </Button>
             </div>
@@ -340,15 +314,15 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit, preselecte
 
           {/* Reminder */}
           <div className="space-y-2">
-            <Label className="text-[#323338] font-medium">Reminder</Label>
+            <Label className="text-foreground font-medium">Reminder</Label>
             <Select
               value={eventData.reminder_minutes?.toString()}
-              onValueChange={(value) => setEventData(prev => ({ 
-                ...prev, 
-                reminder_minutes: parseInt(value) 
+              onValueChange={(value) => setEventData(prev => ({
+                ...prev,
+                reminder_minutes: parseInt(value)
               }))}
             >
-              <SelectTrigger className="rounded-xl border-[#E1E5F3] h-12">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -363,24 +337,12 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit, preselecte
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="rounded-xl h-12 px-6"
-            >
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={!eventData.title}
-              className="rounded-xl h-12 px-6"
-              style={{ 
-                backgroundColor: selectedEventType?.color || '#0073EA',
-                color: 'white'
-              }}
-            >
+            <Button type="submit" disabled={!eventData.title}>
+              <div className={cn("w-2.5 h-2.5 rounded-full mr-2", selectedType.dot)} />
               Create Event
             </Button>
           </div>

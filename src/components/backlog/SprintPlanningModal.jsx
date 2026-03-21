@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { Calendar, Target, AlertTriangle } from "lucide-react";
 import { Sprint } from "@/api/entities/Sprint";
 import { UserStory } from "@/api/entities/UserStory";
@@ -79,6 +80,7 @@ export default function SprintPlanningModal({ isOpen, onClose, stories, boards }
 
   const isOverCapacity = totalPoints > sprintData.capacity;
   const capacityPercent = sprintData.capacity > 0 ? Math.round((totalPoints / sprintData.capacity) * 100) : 0;
+  const isNearCapacity = !isOverCapacity && capacityPercent > 80;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -111,12 +113,25 @@ export default function SprintPlanningModal({ isOpen, onClose, stories, boards }
   // Filter out stories already assigned to an active/completed sprint
   const availableStories = stories.filter(s => !s.sprint_id || s.status === 'backlog');
 
+  const capacityBarColor = isOverCapacity
+    ? 'bg-red-500'
+    : isNearCapacity
+    ? 'bg-amber-500'
+    : 'bg-green-500';
+
+  const priorityBadgeClasses = {
+    critical: 'border-red-300 text-red-700 dark:border-red-700 dark:text-red-400',
+    high: 'border-amber-300 text-amber-700 dark:border-amber-700 dark:text-amber-400',
+    medium: 'border-blue-300 text-blue-700 dark:border-blue-700 dark:text-blue-400',
+    low: 'border-border text-muted-foreground'
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={resetAndClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto dark:bg-gray-800">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold flex items-center gap-2 dark:text-white">
-            <Calendar className="w-6 h-6 text-blue-600" />
+          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+            <Calendar className="w-6 h-6 text-primary" />
             Plan New Sprint
           </DialogTitle>
         </DialogHeader>
@@ -124,12 +139,12 @@ export default function SprintPlanningModal({ isOpen, onClose, stories, boards }
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="dark:text-gray-200">Board *</Label>
+              <Label>Board *</Label>
               <Select
                 value={sprintData.board_id}
                 onValueChange={(value) => setSprintData(prev => ({ ...prev, board_id: value }))}
               >
-                <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -141,51 +156,47 @@ export default function SprintPlanningModal({ isOpen, onClose, stories, boards }
             </div>
 
             <div className="space-y-2">
-              <Label className="dark:text-gray-200">Sprint Name *</Label>
+              <Label>Sprint Name *</Label>
               <Input
                 value={sprintData.name}
                 onChange={(e) => setSprintData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="Sprint 1"
                 required
-                className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className="dark:text-gray-200">Sprint Goal</Label>
+            <Label>Sprint Goal</Label>
             <Textarea
               value={sprintData.goal}
               onChange={(e) => setSprintData(prev => ({ ...prev, goal: e.target.value }))}
               placeholder="What do you want to achieve in this sprint?"
               rows={3}
-              className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label className="dark:text-gray-200">Start Date *</Label>
+              <Label>Start Date *</Label>
               <Input
                 type="date"
                 value={sprintData.start_date}
                 onChange={(e) => setSprintData(prev => ({ ...prev, start_date: e.target.value }))}
                 required
-                className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
             <div className="space-y-2">
-              <Label className="dark:text-gray-200">End Date *</Label>
+              <Label>End Date *</Label>
               <Input
                 type="date"
                 value={sprintData.end_date}
                 onChange={(e) => setSprintData(prev => ({ ...prev, end_date: e.target.value }))}
                 required
-                className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
             <div className="space-y-2">
-              <Label className="dark:text-gray-200">Team Capacity (SP)</Label>
+              <Label>Team Capacity (SP)</Label>
               <Input
                 type="number"
                 value={sprintData.capacity}
@@ -194,30 +205,35 @@ export default function SprintPlanningModal({ isOpen, onClose, stories, boards }
                   setCapacityOverridden(false);
                 }}
                 min="0"
-                className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
           </div>
 
           {/* Sprint Capacity Indicator */}
-          <Card className={`border-2 ${
+          <Card className={cn(
+            "border-2",
             isOverCapacity
-              ? 'border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/20'
-              : 'border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20'
-          }`}>
+              ? 'border-red-300 dark:border-red-700'
+              : isNearCapacity
+              ? 'border-amber-300 dark:border-amber-700'
+              : 'border-green-300 dark:border-green-700'
+          )}>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {isOverCapacity ? (
                     <AlertTriangle className="text-red-600 dark:text-red-400 w-5 h-5" />
                   ) : (
-                    <Target className="text-green-600 dark:text-green-400 w-5 h-5" />
+                    <Target className={cn(
+                      "w-5 h-5",
+                      isNearCapacity ? "text-amber-600 dark:text-amber-400" : "text-green-600 dark:text-green-400"
+                    )} />
                   )}
                   <div>
-                    <p className="font-semibold dark:text-white">
+                    <p className="font-semibold text-foreground">
                       {totalPoints} / {sprintData.capacity} Story Points
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-muted-foreground">
                       {isOverCapacity
                         ? `Overcommitted by ${totalPoints - sprintData.capacity} points — team may not deliver`
                         : `${sprintData.capacity - totalPoints} points remaining`}
@@ -225,16 +241,23 @@ export default function SprintPlanningModal({ isOpen, onClose, stories, boards }
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className={`text-2xl font-bold ${isOverCapacity ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+                  <p className={cn(
+                    "text-2xl font-bold",
+                    isOverCapacity
+                      ? "text-red-600 dark:text-red-400"
+                      : isNearCapacity
+                      ? "text-amber-600 dark:text-amber-400"
+                      : "text-green-600 dark:text-green-400"
+                  )}>
                     {capacityPercent}%
                   </p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">capacity</p>
+                  <p className="text-xs text-muted-foreground">capacity</p>
                 </div>
               </div>
               {/* Visual capacity bar */}
-              <div className="mt-3 h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+              <div className="mt-3 h-2 bg-muted rounded-full overflow-hidden">
                 <div
-                  className={`h-full transition-all duration-300 rounded-full ${isOverCapacity ? 'bg-red-500' : 'bg-green-500'}`}
+                  className={cn("h-full transition-all duration-300 rounded-full", capacityBarColor)}
                   style={{ width: `${Math.min(100, capacityPercent)}%` }}
                 />
               </div>
@@ -243,7 +266,7 @@ export default function SprintPlanningModal({ isOpen, onClose, stories, boards }
 
           {/* Overcapacity warning */}
           {isOverCapacity && capacityOverridden && (
-            <div className="flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg text-sm text-yellow-800 dark:text-yellow-300">
+            <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-950 border border-amber-300 dark:border-amber-700 rounded-lg text-sm text-amber-800 dark:text-amber-300">
               <AlertTriangle className="w-4 h-4 flex-shrink-0" />
               Capacity override active. Sprint will be created overcommitted.
             </div>
@@ -252,23 +275,24 @@ export default function SprintPlanningModal({ isOpen, onClose, stories, boards }
           {/* Story Selection */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-lg font-semibold dark:text-white">Select Stories for Sprint</Label>
+              <Label className="text-lg font-semibold">Select Stories for Sprint</Label>
               <Badge variant="secondary">{selectedStories.size} selected</Badge>
             </div>
-            <div className="max-h-96 overflow-y-auto space-y-2 border dark:border-gray-600 rounded-lg p-4">
+            <div className="max-h-96 overflow-y-auto space-y-2 border border-border rounded-lg p-4">
               {availableStories.length === 0 ? (
-                <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                <p className="text-center text-muted-foreground py-8">
                   No stories available in backlog
                 </p>
               ) : (
                 availableStories.map(story => (
                   <div
                     key={story.id}
-                    className={`flex items-center gap-3 p-3 border rounded-lg transition-colors cursor-pointer ${
+                    className={cn(
+                      "flex items-center gap-3 p-3 border rounded-lg transition-colors cursor-pointer",
                       selectedStories.has(story.id)
-                        ? 'bg-blue-50 border-blue-300 dark:bg-blue-900/20 dark:border-blue-600'
-                        : 'bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600'
-                    }`}
+                        ? 'bg-accent border-primary/40'
+                        : 'bg-card border-border hover:bg-accent/50'
+                    )}
                     onClick={() => toggleStory(story.id)}
                   >
                     <Checkbox
@@ -277,21 +301,20 @@ export default function SprintPlanningModal({ isOpen, onClose, stories, boards }
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium dark:text-white">{story.title}</span>
+                        <span className="font-medium text-foreground">{story.title}</span>
                         {story.story_points > 0 && (
-                          <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                          <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium">
                             {story.story_points} SP
-                          </Badge>
+                          </span>
                         )}
-                        <Badge variant="outline" className={`capitalize ${
-                          story.priority === 'critical' ? 'border-red-300 text-red-700 dark:text-red-400' :
-                          story.priority === 'high' ? 'border-orange-300 text-orange-700 dark:text-orange-400' :
-                          'border-gray-300 text-gray-700 dark:text-gray-400'
-                        }`}>
+                        <Badge variant="outline" className={cn(
+                          "capitalize",
+                          priorityBadgeClasses[story.priority] ?? priorityBadgeClasses.low
+                        )}>
                           {story.priority}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
+                      <p className="text-sm text-muted-foreground line-clamp-1">
                         {story.description}
                       </p>
                     </div>
@@ -302,12 +325,12 @@ export default function SprintPlanningModal({ isOpen, onClose, stories, boards }
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={resetAndClose} className="dark:bg-gray-700 dark:text-white dark:border-gray-600">
+            <Button type="button" variant="outline" onClick={resetAndClose}>
               Cancel
             </Button>
             <Button
               type="submit"
-              className={`${isOverCapacity && !capacityOverridden ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-blue-600 hover:bg-blue-700'} text-white`}
+              variant={isOverCapacity && !capacityOverridden ? "outline" : "default"}
               disabled={selectedStories.size === 0 || !sprintData.name || createSprintMutation.isPending}
             >
               {createSprintMutation.isPending ? 'Creating...' :

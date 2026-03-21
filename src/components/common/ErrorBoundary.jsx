@@ -1,5 +1,6 @@
 import React from 'react';
-import { RefreshCw, Home, ChevronDown, ChevronUp, Bug } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, Home, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -33,39 +34,30 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 dark:bg-slate-950">
-          <div className="max-w-lg w-full">
-            <div className="text-center space-y-8">
-              {/* Illustration */}
-              <div className="relative mx-auto w-48 h-48">
-                <div className="absolute inset-0 rounded-full bg-red-50 dark:bg-red-950/30" />
-                <div className="absolute inset-4 rounded-full bg-red-100/60 dark:bg-red-900/20 flex items-center justify-center">
-                  <Bug className="w-20 h-20 text-red-400 dark:text-red-500" />
-                </div>
-              </div>
+        <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+          <div className="max-w-md w-full">
+            <div className="border border-red-200 bg-red-50 dark:bg-red-950 dark:border-red-800 rounded-lg p-6 text-center">
+              <AlertCircle className="w-10 h-10 text-red-500 mx-auto" />
 
-              {/* Message */}
-              <div className="space-y-3">
-                <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">
-                  Something went wrong
-                </h1>
-                <p className="text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
-                  An unexpected error occurred. This has been logged and we'll look into it. Try reloading the page.
-                </p>
-              </div>
+              <h1 className="text-base font-semibold text-foreground mt-3">
+                Something went wrong
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                An unexpected error occurred. This has been logged and we'll look into it. Try reloading the page.
+              </p>
 
-              {/* Error Details (collapsible) */}
+              {/* Error details (collapsible) */}
               {this.state.error && (
-                <div className="mx-auto max-w-sm">
+                <div className="mt-4 text-left">
                   <button
                     onClick={this.toggleDetails}
-                    className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {this.state.showDetails ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                     {this.state.showDetails ? 'Hide' : 'Show'} error details
                   </button>
                   {this.state.showDetails && (
-                    <div className="mt-2 p-3 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50 text-left">
+                    <div className="mt-2 p-3 rounded-lg bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-800">
                       <p className="font-mono text-xs text-red-700 dark:text-red-300 break-all whitespace-pre-wrap">
                         {this.state.error?.toString()}
                       </p>
@@ -80,21 +72,15 @@ class ErrorBoundary extends React.Component {
               )}
 
               {/* Actions */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <button
-                  onClick={this.handleReload}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 rounded-lg transition-colors"
-                >
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4">
+                <Button onClick={this.handleReload} variant="outline" className="flex items-center gap-2">
                   <RefreshCw className="w-4 h-4" />
                   Reload Page
-                </button>
-                <button
-                  onClick={this.handleGoHome}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                >
+                </Button>
+                <Button onClick={this.handleGoHome} variant="outline" className="flex items-center gap-2">
                   <Home className="w-4 h-4" />
                   Go to Dashboard
-                </button>
+                </Button>
               </div>
             </div>
           </div>

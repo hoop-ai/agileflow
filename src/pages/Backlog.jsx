@@ -8,8 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { 
-  Plus, 
+import { cn } from "@/lib/utils";
+import {
+  Plus,
   Search,
   ListOrdered,
   Target,
@@ -33,7 +34,7 @@ export default function BacklogPage() {
   const [showPlanningModal, setShowPlanningModal] = useState(false);
   const [selectedStory, setSelectedStory] = useState(null);
   const [filterPriority, setFilterPriority] = useState("all");
-  
+
   const queryClient = useQueryClient();
 
   const { data: boards = [], isLoading: loadingBoards } = useQuery({
@@ -103,7 +104,7 @@ export default function BacklogPage() {
                          story.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesPriority = filterPriority === "all" || story.priority === filterPriority;
     const isBacklog = story.status === 'backlog' || !story.sprint_id;
-    
+
     return matchesSearch && matchesPriority && isBacklog;
   });
 
@@ -123,11 +124,11 @@ export default function BacklogPage() {
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;
-    
+
     const items = Array.from(sortedStories);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
-    
+
     // Update priorities based on new order
     items.forEach((story, index) => {
       if (story.id === reorderedItem.id) {
@@ -140,32 +141,30 @@ export default function BacklogPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                <ListOrdered className="w-6 h-6 text-white" />
+            <h1 className="text-2xl font-semibold text-foreground flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg border border-border bg-muted flex items-center justify-center">
+                <ListOrdered className="w-5 h-5 text-muted-foreground" />
               </div>
               Product Backlog
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">Prioritize and manage user stories</p>
+            <p className="text-sm text-muted-foreground mt-1">Prioritize and manage user stories</p>
           </div>
-          
+
           <div className="flex gap-3">
             <Button
               onClick={() => setShowPlanningModal(true)}
               variant="outline"
-              className="border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50 dark:border-purple-700 dark:hover:border-purple-500 dark:hover:bg-purple-900/30 dark:text-purple-300"
             >
               <CalendarPlus className="w-4 h-4 mr-2" />
               Plan Sprint
             </Button>
             <Button
               onClick={() => setShowCreateModal(true)}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
               New User Story
@@ -175,66 +174,58 @@ export default function BacklogPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100 text-sm mb-1">Total Stories</p>
-                  <p className="text-3xl font-bold">{backlogStats.total}</p>
-                </div>
-                <Target className="w-10 h-10 text-blue-200" />
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Total Stories</p>
+                <p className="text-2xl font-semibold text-foreground">{backlogStats.total}</p>
               </div>
-            </CardContent>
-          </Card>
+              <Target className="w-8 h-8 text-muted-foreground" />
+            </div>
+          </div>
 
-          <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100 text-sm mb-1">Story Points</p>
-                  <p className="text-3xl font-bold">{backlogStats.totalPoints}</p>
-                </div>
-                <TrendingUp className="w-10 h-10 text-purple-200" />
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Story Points</p>
+                <p className="text-2xl font-semibold text-foreground">{backlogStats.totalPoints}</p>
               </div>
-            </CardContent>
-          </Card>
+              <TrendingUp className="w-8 h-8 text-muted-foreground" />
+            </div>
+          </div>
 
-          <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-0">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-red-100 text-sm mb-1">Critical Priority</p>
-                  <p className="text-3xl font-bold">{backlogStats.critical}</p>
-                </div>
-                <Target className="w-10 h-10 text-red-200" />
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Critical Priority</p>
+                <p className="text-2xl font-semibold text-foreground">{backlogStats.critical}</p>
               </div>
-            </CardContent>
-          </Card>
+              <Target className="w-8 h-8 text-muted-foreground" />
+            </div>
+          </div>
 
-          <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100 text-sm mb-1">Ready for Sprint</p>
-                  <p className="text-3xl font-bold">{backlogStats.ready}</p>
-                </div>
-                <CheckCircle2 className="w-10 h-10 text-green-200" />
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Ready for Sprint</p>
+                <p className="text-2xl font-semibold text-foreground">{backlogStats.ready}</p>
               </div>
-            </CardContent>
-          </Card>
+              <CheckCircle2 className="w-8 h-8 text-muted-foreground" />
+            </div>
+          </div>
         </div>
 
         {/* Active Sprints Alert */}
         {activeSprints.length > 0 && (
-          <Card className="mb-6 border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-gray-700">
+          <Card className="mb-6 border-l-4 border-l-primary">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <Clock className="w-5 h-5 text-blue-600" />
+                <Clock className="w-5 h-5 text-primary" />
                 <div>
-                  <p className="font-semibold text-blue-900 dark:text-blue-200">
+                  <p className="font-semibold text-foreground">
                     {activeSprints.length} Active Sprint{activeSprints.length > 1 ? 's' : ''}
                   </p>
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                  <p className="text-sm text-muted-foreground">
                     {activeSprints.map(s => s.name).join(', ')}
                   </p>
                 </div>
@@ -244,11 +235,11 @@ export default function BacklogPage() {
         )}
 
         {/* Filters */}
-        <Card className="mb-6 dark:bg-gray-800 dark:border-gray-700">
+        <Card className="mb-6">
           <CardContent className="p-4">
             <div className="flex gap-4 items-center">
               <div className="relative flex-1">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Search user stories..."
                   value={searchQuery}
@@ -256,7 +247,7 @@ export default function BacklogPage() {
                   className="pl-10"
                 />
               </div>
-              
+
               <div className="flex gap-2">
                 {['all', 'critical', 'high', 'medium', 'low'].map(priority => (
                   <Button
@@ -275,9 +266,9 @@ export default function BacklogPage() {
         </Card>
 
         {/* Backlog List */}
-        <Card className="dark:bg-gray-800 dark:border-gray-700">
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 dark:text-white">
+            <CardTitle className="flex items-center gap-2">
               <ListOrdered className="w-5 h-5" />
               Prioritized Backlog
               <Badge variant="secondary" className="ml-2">
@@ -288,14 +279,14 @@ export default function BacklogPage() {
           <CardContent>
             {loadingStories ? (
               <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-gray-600 dark:text-gray-400 mt-4">Loading backlog...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                <p className="text-muted-foreground mt-4">Loading backlog...</p>
               </div>
             ) : sortedStories.length === 0 ? (
               <div className="text-center py-12">
-                <Target className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No stories in backlog</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">Start by creating your first user story</p>
+                <Target className="w-16 h-16 text-muted-foreground/40 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">No stories in backlog</h3>
+                <p className="text-muted-foreground mb-6">Start by creating your first user story</p>
                 <Button onClick={() => setShowCreateModal(true)}>
                   <Plus className="w-4 h-4 mr-2" />
                   Create User Story
@@ -362,49 +353,51 @@ export default function BacklogPage() {
 }
 
 const StoryCard = ({ story, onClick, isDragging }) => {
-  const priorityColors = {
-    critical: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700',
-    high: 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700',
-    medium: 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700',
-    low: 'bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600'
+  const priorityClasses = {
+    critical: 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400',
+    high: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
+    medium: 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-400',
+    low: 'bg-muted text-muted-foreground'
   };
 
-  const statusColors = {
-    backlog: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
-    ready: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-    in_progress: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+  const statusClasses = {
+    backlog: 'bg-muted text-muted-foreground',
+    ready: 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400',
+    in_progress: 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-400'
   };
 
   return (
     <motion.div
-      whileHover={{ scale: 1.01 }}
-      className={`p-4 bg-white dark:bg-gray-800 rounded-lg border-2 cursor-pointer transition-all ${
-        isDragging ? 'shadow-2xl border-blue-500' : 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-md'
-      }`}
+      className={cn(
+        "border border-border bg-card rounded-md p-4 cursor-pointer transition-colors duration-150",
+        isDragging
+          ? "border-primary shadow-md"
+          : "hover:bg-accent/50"
+      )}
       onClick={onClick}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <Badge className={priorityColors[story.priority]} variant="outline">
+            <Badge className={cn("border-0", priorityClasses[story.priority])}>
               {story.priority}
             </Badge>
             {story.story_points && (
-              <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+              <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium">
                 {story.story_points} SP
-              </Badge>
+              </span>
             )}
             {story.status !== 'backlog' && (
-              <Badge className={statusColors[story.status]}>
+              <Badge className={cn("border-0", statusClasses[story.status])}>
                 {story.status.replace('_', ' ')}
               </Badge>
             )}
           </div>
-          
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{story.title}</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{story.description}</p>
 
-          <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 dark:text-gray-400">
+          <h3 className="font-semibold text-foreground mb-1">{story.title}</h3>
+          <p className="text-sm text-muted-foreground line-clamp-2">{story.description}</p>
+
+          <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
             {story.acceptance_criteria && (
               <span className="flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3" />
@@ -413,7 +406,7 @@ const StoryCard = ({ story, onClick, isDragging }) => {
             )}
             {story.assigned_to && (
               <span className="flex items-center gap-1">
-                <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">
+                <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xs">
                   {story.assigned_to.charAt(0).toUpperCase()}
                 </div>
                 {story.assigned_to.split('@')[0]}
@@ -421,8 +414,8 @@ const StoryCard = ({ story, onClick, isDragging }) => {
             )}
           </div>
         </div>
-        
-        <ChevronRight className="w-5 h-5 text-gray-400" />
+
+        <ChevronRight className="w-5 h-5 text-muted-foreground" />
       </div>
     </motion.div>
   );

@@ -18,7 +18,6 @@ import {
   Zap,
   UserMinus
 } from "lucide-react";
-import { motion } from "framer-motion";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,7 +53,7 @@ export default function BoardHeader({
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(board?.title || '');
   const [lastSaved, setLastSaved] = useState(new Date());
-  const [collaborators, setCollaborators] = useState([
+  const [collaborators] = useState([
     { id: 1, name: 'John Doe', avatar: 'JD', online: true, role: 'Owner' },
     { id: 2, name: 'Jane Smith', avatar: 'JS', online: true, role: 'Editor' },
     { id: 3, name: 'Mike Johnson', avatar: 'MJ', online: false, role: 'Viewer' },
@@ -82,7 +81,8 @@ export default function BoardHeader({
     }
   }, [board?.title]);
 
-  const boardColor = board?.color || '#0073EA';
+  // board.color is data-driven and used only for the color indicator strip
+  const boardColor = board?.color || null;
 
   const handleSaveTitle = async () => {
     setIsEditing(false);
@@ -102,14 +102,14 @@ export default function BoardHeader({
 
   return (
     <TooltipProvider>
-      <div className="bg-white sticky top-16 z-40 shadow-sm border-b border-[#E1E5F3]">
-        <motion.div
-          className="absolute top-0 left-0 right-0 h-1"
-          style={{ backgroundColor: boardColor }}
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: isScrolled ? 1 : 0 }}
-          transition={{ duration: 0.3, ease: "easeInOut", originX: 0 }}
-        />
+      <div className="bg-card sticky top-16 z-40 shadow-sm border-b border-border">
+        {/* Data-driven color strip — keep as inline style since it comes from user data */}
+        {boardColor && isScrolled && (
+          <div
+            className="absolute top-0 left-0 right-0 h-1"
+            style={{ backgroundColor: boardColor }}
+          />
+        )}
 
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
@@ -117,7 +117,7 @@ export default function BoardHeader({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Link to={createPageUrl("Boards")}>
-                    <Button variant="ghost" size="icon" className="hover:bg-[#E1E5F3] rounded-lg h-9 w-9 transition-all duration-200 hover:scale-105">
+                    <Button variant="ghost" size="icon" className="rounded-lg h-9 w-9 transition-colors duration-150">
                       <ArrowLeft className="w-4 h-4" />
                     </Button>
                   </Link>
@@ -126,20 +126,13 @@ export default function BoardHeader({
               </Tooltip>
 
               <div className="flex items-center gap-3">
-                <motion.div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg relative overflow-hidden"
-                  style={{ backgroundColor: boardColor }}
-                  whileHover={{ scale: 1.05, rotate: 5 }}
-                  whileTap={{ scale: 0.95 }}
+                {/* Board icon — data-driven color kept as inline style */}
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted"
+                  style={boardColor ? { backgroundColor: boardColor } : undefined}
                 >
-                  <Table2 className="w-5 h-5 text-white" />
-                  <motion.div
-                    className="absolute inset-0 bg-white/20"
-                    initial={{ x: '-100%' }}
-                    whileHover={{ x: '100%' }}
-                    transition={{ duration: 0.6 }}
-                  />
-                </motion.div>
+                  <Table2 className={`w-5 h-5 ${boardColor ? 'text-white' : 'text-muted-foreground'}`} />
+                </div>
 
                 <div className="space-y-1">
                   {isEditing ? (
@@ -159,20 +152,19 @@ export default function BoardHeader({
                       </Button>
                     </div>
                   ) : (
-                    <motion.h1
-                      className="text-xl font-bold text-[#323338] cursor-pointer hover:text-[#0073EA] transition-colors flex items-center gap-2 group"
+                    <h1
+                      className="text-lg font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group"
                       onClick={() => setIsEditing(true)}
-                      whileHover={{ scale: 1.02 }}
                     >
                       {board?.title}
                       <Edit3 className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </motion.h1>
+                    </h1>
                   )}
 
                   <div className="flex items-center gap-3 text-xs">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-[#676879] hover:bg-[#E1E5F3] rounded-md">
+                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground hover:bg-muted rounded-md">
                           <Table2 className="w-3 h-3 mr-1" />
                           {currentView === 'table' ? 'Main table' :
                            currentView === 'kanban' ? 'Kanban' :
@@ -206,22 +198,17 @@ export default function BoardHeader({
                       </DropdownMenuContent>
                     </DropdownMenu>
 
-                    <span className="text-[#A0A0A0]">|</span>
+                    <span className="text-muted-foreground">|</span>
 
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className={`h-6 px-2 text-xs transition-all duration-200 ${isFavorited ? 'text-yellow-500 hover:text-yellow-600' : 'text-[#676879] hover:text-yellow-500'}`}
+                          className={`h-6 px-2 text-xs transition-colors duration-150 ${isFavorited ? 'text-yellow-500 hover:text-yellow-600' : 'text-muted-foreground hover:text-yellow-500'}`}
                           onClick={handleToggleFavorite}
                         >
-                          <motion.div
-                            whileHover={{ scale: 1.2, rotate: 10 }}
-                            whileTap={{ scale: 0.9 }}
-                          >
-                            <Star className={`w-3 h-3 mr-1 ${isFavorited ? 'fill-current' : ''}`} />
-                          </motion.div>
+                          <Star className={`w-3 h-3 mr-1 ${isFavorited ? 'fill-current' : ''}`} />
                           {isFavorited ? 'Favorited' : 'Add to favorites'}
                         </Button>
                       </TooltipTrigger>
@@ -230,12 +217,12 @@ export default function BoardHeader({
                       </TooltipContent>
                     </Tooltip>
 
-                    <span className="text-[#A0A0A0]">|</span>
+                    <span className="text-muted-foreground">|</span>
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-[#A0A0A0]">{itemsCount} items</span>
-                      <span className="text-[#A0A0A0]">▪</span>
-                      <span className="text-[#A0A0A0]">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <span>{itemsCount} items</span>
+                      <span>▪</span>
+                      <span>
                         Saved {lastSaved.toLocaleTimeString()}
                       </span>
                     </div>
@@ -248,7 +235,7 @@ export default function BoardHeader({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 px-3 text-xs border-[#E1E5F3] hover:border-green-500 hover:text-green-600"
+                className="h-8 px-3 text-xs"
                 onClick={onShowAnalytics}
               >
                 <TrendingUp className="w-3 h-3 mr-1" />
@@ -260,7 +247,7 @@ export default function BoardHeader({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 px-3 text-xs border-[#E1E5F3] hover:border-blue-500"
+                    className="h-8 px-3 text-xs"
                     onClick={onShowIntegrations}
                   >
                     <Activity className="w-3 h-3 mr-1" />
@@ -275,16 +262,12 @@ export default function BoardHeader({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 px-3 text-xs border-[#E1E5F3] hover:border-purple-500 relative"
+                    className="h-8 px-3 text-xs relative"
                     onClick={onShowAutomations}
                   >
                     <Zap className="w-3 h-3 mr-1" />
                     Automate
-                    <motion.div
-                      className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full"
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 1, repeat: Infinity }}
-                    />
+                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Manage automations</TooltipContent>
@@ -296,28 +279,20 @@ export default function BoardHeader({
                     {collaborators.slice(0, 3).map((user, index) => (
                       <Tooltip key={user.id}>
                         <TooltipTrigger asChild>
-                          <motion.div
-                            className={`w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-medium relative ${
-                              index === 0 ? 'bg-blue-500' : index === 1 ? 'bg-green-500' : 'bg-purple-500'
-                            }`}
-                            whileHover={{ scale: 1.1, zIndex: 10 }}
-                            whileTap={{ scale: 0.95 }}
+                          <div
+                            className={`w-8 h-8 rounded-full border-2 border-background flex items-center justify-center text-foreground text-xs font-medium relative bg-muted`}
                           >
                             {user.avatar}
                             {user.online && (
-                              <motion.div
-                                className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full border border-white"
-                                animate={{ scale: [1, 1.2, 1] }}
-                                transition={{ duration: 2, repeat: Infinity }}
-                              />
+                              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border border-background" />
                             )}
-                          </motion.div>
+                          </div>
                         </TooltipTrigger>
                         <TooltipContent>{user.name} ({user.role})</TooltipContent>
                       </Tooltip>
                     ))}
                     {collaborators.length > 3 && (
-                      <div className="w-8 h-8 rounded-full bg-gray-400 border-2 border-white flex items-center justify-center text-white text-xs">
+                      <div className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-muted-foreground text-xs">
                         +{collaborators.length - 3}
                       </div>
                     )}
@@ -326,7 +301,7 @@ export default function BoardHeader({
                 <PopoverContent className="w-80">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-medium">Team ({collaborators.length})</h4>
+                      <h4 className="font-medium text-foreground">Team ({collaborators.length})</h4>
                       <Button size="sm" variant="outline">
                         <UserPlus className="w-3 h-3 mr-1" />
                         Invite
@@ -334,19 +309,17 @@ export default function BoardHeader({
                     </div>
                     <div className="space-y-2 max-h-64 overflow-y-auto">
                       {collaborators.map((user) => (
-                        <div key={user.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50">
+                        <div key={user.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent transition-colors duration-150">
                           <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs relative ${
-                              user.id % 3 === 0 ? 'bg-blue-500' : user.id % 3 === 1 ? 'bg-green-500' : 'bg-purple-500'
-                            }`}>
+                            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground text-xs relative">
                               {user.avatar}
                               {user.online && (
-                                <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-green-400 rounded-full border border-white" />
+                                <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full border border-background" />
                               )}
                             </div>
                             <div>
-                              <p className="text-sm font-medium">{user.name}</p>
-                              <p className="text-xs text-gray-500">{user.role}</p>
+                              <p className="text-sm font-medium text-foreground">{user.name}</p>
+                              <p className="text-xs text-muted-foreground">{user.role}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-1">

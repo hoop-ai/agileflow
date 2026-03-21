@@ -35,6 +35,31 @@ const AuthenticatedApp = () => {
     return <UserNotRegisteredError />;
   }
 
+  // Handle missing Supabase configuration
+  if (authError?.type === 'config_error') {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center p-6 bg-white dark:bg-neutral-950">
+        <div className="max-w-md w-full text-center space-y-4">
+          <div className="w-12 h-12 mx-auto rounded-full bg-red-50 dark:bg-red-950 flex items-center justify-center">
+            <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h1 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Configuration Error</h1>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            The application cannot connect to the database. Environment variables <code className="px-1 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded text-xs">VITE_SUPABASE_URL</code> and <code className="px-1 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded text-xs">VITE_SUPABASE_ANON_KEY</code> must be set.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 text-sm font-medium bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-md hover:opacity-90 transition-opacity"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Handle session expiry (was authenticated, token refresh failed)
   if (authError?.type === 'session_expired') {
     return <SessionExpired />;

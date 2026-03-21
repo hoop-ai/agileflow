@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { supabase } from '@/api/supabaseClient';
+import { supabase, isSupabaseConfigured } from '@/api/supabaseClient';
 
 const AuthContext = createContext();
 
@@ -11,6 +11,12 @@ export const AuthProvider = ({ children }) => {
   const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setIsLoadingAuth(false);
+      setAuthError({ type: 'config_error', message: 'Supabase is not configured. Check environment variables.' });
+      return;
+    }
+
     checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {

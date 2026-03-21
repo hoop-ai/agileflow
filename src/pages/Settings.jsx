@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { User as UserService } from "@/api/entities/User";
 import { supabase } from "@/api/supabaseClient";
 import { useTheme } from "@/components/utils/ThemeProvider";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,11 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { 
-  Settings as SettingsIcon, 
-  User, 
-  Bell, 
-  Shield, 
+import {
+  Settings as SettingsIcon,
+  User,
+  Bell,
+  Shield,
   Palette,
   Save,
   CheckCircle2,
@@ -31,7 +30,7 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  
+
   const [settings, setSettings] = useState({
     full_name: '',
     email: '',
@@ -57,7 +56,6 @@ export default function SettingsPage() {
     loadUserSettings();
   }, []);
 
-  // Sync settings.theme with currentTheme from context
   useEffect(() => {
     if (currentTheme && settings.theme !== currentTheme) {
       setSettings(prev => ({ ...prev, theme: currentTheme }));
@@ -69,7 +67,7 @@ export default function SettingsPage() {
     try {
       const userData = await UserService.me();
       setUser(userData);
-      
+
       const s = userData.settings || {};
       setSettings({
         full_name: userData.full_name || '',
@@ -131,7 +129,6 @@ export default function SettingsPage() {
 
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
-
       await loadUserSettings();
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -146,7 +143,6 @@ export default function SettingsPage() {
   };
 
   const handleThemeChange = (value) => {
-    console.log('Theme dropdown changed to:', value);
     setSettings(prev => ({ ...prev, theme: value }));
     updateTheme(value);
   };
@@ -157,10 +153,10 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0073EA] mx-auto mb-4"></div>
-          <p className="text-lg text-gray-900 dark:text-white">Loading settings...</p>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="w-8 h-8 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground mt-3">Loading settings...</p>
         </div>
       </div>
     );
@@ -173,35 +169,35 @@ export default function SettingsPage() {
     .toUpperCase() || 'U';
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 transition-colors duration-200">
+    <div className="min-h-screen bg-background p-6 transition-colors duration-200">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
-              <SettingsIcon className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
+              <SettingsIcon className="w-5 h-5 text-foreground" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your account and preferences</p>
+              <h1 className="text-3xl font-bold text-foreground">Settings</h1>
+              <p className="text-muted-foreground mt-1">Manage your account and preferences</p>
             </div>
           </div>
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="bg-white dark:bg-gray-800 p-1 rounded-xl shadow-sm">
-            <TabsTrigger value="profile" className="flex items-center gap-2 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 dark:text-white">
+          <TabsList>
+            <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="w-4 h-4" />
               Profile
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 dark:text-white">
+            <TabsTrigger value="notifications" className="flex items-center gap-2">
               <Bell className="w-4 h-4" />
               Notifications
             </TabsTrigger>
-            <TabsTrigger value="preferences" className="flex items-center gap-2 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 dark:text-white">
+            <TabsTrigger value="preferences" className="flex items-center gap-2">
               <Palette className="w-4 h-4" />
               Preferences
             </TabsTrigger>
-            <TabsTrigger value="privacy" className="flex items-center gap-2 data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-700 dark:text-white">
+            <TabsTrigger value="privacy" className="flex items-center gap-2">
               <Shield className="w-4 h-4" />
               Privacy
             </TabsTrigger>
@@ -209,405 +205,315 @@ export default function SettingsPage() {
 
           {/* Profile Tab */}
           <TabsContent value="profile">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Card className="dark:bg-gray-800 dark:border-gray-700">
-                <CardHeader>
-                  <CardTitle className="dark:text-white">Profile Information</CardTitle>
-                  <CardDescription className="dark:text-gray-400">Update your personal information and profile details</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="flex items-center gap-6">
-                    <Avatar className="w-24 h-24 bg-gradient-to-r from-[#0073EA] to-[#00C875]">
-                      <AvatarFallback className="text-2xl font-bold text-white">
-                        {userInitials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-semibold text-lg text-gray-900 dark:text-white">{settings.full_name || 'User'}</h3>
-                      <p className="text-gray-600 dark:text-gray-400">{settings.email}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        Role: <span className="font-medium capitalize">{user?.role || 'User'}</span>
-                      </p>
-                    </div>
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+              <div className="border border-border bg-card rounded-lg p-6 space-y-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Profile Information</h2>
+                  <p className="text-sm text-muted-foreground">Update your personal information and profile details</p>
+                </div>
+
+                <div className="flex items-center gap-6">
+                  <Avatar className="w-20 h-20">
+                    <AvatarFallback className="text-xl font-bold bg-muted text-foreground">
+                      {userInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-semibold text-lg text-foreground">{settings.full_name || 'User'}</h3>
+                    <p className="text-muted-foreground">{settings.email}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Role: <span className="font-medium capitalize">{user?.role || 'User'}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="full_name">Full Name</Label>
+                    <Input
+                      id="full_name"
+                      value={settings.full_name}
+                      onChange={(e) => setSettings(prev => ({ ...prev, full_name: e.target.value }))}
+                      placeholder="Enter your full name"
+                    />
                   </div>
 
-                  <Separator className="dark:bg-gray-700" />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="full_name" className="dark:text-white">Full Name</Label>
-                      <Input
-                        id="full_name"
-                        value={settings.full_name}
-                        onChange={(e) => setSettings(prev => ({ ...prev, full_name: e.target.value }))}
-                        placeholder="Enter your full name"
-                        className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="email" className="dark:text-white">Email</Label>
-                      <Input
-                        id="email"
-                        value={settings.email}
-                        disabled
-                        className="bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400"
-                      />
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Email cannot be changed</p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="job_title" className="dark:text-white">Job Title</Label>
-                      <Input
-                        id="job_title"
-                        value={settings.job_title}
-                        onChange={(e) => setSettings(prev => ({ ...prev, job_title: e.target.value }))}
-                        placeholder="e.g., Product Manager"
-                        className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="department" className="dark:text-white">Department</Label>
-                      <Input
-                        id="department"
-                        value={settings.department}
-                        onChange={(e) => setSettings(prev => ({ ...prev, department: e.target.value }))}
-                        placeholder="e.g., Engineering"
-                        className="dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      value={settings.email}
+                      disabled
+                      className="bg-muted"
+                    />
+                    <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                   </div>
-                </CardContent>
-              </Card>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="job_title">Job Title</Label>
+                    <Input
+                      id="job_title"
+                      value={settings.job_title}
+                      onChange={(e) => setSettings(prev => ({ ...prev, job_title: e.target.value }))}
+                      placeholder="e.g., Product Manager"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="department">Department</Label>
+                    <Input
+                      id="department"
+                      value={settings.department}
+                      onChange={(e) => setSettings(prev => ({ ...prev, department: e.target.value }))}
+                      placeholder="e.g., Engineering"
+                    />
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </TabsContent>
 
           {/* Notifications Tab */}
           <TabsContent value="notifications">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Card className="dark:bg-gray-800 dark:border-gray-700">
-                <CardHeader>
-                  <CardTitle className="dark:text-white">Notification Preferences</CardTitle>
-                  <CardDescription className="dark:text-gray-400">Choose what notifications you want to receive</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="email_notifications" className="text-base dark:text-white">Email Notifications</Label>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Receive email notifications for updates</p>
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+              <div className="border border-border bg-card rounded-lg p-6 space-y-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Notification Preferences</h2>
+                  <p className="text-sm text-muted-foreground">Choose what notifications you want to receive</p>
+                </div>
+
+                <div className="space-y-4">
+                  {[
+                    { id: 'email_notifications', label: 'Email Notifications', desc: 'Receive email notifications for updates' },
+                    { id: 'task_assignments',    label: 'Task Assignments',    desc: 'Get notified when tasks are assigned to you' },
+                    { id: 'mentions',            label: 'Mentions',            desc: 'Get notified when someone mentions you' },
+                    { id: 'due_date_reminders',  label: 'Due Date Reminders',  desc: 'Receive reminders for upcoming due dates' },
+                    { id: 'sprint_updates',      label: 'Sprint Updates',      desc: 'Get notified about sprint changes and updates' },
+                    { id: 'daily_digest',        label: 'Daily Digest',        desc: 'Receive a daily summary of your tasks' },
+                  ].map((item, i) => (
+                    <React.Fragment key={item.id}>
+                      {i > 0 && <Separator />}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label htmlFor={item.id} className="text-base text-foreground">{item.label}</Label>
+                          <p className="text-sm text-muted-foreground">{item.desc}</p>
+                        </div>
+                        <Switch
+                          id={item.id}
+                          checked={settings[item.id]}
+                          onCheckedChange={(checked) => setSettings(prev => ({ ...prev, [item.id]: checked }))}
+                        />
                       </div>
-                      <Switch
-                        id="email_notifications"
-                        checked={settings.email_notifications}
-                        onCheckedChange={(checked) => setSettings(prev => ({ ...prev, email_notifications: checked }))}
-                      />
-                    </div>
-
-                    <Separator className="dark:bg-gray-700" />
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="task_assignments" className="text-base dark:text-white">Task Assignments</Label>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Get notified when tasks are assigned to you</p>
-                      </div>
-                      <Switch
-                        id="task_assignments"
-                        checked={settings.task_assignments}
-                        onCheckedChange={(checked) => setSettings(prev => ({ ...prev, task_assignments: checked }))}
-                      />
-                    </div>
-
-                    <Separator className="dark:bg-gray-700" />
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="mentions" className="text-base dark:text-white">Mentions</Label>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Get notified when someone mentions you</p>
-                      </div>
-                      <Switch
-                        id="mentions"
-                        checked={settings.mentions}
-                        onCheckedChange={(checked) => setSettings(prev => ({ ...prev, mentions: checked }))}
-                      />
-                    </div>
-
-                    <Separator className="dark:bg-gray-700" />
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="due_date_reminders" className="text-base dark:text-white">Due Date Reminders</Label>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Receive reminders for upcoming due dates</p>
-                      </div>
-                      <Switch
-                        id="due_date_reminders"
-                        checked={settings.due_date_reminders}
-                        onCheckedChange={(checked) => setSettings(prev => ({ ...prev, due_date_reminders: checked }))}
-                      />
-                    </div>
-
-                    <Separator className="dark:bg-gray-700" />
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="sprint_updates" className="text-base dark:text-white">Sprint Updates</Label>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Get notified about sprint changes and updates</p>
-                      </div>
-                      <Switch
-                        id="sprint_updates"
-                        checked={settings.sprint_updates}
-                        onCheckedChange={(checked) => setSettings(prev => ({ ...prev, sprint_updates: checked }))}
-                      />
-                    </div>
-
-                    <Separator className="dark:bg-gray-700" />
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="daily_digest" className="text-base dark:text-white">Daily Digest</Label>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Receive a daily summary of your tasks</p>
-                      </div>
-                      <Switch
-                        id="daily_digest"
-                        checked={settings.daily_digest}
-                        onCheckedChange={(checked) => setSettings(prev => ({ ...prev, daily_digest: checked }))}
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
             </motion.div>
           </TabsContent>
 
           {/* Preferences Tab */}
           <TabsContent value="preferences">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Card className="dark:bg-gray-800 dark:border-gray-700">
-                <CardHeader>
-                  <CardTitle className="dark:text-white">Display Preferences</CardTitle>
-                  <CardDescription className="dark:text-gray-400">Customize how the application looks and feels</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="theme" className="dark:text-white">Theme</Label>
-                      <Select
-                        value={settings.theme}
-                        onValueChange={handleThemeChange}
-                      >
-                        <SelectTrigger id="theme" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                          <SelectItem value="light" className="dark:text-white dark:hover:bg-gray-700">Light</SelectItem>
-                          <SelectItem value="dark" className="dark:text-white dark:hover:bg-gray-700">Dark</SelectItem>
-                          <SelectItem value="auto" className="dark:text-white dark:hover:bg-gray-700">Auto (System)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Theme changes apply immediately</p>
-                    </div>
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+              <div className="border border-border bg-card rounded-lg p-6 space-y-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Display Preferences</h2>
+                  <p className="text-sm text-muted-foreground">Customize how the application looks and feels</p>
+                </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="language" className="dark:text-white">Language</Label>
-                      <Select
-                        value={settings.language}
-                        onValueChange={(value) => setSettings(prev => ({ ...prev, language: value }))}
-                      >
-                        <SelectTrigger id="language" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                          <SelectItem value="en" className="dark:text-white dark:hover:bg-gray-700">English</SelectItem>
-                          <SelectItem value="es" className="dark:text-white dark:hover:bg-gray-700">Spanish</SelectItem>
-                          <SelectItem value="fr" className="dark:text-white dark:hover:bg-gray-700">French</SelectItem>
-                          <SelectItem value="de" className="dark:text-white dark:hover:bg-gray-700">German</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="timezone" className="dark:text-white">Timezone</Label>
-                      <Select
-                        value={settings.timezone}
-                        onValueChange={(value) => setSettings(prev => ({ ...prev, timezone: value }))}
-                      >
-                        <SelectTrigger id="timezone" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                          <SelectItem value="UTC" className="dark:text-white dark:hover:bg-gray-700">UTC</SelectItem>
-                          <SelectItem value="America/New_York" className="dark:text-white dark:hover:bg-gray-700">Eastern Time</SelectItem>
-                          <SelectItem value="America/Chicago" className="dark:text-white dark:hover:bg-gray-700">Central Time</SelectItem>
-                          <SelectItem value="America/Los_Angeles" className="dark:text-white dark:hover:bg-gray-700">Pacific Time</SelectItem>
-                          <SelectItem value="Europe/London" className="dark:text-white dark:hover:bg-gray-700">London</SelectItem>
-                          <SelectItem value="Europe/Paris" className="dark:text-white dark:hover:bg-gray-700">Paris</SelectItem>
-                          <SelectItem value="Asia/Tokyo" className="dark:text-white dark:hover:bg-gray-700">Tokyo</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="date_format" className="dark:text-white">Date Format</Label>
-                      <Select
-                        value={settings.date_format}
-                        onValueChange={(value) => setSettings(prev => ({ ...prev, date_format: value }))}
-                      >
-                        <SelectTrigger id="date_format" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                          <SelectItem value="MM/DD/YYYY" className="dark:text-white dark:hover:bg-gray-700">MM/DD/YYYY</SelectItem>
-                          <SelectItem value="DD/MM/YYYY" className="dark:text-white dark:hover:bg-gray-700">DD/MM/YYYY</SelectItem>
-                          <SelectItem value="YYYY-MM-DD" className="dark:text-white dark:hover:bg-gray-700">YYYY-MM-DD</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="week_start" className="dark:text-white">Week Starts On</Label>
-                      <Select
-                        value={settings.week_start}
-                        onValueChange={(value) => setSettings(prev => ({ ...prev, week_start: value }))}
-                      >
-                        <SelectTrigger id="week_start" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                          <SelectItem value="sunday" className="dark:text-white dark:hover:bg-gray-700">Sunday</SelectItem>
-                          <SelectItem value="monday" className="dark:text-white dark:hover:bg-gray-700">Monday</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="theme">Theme</Label>
+                    <Select value={settings.theme} onValueChange={handleThemeChange}>
+                      <SelectTrigger id="theme">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="light">Light</SelectItem>
+                        <SelectItem value="dark">Dark</SelectItem>
+                        <SelectItem value="auto">Auto (System)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Theme changes apply immediately</p>
                   </div>
-                </CardContent>
-              </Card>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="language">Language</Label>
+                    <Select
+                      value={settings.language}
+                      onValueChange={(value) => setSettings(prev => ({ ...prev, language: value }))}
+                    >
+                      <SelectTrigger id="language">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="es">Spanish</SelectItem>
+                        <SelectItem value="fr">French</SelectItem>
+                        <SelectItem value="de">German</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="timezone">Timezone</Label>
+                    <Select
+                      value={settings.timezone}
+                      onValueChange={(value) => setSettings(prev => ({ ...prev, timezone: value }))}
+                    >
+                      <SelectTrigger id="timezone">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="UTC">UTC</SelectItem>
+                        <SelectItem value="America/New_York">Eastern Time</SelectItem>
+                        <SelectItem value="America/Chicago">Central Time</SelectItem>
+                        <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
+                        <SelectItem value="Europe/London">London</SelectItem>
+                        <SelectItem value="Europe/Paris">Paris</SelectItem>
+                        <SelectItem value="Asia/Tokyo">Tokyo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="date_format">Date Format</Label>
+                    <Select
+                      value={settings.date_format}
+                      onValueChange={(value) => setSettings(prev => ({ ...prev, date_format: value }))}
+                    >
+                      <SelectTrigger id="date_format">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
+                        <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
+                        <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="week_start">Week Starts On</Label>
+                    <Select
+                      value={settings.week_start}
+                      onValueChange={(value) => setSettings(prev => ({ ...prev, week_start: value }))}
+                    >
+                      <SelectTrigger id="week_start">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sunday">Sunday</SelectItem>
+                        <SelectItem value="monday">Monday</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </TabsContent>
 
           {/* Privacy Tab */}
           <TabsContent value="privacy">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Card className="dark:bg-gray-800 dark:border-gray-700">
-                <CardHeader>
-                  <CardTitle className="dark:text-white">Privacy & Security</CardTitle>
-                  <CardDescription className="dark:text-gray-400">Manage your privacy and security settings</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="profile_visibility" className="dark:text-white">Profile Visibility</Label>
-                      <Select
-                        value={settings.profile_visibility}
-                        onValueChange={(value) => setSettings(prev => ({ ...prev, profile_visibility: value }))}
-                      >
-                        <SelectTrigger id="profile_visibility" className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                          <SelectItem value="public" className="dark:text-white dark:hover:bg-gray-700">Public - Anyone can see</SelectItem>
-                          <SelectItem value="team" className="dark:text-white dark:hover:bg-gray-700">Team Only - Only team members</SelectItem>
-                          <SelectItem value="private" className="dark:text-white dark:hover:bg-gray-700">Private - Only me</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+              <div className="border border-border bg-card rounded-lg p-6 space-y-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Privacy & Security</h2>
+                  <p className="text-sm text-muted-foreground">Manage your privacy and security settings</p>
+                </div>
 
-                    <Separator className="dark:bg-gray-700" />
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="show_email" className="text-base dark:text-white">Show Email Address</Label>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Allow others to see your email address</p>
-                      </div>
-                      <Switch
-                        id="show_email"
-                        checked={settings.show_email}
-                        onCheckedChange={(checked) => setSettings(prev => ({ ...prev, show_email: checked }))}
-                      />
-                    </div>
-
-                    <Separator className="dark:bg-gray-700" />
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="activity_tracking" className="text-base dark:text-white">Activity Tracking</Label>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Allow tracking of your activity for analytics</p>
-                      </div>
-                      <Switch
-                        id="activity_tracking"
-                        checked={settings.activity_tracking}
-                        onCheckedChange={(checked) => setSettings(prev => ({ ...prev, activity_tracking: checked }))}
-                      />
-                    </div>
-                  </div>
-
-                  <Separator className="dark:bg-gray-700" />
-
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 dark:bg-red-950 dark:border-red-900">
-                    <h3 className="text-red-900 font-semibold mb-2 dark:text-red-300">Danger Zone</h3>
-                    <p className="text-sm text-red-700 mb-4 dark:text-red-400">These actions cannot be undone</p>
-                    <Button
-                      variant="destructive"
-                      onClick={handleLogout}
-                      className="flex items-center gap-2"
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="profile_visibility">Profile Visibility</Label>
+                    <Select
+                      value={settings.profile_visibility}
+                      onValueChange={(value) => setSettings(prev => ({ ...prev, profile_visibility: value }))}
                     >
-                      <LogOut className="w-4 h-4" />
-                      Log Out
-                    </Button>
+                      <SelectTrigger id="profile_visibility">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="public">Public - Anyone can see</SelectItem>
+                        <SelectItem value="team">Team Only - Only team members</SelectItem>
+                        <SelectItem value="private">Private - Only me</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                </CardContent>
-              </Card>
+
+                  <Separator />
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="show_email" className="text-base text-foreground">Show Email Address</Label>
+                      <p className="text-sm text-muted-foreground">Allow others to see your email address</p>
+                    </div>
+                    <Switch
+                      id="show_email"
+                      checked={settings.show_email}
+                      onCheckedChange={(checked) => setSettings(prev => ({ ...prev, show_email: checked }))}
+                    />
+                  </div>
+
+                  <Separator />
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="activity_tracking" className="text-base text-foreground">Activity Tracking</Label>
+                      <p className="text-sm text-muted-foreground">Allow tracking of your activity for analytics</p>
+                    </div>
+                    <Switch
+                      id="activity_tracking"
+                      checked={settings.activity_tracking}
+                      onCheckedChange={(checked) => setSettings(prev => ({ ...prev, activity_tracking: checked }))}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="border border-red-200 bg-red-50 dark:bg-red-950 dark:border-red-800 rounded-lg p-4">
+                  <h3 className="text-red-900 dark:text-red-300 font-semibold mb-2">Danger Zone</h3>
+                  <p className="text-sm text-red-700 dark:text-red-400 mb-4">These actions cannot be undone</p>
+                  <Button
+                    variant="destructive"
+                    onClick={handleLogout}
+                    className="flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Log Out
+                  </Button>
+                </div>
+              </div>
             </motion.div>
           </TabsContent>
         </Tabs>
 
         {/* Save Button */}
         <div className="fixed bottom-6 right-6 z-50">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <Button
+            onClick={handleSaveSettings}
+            disabled={isSaving}
+            variant={saveSuccess ? "default" : "default"}
+            className="rounded-full h-14 px-8 shadow-sm font-medium"
           >
-            <Button
-              onClick={handleSaveSettings}
-              disabled={isSaving}
-              className={`rounded-full h-14 px-8 shadow-lg ${
-                saveSuccess 
-                  ? 'bg-green-500 hover:bg-green-600' 
-                  : 'bg-[#0073EA] hover:bg-[#0056B3]'
-              } text-white font-medium`}
-            >
-              {isSaving ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                  Saving...
-                </>
-              ) : saveSuccess ? (
-                <>
-                  <CheckCircle2 className="w-5 h-5 mr-2" />
-                  Saved!
-                </>
-              ) : (
-                <>
-                  <Save className="w-5 h-5 mr-2" />
-                  Save Changes
-                </>
-              )}
-            </Button>
-          </motion.div>
+            {isSaving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin mr-2" />
+                Saving...
+              </>
+            ) : saveSuccess ? (
+              <>
+                <CheckCircle2 className="w-5 h-5 mr-2" />
+                Saved!
+              </>
+            ) : (
+              <>
+                <Save className="w-5 h-5 mr-2" />
+                Save Changes
+              </>
+            )}
+          </Button>
         </div>
       </div>
     </div>

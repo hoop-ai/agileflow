@@ -131,21 +131,21 @@ export default function Boards() {
   };
 
   return (
-    <div className="p-4 md:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="p-4 md:p-6 bg-background min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
               My Boards
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+            <p className="text-muted-foreground text-sm mt-1">
               Manage your projects and workflows
             </p>
           </div>
-          <Button 
+          <Button
             onClick={() => setShowCreateModal(true)}
-            className="bg-gradient-to-r from-[#0073EA] to-[#0056B3] hover:from-[#0056B3] hover:to-[#0073EA] text-white rounded-lg h-10 px-5 font-medium text-sm shadow-md transition-all hover:shadow-lg"
+            className="rounded-lg h-10 px-5 font-medium text-sm transition-colors duration-150"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Board
@@ -155,36 +155,36 @@ export default function Boards() {
         {/* Controls */}
         <div className="flex flex-col md:flex-row gap-3 mb-6">
           <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search boards..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 rounded-lg h-10 focus:ring-2 focus:ring-[#0073EA]/20 text-sm"
+              className="pl-9 rounded-lg h-10 text-sm"
             />
           </div>
           <div className="flex gap-2">
             <Button
               variant={viewMode === "grid" ? "default" : "outline"}
               onClick={() => setViewMode("grid")}
-              className={`rounded-lg h-10 px-3 ${viewMode === "grid" ? "bg-[#0073EA] text-white hover:bg-[#0056B3]" : "border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"}`}
+              className="rounded-lg h-10 px-3"
             >
               <Grid3X3 className="w-4 h-4" />
             </Button>
             <Button
               variant={viewMode === "list" ? "default" : "outline"}
               onClick={() => setViewMode("list")}
-              className={`rounded-lg h-10 px-3 ${viewMode === "list" ? "bg-[#0073EA] text-white hover:bg-[#0056B3]" : "border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"}`}
+              className="rounded-lg h-10 px-3"
             >
               <LayoutList className="w-4 h-4" />
             </Button>
             <Link to={createPageUrl("Analytics")}>
-              <Button variant="outline" className="rounded-lg h-10 px-3 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
+              <Button variant="outline" className="rounded-lg h-10 px-3 text-sm">
                 <BarChart className="w-4 h-4 mr-1.5" />
                 Analytics
               </Button>
             </Link>
-            <Button variant="outline" className="rounded-lg h-10 px-3 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
+            <Button variant="outline" className="rounded-lg h-10 px-3 text-sm">
               <Filter className="w-4 h-4 mr-1.5" />
               Filter
             </Button>
@@ -197,38 +197,38 @@ export default function Boards() {
             <div className={`gap-6 ${viewMode === "grid" ? "grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "space-y-3"}`}>
               {Array(viewMode === "grid" ? 8 : 5).fill(0).map((_, i) => (
                  viewMode === "grid" ? (
-                    <Card key={i} className="animate-pulse bg-white dark:bg-gray-800 rounded-xl shadow-md h-[220px]">
+                    <Card key={i} className="animate-pulse bg-card rounded-xl border border-border h-[220px]">
                       <CardContent className="p-5 space-y-3 h-full flex flex-col justify-between">
                         <div>
                           <div className="flex justify-between items-start">
-                              <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-                              <div className="w-14 h-5 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                              <div className="w-10 h-10 bg-muted rounded-lg"></div>
+                              <div className="w-14 h-5 bg-muted rounded-full"></div>
                           </div>
-                          <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mt-3"></div>
-                          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full mt-1.5"></div>
-                          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3 mt-1"></div>
+                          <div className="h-5 bg-muted rounded w-3/4 mt-3"></div>
+                          <div className="h-3 bg-muted rounded w-full mt-1.5"></div>
+                          <div className="h-3 bg-muted rounded w-2/3 mt-1"></div>
                         </div>
-                        <div className="flex justify-between items-center pt-2.5 border-t border-gray-200 dark:border-gray-700 mt-2.5">
-                            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
-                            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+                        <div className="flex justify-between items-center pt-2.5 border-t border-border mt-2.5">
+                            <div className="h-3 bg-muted rounded w-1/3"></div>
+                            <div className="h-3 bg-muted rounded w-1/4"></div>
                         </div>
                       </CardContent>
                     </Card>
                  ) : (
-                    <Card key={i} className="animate-pulse bg-white dark:bg-gray-800 rounded-lg shadow-sm h-[60px]">
+                    <Card key={i} className="animate-pulse bg-card rounded-lg border border-border h-[60px]">
                         <CardContent className="p-3 flex items-center justify-between h-full">
                             <div className="flex items-center gap-3">
-                                <div className="w-1.5 h-full bg-gray-200 dark:bg-gray-700 rounded-l-lg"></div>
-                                <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-md"></div>
+                                <div className="w-1.5 h-full bg-muted rounded-l-lg"></div>
+                                <div className="w-8 h-8 bg-muted rounded-md"></div>
                                 <div>
-                                    <div className="h-3.5 bg-gray-200 dark:bg-gray-700 rounded w-28 mb-1"></div>
-                                    <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                                    <div className="h-3.5 bg-muted rounded w-28 mb-1"></div>
+                                    <div className="h-2.5 bg-muted rounded w-20"></div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                <div className="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-                                <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded-md hidden sm:block"></div>
-                                <div className="h-7 w-7 bg-gray-200 dark:bg-gray-700 rounded-md"></div>
+                                <div className="h-4 w-12 bg-muted rounded-full"></div>
+                                <div className="h-3 w-20 bg-muted rounded-md hidden sm:block"></div>
+                                <div className="h-7 w-7 bg-muted rounded-md"></div>
                             </div>
                         </CardContent>
                     </Card>
@@ -241,22 +241,22 @@ export default function Boards() {
               animate={{ opacity: 1, y: 0 }}
               className="text-center py-16"
             >
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <Folder className="w-12 h-12 text-blue-500" />
+              <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                <Folder className="w-12 h-12 text-muted-foreground" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              <h3 className="text-xl font-semibold text-foreground mb-2">
                 {searchQuery ? "No boards found" : "No boards yet"}
               </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                {searchQuery 
-                  ? "Try adjusting your search query or filters." 
+              <p className="text-muted-foreground mb-6">
+                {searchQuery
+                  ? "Try adjusting your search query or filters."
                   : "Get started by creating your first project board!"
                 }
               </p>
               {!searchQuery && (
-                <Button 
+                <Button
                   onClick={() => setShowCreateModal(true)}
-                  className="bg-gradient-to-r from-[#0073EA] to-[#0056B3] hover:from-[#0056B3] hover:to-[#0073EA] text-white rounded-xl h-12 px-6 font-medium shadow-md hover:shadow-lg transition-all"
+                  className="rounded-xl h-12 px-6 font-medium transition-colors duration-150"
                 >
                   <Plus className="w-5 h-5 mr-2" />
                   Create Your First Board

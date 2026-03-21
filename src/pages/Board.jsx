@@ -444,23 +444,23 @@ export default function BoardPage() {
 
   if (isLoading && !board) {
     return (
-      <div className="p-8 bg-[#F5F6F8] min-h-screen flex items-center justify-center">
+      <div className="p-8 bg-background min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0073EA] mx-auto mb-4"></div>
-          <p className="text-lg text-[#323338]">Loading board...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-lg text-foreground">Loading board...</p>
         </div>
       </div>
     );
   }
-  
+
   if (!board) {
     return (
-      <div className="p-8 bg-[#F5F6F8] min-h-screen">
+      <div className="p-8 bg-background min-h-screen">
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-16">
-            <h2 className="text-2xl font-bold text-[#323338] mb-4">Board not found</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4">Board not found</h2>
             <Link to={createPageUrl("Boards")}>
-              <Button className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-xl">
+              <Button variant="default">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Boards
               </Button>
@@ -475,9 +475,9 @@ export default function BoardPage() {
   const numHiddenColumns = hiddenColumns?.size || 0;
 
   return (
-    <div className="bg-[#F5F6F8] min-h-screen">
+    <div className="bg-background min-h-screen">
       <div className="max-w-full">
-        <div className="sticky top-0 z-20 bg-[#F5F6F8] pb-4">
+        <div className="sticky top-0 z-20 bg-background pb-4">
           <BoardHeader
             board={board}
             items={items}
@@ -506,36 +506,36 @@ export default function BoardPage() {
 
         <div className="px-6 py-6">
           {currentView === 'table' && (
-            <div className="flex items-center justify-between mb-6 bg-white rounded-xl p-4 shadow-sm border border-[#E1E5F3]">
+            <div className="flex items-center justify-between mb-6 bg-card rounded-xl p-4 shadow-sm border border-border">
               <div className="flex items-center gap-4">
-                <Button 
+                <Button
                   onClick={() => setShowNewTaskModal(true)}
-                  className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg h-10 px-4 font-medium"
+                  className="rounded-lg h-10 px-4 font-medium"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   New Task
                 </Button>
-                
+
                 <div className="relative">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-[#676879]" />
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                   <Input
                     placeholder="Search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 w-64 bg-[#F5F6F8] border-none rounded-lg h-10 focus:bg-white focus:ring-2 focus:ring-[#0073EA]/20"
+                    className="pl-10 w-64 rounded-lg h-10"
                   />
                 </div>
-                
+
                 <div className="relative">
-                  <Button 
-                    variant="outline" 
-                    className="rounded-lg h-10 px-4 border-[#E1E5F3]"
+                  <Button
+                    variant="outline"
+                    className="rounded-lg h-10 px-4"
                     onClick={() => setShowPersonFilter(!showPersonFilter)}
                   >
                     <Users className="w-4 h-4 mr-2" />
                     Person
                     {filters.people.length > 0 && (
-                      <Badge className="ml-2 bg-[#0073EA] text-white rounded-full w-5 h-5 text-xs p-0 flex items-center justify-center">
+                      <Badge className="ml-2 rounded-full w-5 h-5 text-xs p-0 flex items-center justify-center">
                         {filters.people.length}
                       </Badge>
                     )}
@@ -551,15 +551,15 @@ export default function BoardPage() {
                 </div>
                 
                 <div className="relative">
-                  <Button 
-                    variant="outline" 
-                    className="rounded-lg h-10 px-4 border-[#E1E5F3]"
+                  <Button
+                    variant="outline"
+                    className="rounded-lg h-10 px-4"
                     onClick={() => setShowFilterPanel(!showFilterPanel)}
                   >
                     <Filter className="w-4 h-4 mr-2" />
                     Filter
                     {(filters.status.length + (filters.priority?.length || 0)) > 0 && (
-                      <Badge className="ml-2 bg-[#0073EA] text-white rounded-full w-5 h-5 text-xs p-0 flex items-center justify-center">
+                      <Badge className="ml-2 rounded-full w-5 h-5 text-xs p-0 flex items-center justify-center">
                         {filters.status.length + (filters.priority?.length || 0)}
                       </Badge>
                     )}
@@ -575,9 +575,9 @@ export default function BoardPage() {
                 </div>
                 
                 <div className="relative">
-                  <Button 
-                    variant="outline" 
-                    className="rounded-lg h-10 px-4 border-[#E1E5F3]"
+                  <Button
+                    variant="outline"
+                    className="rounded-lg h-10 px-4"
                     onClick={() => setShowSortMenu(!showSortMenu)}
                   >
                     <SortAsc className="w-4 h-4 mr-2" />
@@ -598,15 +598,15 @@ export default function BoardPage() {
                 </div>
                 
                 <div className="relative">
-                  <Button 
-                    variant="outline" 
-                    className="rounded-lg h-10 px-4 border-[#E1E5F3]"
+                  <Button
+                    variant="outline"
+                    className="rounded-lg h-10 px-4"
                     onClick={() => setShowHideMenu(!showHideMenu)}
                   >
                     {numHiddenColumns > 0 ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
                     Hide
                     {numHiddenColumns > 0 && (
-                      <Badge className="ml-2 bg-[#0073EA] text-white rounded-full w-5 h-5 text-xs p-0 flex items-center justify-center">
+                      <Badge className="ml-2 rounded-full w-5 h-5 text-xs p-0 flex items-center justify-center">
                         {numHiddenColumns}
                       </Badge>
                     )}
@@ -622,9 +622,9 @@ export default function BoardPage() {
                 </div>
                 
                 <div className="relative">
-                  <Button 
-                    variant="outline" 
-                    className="rounded-lg h-10 px-4 border-[#E1E5F3]"
+                  <Button
+                    variant="outline"
+                    className="rounded-lg h-10 px-4"
                     onClick={() => setShowGroupByMenu(!showGroupByMenu)}
                   >
                     <GroupIcon className="w-4 h-4 mr-2" />
@@ -646,7 +646,7 @@ export default function BoardPage() {
           )}
 
           {currentView === 'table' && (
-            <div className="bg-white rounded-xl shadow-sm border border-[#E1E5F3] overflow-hidden">
+            <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
               {board.groups?.map((group) => (
                 <GroupSection
                   key={group.id}
@@ -676,11 +676,11 @@ export default function BoardPage() {
                 />
               ))}
               {(!board.groups || board.groups.length === 0) && !isLoading && (
-                <div className="p-8 text-center text-[#676879]">
+                <div className="p-8 text-center text-muted-foreground">
                   <h3 className="text-xl font-medium mb-2">No groups yet!</h3>
                   <p className="mb-4">Start by adding your first group to organize your tasks.</p>
                   <Button
-                    className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-lg h-10 px-4 font-medium"
+                    className="rounded-lg h-10 px-4 font-medium"
                     onClick={() => setShowNewGroupModal(true)}
                   >
                     <Plus className="w-4 h-4 mr-2" />
@@ -688,11 +688,11 @@ export default function BoardPage() {
                   </Button>
                 </div>
               )}
-              
-              <div className="p-4 border-t border-[#E1E5F3]">
+
+              <div className="p-4 border-t border-border">
                 <Button
                   variant="outline"
-                  className="w-full border-dashed border-[#0073EA] text-[#0073EA] hover:bg-[#0073EA]/10 rounded-lg h-10"
+                  className="w-full border-dashed rounded-lg h-10"
                   onClick={() => setShowNewGroupModal(true)}
                 >
                   <Plus className="w-4 h-4 mr-2" />

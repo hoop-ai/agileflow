@@ -1,18 +1,32 @@
 import React, { useState } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+
+// Tailwind-based color map for known status labels
+const statusColorMap = {
+  'not started': { bg: 'bg-muted', text: 'text-muted-foreground' },
+  'working on it': { bg: 'bg-amber-50 dark:bg-amber-950', text: 'text-amber-700 dark:text-amber-400' },
+  'done': { bg: 'bg-green-50 dark:bg-green-950', text: 'text-green-700 dark:text-green-400' },
+  'stuck': { bg: 'bg-red-50 dark:bg-red-950', text: 'text-red-700 dark:text-red-400' },
+};
+
+const getStatusClasses = (label) => {
+  const key = (label || '').toLowerCase();
+  return statusColorMap[key] || { bg: 'bg-muted', text: 'text-muted-foreground' };
+};
 
 export default function StatusCell({ value, options, onUpdate }) {
   const [isEditing, setIsEditing] = useState(false);
-  
+
   const choices = options?.choices || [
-    { label: 'Not Started', color: '#C4C4C4' },
-    { label: 'Working on it', color: '#FFCB00' },
-    { label: 'Done', color: '#00C875' },
-    { label: 'Stuck', color: '#E2445C' }
+    { label: 'Not Started' },
+    { label: 'Working on it' },
+    { label: 'Done' },
+    { label: 'Stuck' },
   ];
-  
-  const currentChoice = choices.find(choice => 
+
+  const currentChoice = choices.find(choice =>
     choice.label.toLowerCase() === (value || '').toLowerCase()
   ) || choices[0];
 
@@ -33,26 +47,31 @@ export default function StatusCell({ value, options, onUpdate }) {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {choices.map((choice) => (
-            <SelectItem key={choice.label} value={choice.label}>
-              <div className="flex items-center gap-2">
-                <div 
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: choice.color }}
-                />
-                <span>{choice.label}</span>
-              </div>
-            </SelectItem>
-          ))}
+          {choices.map((choice) => {
+            const colors = getStatusClasses(choice.label);
+            return (
+              <SelectItem key={choice.label} value={choice.label}>
+                <div className="flex items-center gap-2">
+                  <div className={cn('w-3 h-3 rounded-full', colors.bg)} />
+                  <span>{choice.label}</span>
+                </div>
+              </SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
     );
   }
 
+  const colors = getStatusClasses(currentChoice.label);
+
   return (
     <Badge
-      className="cursor-pointer border-none text-white font-medium px-3 py-1 hover:opacity-80 transition-opacity"
-      style={{ backgroundColor: currentChoice.color }}
+      className={cn(
+        'cursor-pointer border-none font-medium px-3 py-1 hover:opacity-80 transition-opacity',
+        colors.bg,
+        colors.text
+      )}
       onClick={() => setIsEditing(true)}
     >
       {currentChoice.label}

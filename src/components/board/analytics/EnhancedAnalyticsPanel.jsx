@@ -62,19 +62,19 @@ export default function EnhancedAnalyticsPanel({ board, items, onClose }) {
       initial={{ x: '100%' }}
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
-      className="fixed right-0 top-0 h-full w-full md:w-2/3 lg:w-1/2 bg-white shadow-2xl z-50 overflow-y-auto"
+      className="fixed right-0 top-0 h-full w-full md:w-2/3 lg:w-1/2 bg-card border-l border-border shadow-sm z-50 overflow-y-auto"
     >
-      <div className="sticky top-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6 z-10">
+      <div className="sticky top-0 bg-card border-b border-border p-6 z-10">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold">Advanced Analytics</h2>
-            <p className="text-purple-100 mt-1">{board.title}</p>
+            <h2 className="text-xl font-semibold text-foreground">Advanced Analytics</h2>
+            <p className="text-muted-foreground mt-1 text-sm">{board.title}</p>
           </div>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
-              className="text-white hover:bg-white/20 rounded-full"
+              className="rounded-lg"
               onClick={handleExport}
             >
               <Download className="w-5 h-5" />
@@ -82,7 +82,7 @@ export default function EnhancedAnalyticsPanel({ board, items, onClose }) {
             <Button
               variant="ghost"
               size="icon"
-              className="text-white hover:bg-white/20 rounded-full"
+              className="rounded-lg"
               onClick={onClose}
             >
               <X className="w-5 h-5" />
@@ -94,7 +94,7 @@ export default function EnhancedAnalyticsPanel({ board, items, onClose }) {
       <div className="p-6 space-y-6">
         {/* Time Range Selector */}
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-gray-800">Performance Insights</h3>
+          <h3 className="text-lg font-semibold text-foreground">Performance Insights</h3>
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger className="w-40">
               <SelectValue />
@@ -110,61 +110,61 @@ export default function EnhancedAnalyticsPanel({ board, items, onClose }) {
         {/* Quick Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {metrics.cycleTime && (
-            <Card className="border-l-4 border-l-blue-500">
+            <Card className="bg-card border border-border rounded-lg">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Avg Cycle Time</p>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-sm text-muted-foreground">Avg Cycle Time</p>
+                    <p className="text-2xl font-bold text-foreground">
                       {metrics.cycleTime.average.toFixed(1)}d
                     </p>
                   </div>
-                  <Zap className="w-8 h-8 text-blue-500" />
+                  <Zap className="w-8 h-8 text-muted-foreground" />
                 </div>
               </CardContent>
             </Card>
           )}
-          
-          <Card className="border-l-4 border-l-green-500">
+
+          <Card className="bg-card border border-border rounded-lg">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Team Velocity</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm text-muted-foreground">Team Velocity</p>
+                  <p className="text-2xl font-bold text-foreground">
                     {metrics.velocity[metrics.velocity.length - 1]?.completed || 0}
                   </p>
                 </div>
-                <TrendingUp className="w-8 h-8 text-green-500" />
+                <TrendingUp className="w-8 h-8 text-muted-foreground" />
               </div>
             </CardContent>
           </Card>
 
           {metrics.priorityHealth && (
-            <Card className="border-l-4 border-l-purple-500">
+            <Card className="bg-card border border-border rounded-lg">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Health Score</p>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-sm text-muted-foreground">Health Score</p>
+                    <p className="text-2xl font-bold text-foreground">
                       {metrics.priorityHealth.healthScore}
                     </p>
                   </div>
-                  <Target className="w-8 h-8 text-purple-500" />
+                  <Target className="w-8 h-8 text-muted-foreground" />
                 </div>
               </CardContent>
             </Card>
           )}
 
-          <Card className="border-l-4 border-l-orange-500">
+          <Card className="bg-card border border-border rounded-lg">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Active Members</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm text-muted-foreground">Active Members</p>
+                  <p className="text-2xl font-bold text-foreground">
                     {metrics.teamMetrics.length}
                   </p>
                 </div>
-                <Users className="w-8 h-8 text-orange-500" />
+                <Users className="w-8 h-8 text-muted-foreground" />
               </div>
             </CardContent>
           </Card>
@@ -180,9 +180,9 @@ export default function EnhancedAnalyticsPanel({ board, items, onClose }) {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6 mt-6">
-            <Card>
+            <Card className="bg-card border border-border rounded-lg p-4">
               <CardHeader>
-                <CardTitle>Completion Rate Over Time</CardTitle>
+                <CardTitle className="text-foreground">Completion Rate Over Time</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -190,21 +190,27 @@ export default function EnhancedAnalyticsPanel({ board, items, onClose }) {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
                     <YAxis />
-                    <Tooltip />
-                    <Area 
-                      type="monotone" 
-                      dataKey="completionRate" 
-                      stroke="#8b5cf6" 
-                      fill="#c4b5fd" 
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'var(--card)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '6px',
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="completionRate"
+                      stroke="#8b5cf6"
+                      fill="#ede9fe"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-card border border-border rounded-lg p-4">
               <CardHeader>
-                <CardTitle>Team Velocity</CardTitle>
+                <CardTitle className="text-foreground">Team Velocity</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -212,7 +218,13 @@ export default function EnhancedAnalyticsPanel({ board, items, onClose }) {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="period" />
                     <YAxis />
-                    <Tooltip />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'var(--card)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '6px',
+                      }}
+                    />
                     <Bar dataKey="completed" fill="#10b981" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -221,36 +233,36 @@ export default function EnhancedAnalyticsPanel({ board, items, onClose }) {
           </TabsContent>
 
           <TabsContent value="team" className="space-y-6 mt-6">
-            <Card>
+            <Card className="bg-card border border-border rounded-lg">
               <CardHeader>
-                <CardTitle>Team Performance</CardTitle>
+                <CardTitle className="text-foreground">Team Performance</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {metrics.teamMetrics.map((member, index) => (
-                    <div key={index} className="p-4 bg-gray-50 rounded-lg">
+                    <div key={index} className="p-4 bg-muted rounded-lg">
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-gray-900">{member.owner}</h4>
-                        <span className="text-sm text-gray-600">
+                        <h4 className="font-semibold text-foreground">{member.owner}</h4>
+                        <span className="text-sm text-muted-foreground">
                           {member.completionRate.toFixed(1)}% completion
                         </span>
                       </div>
                       <div className="grid grid-cols-4 gap-2 text-sm">
                         <div>
-                          <p className="text-gray-600">Assigned</p>
-                          <p className="font-semibold">{member.assigned}</p>
+                          <p className="text-muted-foreground">Assigned</p>
+                          <p className="font-semibold text-foreground">{member.assigned}</p>
                         </div>
                         <div>
-                          <p className="text-gray-600">Completed</p>
-                          <p className="font-semibold text-green-600">{member.completed}</p>
+                          <p className="text-muted-foreground">Completed</p>
+                          <p className="font-semibold text-green-600 dark:text-green-400">{member.completed}</p>
                         </div>
                         <div>
-                          <p className="text-gray-600">In Progress</p>
-                          <p className="font-semibold text-blue-600">{member.inProgress}</p>
+                          <p className="text-muted-foreground">In Progress</p>
+                          <p className="font-semibold text-blue-600 dark:text-blue-400">{member.inProgress}</p>
                         </div>
                         <div>
-                          <p className="text-gray-600">Avg Days</p>
-                          <p className="font-semibold">{member.avgCompletionTime.toFixed(1)}</p>
+                          <p className="text-muted-foreground">Avg Days</p>
+                          <p className="font-semibold text-foreground">{member.avgCompletionTime.toFixed(1)}</p>
                         </div>
                       </div>
                     </div>
@@ -261,9 +273,9 @@ export default function EnhancedAnalyticsPanel({ board, items, onClose }) {
           </TabsContent>
 
           <TabsContent value="burndown" className="space-y-6 mt-6">
-            <Card>
+            <Card className="bg-card border border-border rounded-lg p-4">
               <CardHeader>
-                <CardTitle>Burndown Chart</CardTitle>
+                <CardTitle className="text-foreground">Burndown Chart</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={400}>
@@ -271,19 +283,25 @@ export default function EnhancedAnalyticsPanel({ board, items, onClose }) {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="day" label={{ value: 'Days', position: 'insideBottom', offset: -5 }} />
                     <YAxis label={{ value: 'Tasks Remaining', angle: -90, position: 'insideLeft' }} />
-                    <Tooltip />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'var(--card)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '6px',
+                      }}
+                    />
                     <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="ideal" 
-                      stroke="#94a3b8" 
-                      strokeDasharray="5 5" 
+                    <Line
+                      type="monotone"
+                      dataKey="ideal"
+                      stroke="#94a3b8"
+                      strokeDasharray="5 5"
                       name="Ideal"
                     />
-                    <Line 
-                      type="monotone" 
-                      dataKey="remaining" 
-                      stroke="#3b82f6" 
+                    <Line
+                      type="monotone"
+                      dataKey="remaining"
+                      stroke="#3b82f6"
                       strokeWidth={2}
                       name="Actual"
                     />
@@ -295,27 +313,27 @@ export default function EnhancedAnalyticsPanel({ board, items, onClose }) {
 
           <TabsContent value="trends" className="space-y-6 mt-6">
             {metrics.priorityHealth && (
-              <Card>
+              <Card className="bg-card border border-border rounded-lg p-4">
                 <CardHeader>
-                  <CardTitle>Priority Distribution</CardTitle>
+                  <CardTitle className="text-foreground">Priority Distribution</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {Object.entries(metrics.priorityHealth.distribution).map(([priority, count]) => {
                       const overdue = metrics.priorityHealth.overdue[priority] || 0;
                       const percentage = (count / items.length) * 100;
-                      
+
                       return (
                         <div key={priority} className="space-y-2">
                           <div className="flex justify-between text-sm">
-                            <span className="font-medium capitalize">{priority}</span>
-                            <span className="text-gray-600">
+                            <span className="font-medium capitalize text-foreground">{priority}</span>
+                            <span className="text-muted-foreground">
                               {count} tasks ({overdue} overdue)
                             </span>
                           </div>
-                          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+                              className="h-full bg-primary rounded-full"
                               style={{ width: `${percentage}%` }}
                             />
                           </div>

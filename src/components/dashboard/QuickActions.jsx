@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Plus, Users, Calendar, BarChart3, Zap } from "lucide-react";
-import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
@@ -26,100 +26,78 @@ export default function QuickActions({ onCreateBoard }) {
       title: "Create Board",
       description: "Start new project",
       icon: Plus,
-      gradient: "from-blue-500 to-cyan-500",
-      hoverGradient: "hover:from-blue-600 hover:to-cyan-600",
       onClick: () => setShowCreateModal(true)
     },
     {
       title: "Invite Team",
       description: "Add collaborators",
       icon: Users,
-      gradient: "from-green-500 to-emerald-500",
-      hoverGradient: "hover:from-green-600 hover:to-emerald-600",
       onClick: () => setShowInviteModal(true)
     },
     {
       title: "Calendar",
       description: "View deadlines",
       icon: Calendar,
-      gradient: "from-amber-500 to-orange-500",
-      hoverGradient: "hover:from-amber-600 hover:to-orange-600",
       onClick: () => setShowCalendarModal(true)
     },
     {
       title: "Analytics",
       description: "View insights",
       icon: BarChart3,
-      gradient: "from-purple-500 to-pink-500",
-      hoverGradient: "hover:from-purple-600 hover:to-pink-600",
       link: createPageUrl("Analytics")
     }
   ];
 
   return (
     <>
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-white via-white to-purple-50/30 backdrop-blur-sm">
+      <Card className="border border-border bg-card">
         <CardHeader className="pb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Zap className="w-6 h-6 text-white" />
-            </div>
+          <div className="flex items-center gap-2">
+            <Zap className="h-4 w-4 text-muted-foreground" />
             <div>
-              <CardTitle className="text-lg font-bold text-[#323338]">
+              <CardTitle className="text-base font-semibold text-foreground">
                 Quick Actions
               </CardTitle>
-              <p className="text-sm text-[#676879]">Get things done faster</p>
+              <p className="text-sm text-muted-foreground">Get things done faster</p>
             </div>
           </div>
         </CardHeader>
-        
-        <CardContent className="space-y-3">
-          {actions.map((action, index) => (
-            <motion.div
-              key={action.title}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
-              className="group"
-            >
-              {action.link ? (
-                <Link to={action.link}>
-                  <div className={`flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r ${action.gradient} ${action.hoverGradient} transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg text-white`}>
-                    <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/20">
-                      <action.icon className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-white">
-                        {action.title}
-                      </p>
-                      <p className="text-sm text-white/80">{action.description}</p>
-                    </div>
-                  </div>
-                </Link>
-              ) : (
-                <div 
-                  className={`flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r ${action.gradient} ${action.hoverGradient} transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg text-white`}
-                  onClick={action.onClick}
-                >
-                  <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/20">
-                    <action.icon className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-white">
-                      {action.title}
-                    </p>
-                    <p className="text-sm text-white/80">{action.description}</p>
-                  </div>
+
+        <CardContent className="space-y-2">
+          {actions.map((action) => {
+            const inner = (
+              <div className="flex items-center gap-3 w-full">
+                <action.icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-medium text-foreground">{action.title}</p>
+                  <p className="text-xs text-muted-foreground">{action.description}</p>
                 </div>
-              )}
-            </motion.div>
-          ))}
+              </div>
+            );
+
+            return action.link ? (
+              <Link key={action.title} to={action.link} className="block">
+                <Button
+                  variant="outline"
+                  className="w-full h-auto py-3 px-4 justify-start"
+                >
+                  {inner}
+                </Button>
+              </Link>
+            ) : (
+              <Button
+                key={action.title}
+                variant="outline"
+                className="w-full h-auto py-3 px-4 justify-start"
+                onClick={action.onClick}
+              >
+                {inner}
+              </Button>
+            );
+          })}
         </CardContent>
       </Card>
 
-      {/* Modals */}
       <CreateBoardModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}

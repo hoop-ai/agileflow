@@ -16,6 +16,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 import {
   Shield,
   Users,
@@ -99,19 +100,19 @@ export default function AdminPage() {
   );
 
   const roleColors = {
-    admin: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    admin:  'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
     member: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-    viewer: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+    viewer: 'bg-muted text-muted-foreground'
   };
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-6">
-        <Card className="max-w-md w-full dark:bg-gray-800 dark:border-gray-700">
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <Card className="max-w-md w-full border border-border bg-card">
           <CardContent className="pt-6 text-center">
             <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Access Denied</h2>
-            <p className="text-gray-600 dark:text-gray-400">
+            <h2 className="text-2xl font-bold text-foreground mb-2">Access Denied</h2>
+            <p className="text-muted-foreground">
               You need administrator privileges to access this page.
               Contact your admin to request access.
             </p>
@@ -123,53 +124,55 @@ export default function AdminPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0073EA] mx-auto mb-4"></div>
-          <p className="text-lg text-gray-900 dark:text-white">Loading admin panel...</p>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="w-8 h-8 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground mt-3">Loading admin panel...</p>
         </div>
       </div>
     );
   }
 
+  const statCards = [
+    { label: 'Total Users',   value: stats.totalUsers,  icon: Users    },
+    { label: 'Total Boards',  value: stats.totalBoards, icon: LayoutGrid },
+    { label: 'Admins',        value: stats.admins,      icon: Crown    },
+    { label: 'Active Today',  value: stats.activeToday, icon: Activity },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 transition-colors duration-200">
+    <div className="min-h-screen bg-background p-6 transition-colors duration-200">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-orange-600 rounded-xl flex items-center justify-center">
-              <Shield className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
+              <Shield className="w-5 h-5 text-foreground" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Panel</h1>
-              <p className="text-gray-600 dark:text-gray-400">Manage users, roles, and system settings</p>
+              <h1 className="text-3xl font-bold text-foreground">Admin Panel</h1>
+              <p className="text-muted-foreground">Manage users, roles, and system settings</p>
             </div>
           </div>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'from-blue-500 to-blue-600' },
-            { label: 'Total Boards', value: stats.totalBoards, icon: LayoutGrid, color: 'from-green-500 to-green-600' },
-            { label: 'Admins', value: stats.admins, icon: Crown, color: 'from-red-500 to-red-600' },
-            { label: 'Active Today', value: stats.activeToday, icon: Activity, color: 'from-purple-500 to-purple-600' },
-          ].map((stat, i) => (
+          {statCards.map((stat, i) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
+              transition={{ delay: i * 0.05 }}
             >
-              <Card className="dark:bg-gray-800 dark:border-gray-700">
-                <CardContent className="p-6">
+              <Card className="border border-border bg-card">
+                <CardContent className="p-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</p>
-                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1">{stat.value}</p>
+                      <p className="text-sm text-muted-foreground">{stat.label}</p>
+                      <p className="text-3xl font-bold text-foreground mt-1">{stat.value}</p>
                     </div>
-                    <div className={`w-12 h-12 bg-gradient-to-r ${stat.color} rounded-xl flex items-center justify-center`}>
-                      <stat.icon className="w-6 h-6 text-white" />
+                    <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
+                      <stat.icon className="w-5 h-5 text-muted-foreground" />
                     </div>
                   </div>
                 </CardContent>
@@ -179,25 +182,25 @@ export default function AdminPage() {
         </div>
 
         {/* Users Table */}
-        <Card className="dark:bg-gray-800 dark:border-gray-700">
+        <Card className="border border-border bg-card">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="dark:text-white flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-foreground">
                   <UserCog className="w-5 h-5" />
                   User Management
                 </CardTitle>
-                <CardDescription className="dark:text-gray-400">
+                <CardDescription>
                   {filteredUsers.length} users found
                 </CardDescription>
               </div>
               <div className="relative w-72">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search users..."
-                  className="pl-9 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="pl-9"
                 />
               </div>
             </div>
@@ -206,13 +209,13 @@ export default function AdminPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">User</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">Email</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">Role</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">Boards</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">Joined</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">Actions</th>
+                  <tr className="bg-muted">
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground border-b border-border">User</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground border-b border-border">Email</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground border-b border-border">Role</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground border-b border-border">Boards</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground border-b border-border">Joined</th>
+                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground border-b border-border">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -220,28 +223,28 @@ export default function AdminPage() {
                     const userBoards = boards.filter(b => b.user_id === u.id).length;
                     const initials = u.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
                     return (
-                      <tr key={u.id} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                      <tr key={u.id} className="border-b border-border hover:bg-muted/40 transition-colors">
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 bg-gradient-to-r from-[#0073EA] to-[#00C875] rounded-full flex items-center justify-center flex-shrink-0">
-                              <span className="text-white font-bold text-xs">{initials}</span>
+                            <div className="w-9 h-9 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
+                              <span className="text-foreground font-bold text-xs">{initials}</span>
                             </div>
-                            <span className="font-medium text-gray-900 dark:text-white">
+                            <span className="font-medium text-foreground">
                               {u.full_name || 'Unnamed User'}
                               {u.id === currentUser?.id && (
-                                <span className="text-xs text-gray-500 ml-1">(you)</span>
+                                <span className="text-xs text-muted-foreground ml-1">(you)</span>
                               )}
                             </span>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{u.email}</td>
+                        <td className="py-3 px-4 text-sm text-muted-foreground">{u.email}</td>
                         <td className="py-3 px-4">
-                          <Badge variant="secondary" className={roleColors[u.role] || roleColors.member}>
+                          <Badge variant="secondary" className={cn(roleColors[u.role] || roleColors.member)}>
                             {u.role || 'member'}
                           </Badge>
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{userBoards}</td>
-                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
+                        <td className="py-3 px-4 text-sm text-muted-foreground">{userBoards}</td>
+                        <td className="py-3 px-4 text-sm text-muted-foreground">
                           {new Date(u.created_at).toLocaleDateString()}
                         </td>
                         <td className="py-3 px-4 text-right">
@@ -250,7 +253,6 @@ export default function AdminPage() {
                             size="sm"
                             onClick={() => { setEditingUser(u); setEditRole(u.role || 'member'); }}
                             disabled={u.id === currentUser?.id}
-                            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                           >
                             <Edit2 className="w-4 h-4 mr-1" />
                             Edit Role
@@ -262,7 +264,7 @@ export default function AdminPage() {
                 </tbody>
               </table>
               {filteredUsers.length === 0 && (
-                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                <div className="text-center py-12 text-muted-foreground">
                   No users found matching your search.
                 </div>
               )}
@@ -272,35 +274,35 @@ export default function AdminPage() {
 
         {/* Edit Role Dialog */}
         <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
-          <DialogContent className="dark:bg-gray-800 dark:border-gray-700">
+          <DialogContent>
             <DialogHeader>
-              <DialogTitle className="dark:text-white">Edit User Role</DialogTitle>
-              <DialogDescription className="dark:text-gray-400">
+              <DialogTitle>Edit User Role</DialogTitle>
+              <DialogDescription>
                 Change the role for {editingUser?.full_name || editingUser?.email}
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
               <Select value={editRole} onValueChange={setEditRole}>
-                <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
-                  <SelectItem value="admin" className="dark:text-white">Admin - Full access</SelectItem>
-                  <SelectItem value="member" className="dark:text-white">Member - Can create and edit</SelectItem>
-                  <SelectItem value="viewer" className="dark:text-white">Viewer - Read-only access</SelectItem>
+                <SelectContent>
+                  <SelectItem value="admin">Admin - Full access</SelectItem>
+                  <SelectItem value="member">Member - Can create and edit</SelectItem>
+                  <SelectItem value="viewer">Viewer - Read-only access</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+              <div className="mt-3 text-sm text-muted-foreground space-y-1">
                 <p><strong>Admin:</strong> Full system access, manage users and settings</p>
                 <p><strong>Member:</strong> Create boards, manage own content</p>
                 <p><strong>Viewer:</strong> View shared boards only</p>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingUser(null)} className="dark:border-gray-600 dark:text-gray-300">
+              <Button variant="outline" onClick={() => setEditingUser(null)}>
                 Cancel
               </Button>
-              <Button onClick={handleUpdateRole} className="bg-[#0073EA] hover:bg-[#0056B3]">
+              <Button onClick={handleUpdateRole}>
                 Save Changes
               </Button>
             </DialogFooter>

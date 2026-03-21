@@ -7,12 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import {
-  Folder,
-  BarChart3,
-  ArrowRight,
-  Sparkles
-} from "lucide-react";
+import { Folder, BarChart3, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 import StatsOverview from "../components/dashboard/StatsOverview";
@@ -39,7 +34,7 @@ export default function Dashboard() {
         Item.list("-updated_date", 20),
         User.me()
       ]);
-      
+
       setBoards(boardsData);
       setItems(itemsData);
       setUser(userData);
@@ -57,7 +52,6 @@ export default function Dashboard() {
   const handleCreateBoard = async (boardData) => {
     try {
       const newBoard = await Board.create(boardData);
-      // Prepend new board to the list to show it immediately
       setBoards(prev => [newBoard, ...prev]);
     } catch (error) {
       console.error("Error creating board:", error);
@@ -79,66 +73,43 @@ export default function Dashboard() {
   const pendingTasks = items.filter(item => !item.data?.status || item.data?.status !== 'done').length;
 
   return (
-    <div className="p-4 md:p-8 bg-[#F5F6F8] dark:bg-gray-900 min-h-screen transition-colors">
+    <div className="p-4 md:p-8 bg-background min-h-screen transition-colors">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Hero Section - Made more compact */}
-        <motion.div 
+        {/* Welcome/Hero Section */}
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden"
+          className="space-y-1 mb-8"
         >
-          <div className="bg-gradient-to-br from-white via-white to-blue-50/30 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800/80 rounded-2xl p-6 md:p-8 shadow-sm border border-white/60 dark:border-gray-700">
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-[#323338] dark:text-white leading-tight">
-                    {getGreeting()}, {user?.full_name?.split(' ')[0] || 'there'}!
-                  </h1>
-                  <p className="text-[#676879] dark:text-gray-400 text-base mt-1">
-                    Ready to make today productive? {pendingTasks > 0 && `You have ${pendingTasks} tasks waiting.`}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex flex-wrap gap-3 mt-6">
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Link to={createPageUrl("Boards")}>
-                    <Button className="bg-[#0073EA] hover:bg-[#0056B3] text-white rounded-xl h-10 px-5 font-medium shadow-lg hover:shadow-xl transition-all duration-200">
-                      <Folder className="w-4 h-4 mr-2" />
-                      View All Boards
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </Link>
-                </motion.div>
-                
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Link to={createPageUrl("Analytics")}>
-                    <Button variant="outline" className="border-2 border-[#E1E5F3] hover:border-[#0073EA] hover:bg-[#0073EA]/5 rounded-xl h-10 px-5 font-medium transition-all duration-200">
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      View Analytics
-                    </Button>
-                  </Link>
-                </motion.div>
-              </div>
-            </div>
-            
-            {/* Subtle background decoration - made smaller */}
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-500/10 to-transparent rounded-full -translate-y-12 translate-x-12"></div>
-            <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-blue-500/5 to-transparent rounded-full translate-y-10 -translate-x-10"></div>
+          <h1 className="text-2xl font-semibold text-foreground">
+            {getGreeting()}, {user?.full_name?.split(' ')[0] || 'there'}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {pendingTasks > 0
+              ? `You have ${pendingTasks} task${pendingTasks === 1 ? '' : 's'} pending.`
+              : "Everything is up to date."}
+          </p>
+
+          <div className="flex flex-wrap gap-3 pt-4">
+            <Link to={createPageUrl("Boards")}>
+              <Button>
+                <Folder className="w-4 h-4 mr-2" />
+                View All Boards
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+
+            <Link to={createPageUrl("Analytics")}>
+              <Button variant="outline">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                View Analytics
+              </Button>
+            </Link>
           </div>
         </motion.div>
 
         {/* Stats Overview */}
-        <StatsOverview 
+        <StatsOverview
           boards={boards}
           items={items}
           isLoading={isLoading}
@@ -146,9 +117,9 @@ export default function Dashboard() {
 
         {/* Main Content Grid */}
         <div className="grid xl:grid-cols-4 gap-8">
-          {/* Left Column - Boards and Activity */}
+          {/* Left Column */}
           <div className="xl:col-span-3 space-y-8">
-            <RecentBoards 
+            <RecentBoards
               boards={boards}
               isLoading={isLoading}
               onCreateBoard={handleCreateBoard}
@@ -158,7 +129,7 @@ export default function Dashboard() {
           {/* Right Sidebar */}
           <div className="space-y-8">
             <QuickActions onCreateBoard={handleCreateBoard} />
-            <ActivityFeed 
+            <ActivityFeed
               items={items.slice(0, 5)}
               isLoading={isLoading}
             />

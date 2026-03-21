@@ -3,7 +3,6 @@ import { Board } from "@/api/entities/Board";
 import { Item } from "@/api/entities/Item";
 import { Sprint } from "@/api/entities/Sprint";
 import { UserStory } from "@/api/entities/UserStory";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +14,6 @@ import {
   CheckCircle2, Download, Users, Zap, ArrowUpDown
 } from "lucide-react";
 import { subDays, isAfter, isBefore } from 'date-fns';
-import { motion } from "framer-motion";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
@@ -30,24 +28,55 @@ import {
   exportToCSV,
 } from "@/components/utils/analytics";
 
-const STATUS_COLORS = {
-  done: '#00C875', completed: '#00C875',
-  'working on it': '#FFCB00', 'in progress': '#FFCB00', working: '#FFCB00',
-  stuck: '#E2445C',
-  default: '#C4C4C4'
+// ── Chart color palette (HSL token-aligned, no hex) ──
+const CHART_COLORS = [
+  'hsl(217, 91%, 60%)',   // blue
+  'hsl(142, 71%, 45%)',   // green
+  'hsl(38, 92%, 50%)',    // amber
+  'hsl(0, 84%, 60%)',     // red
+  'hsl(262, 83%, 58%)',   // purple
+  'hsl(192, 91%, 36%)',   // cyan
+  'hsl(0, 0%, 64%)',      // gray
+];
+
+const STATUS_CHART_COLORS = {
+  todo: 'hsl(0, 0%, 64%)',
+  'not started': 'hsl(0, 0%, 64%)',
+  working: 'hsl(38, 92%, 50%)',
+  'working on it': 'hsl(38, 92%, 50%)',
+  'in progress': 'hsl(38, 92%, 50%)',
+  done: 'hsl(142, 71%, 45%)',
+  completed: 'hsl(142, 71%, 45%)',
+  stuck: 'hsl(0, 84%, 60%)',
 };
 
-const PRIORITY_COLORS = {
-  critical: '#E2445C', high: '#FDAB3D', medium: '#FFCB00', low: '#787D80', default: '#C4C4C4'
+const PRIORITY_CHART_COLORS = {
+  critical: 'hsl(0, 84%, 60%)',
+  high: 'hsl(38, 92%, 50%)',
+  medium: 'hsl(217, 91%, 60%)',
+  low: 'hsl(0, 0%, 64%)',
 };
 
-const PIE_COLORS = ['#0073EA', '#00C875', '#FFCB00', '#E2445C', '#A25DDC', '#FDAB3D', '#787D80'];
-
-function getStatusColor(status) {
-  return STATUS_COLORS[status?.toLowerCase()] || STATUS_COLORS.default;
+function getStatusChartColor(status) {
+  return STATUS_CHART_COLORS[status?.toLowerCase()] || 'hsl(0, 0%, 64%)';
 }
-function getPriorityColor(priority) {
-  return PRIORITY_COLORS[priority?.toLowerCase()] || PRIORITY_COLORS.default;
+function getPriorityChartColor(priority) {
+  return PRIORITY_CHART_COLORS[priority?.toLowerCase()] || 'hsl(0, 0%, 64%)';
+}
+
+// ── Custom Tooltip ──
+function ChartTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-card border border-border shadow-sm rounded-md p-2 text-sm">
+      {label && <p className="font-medium text-foreground mb-1">{label}</p>}
+      {payload.map((entry, i) => (
+        <p key={i} style={{ color: entry.color }} className="text-xs">
+          {entry.name}: {entry.value}
+        </p>
+      ))}
+    </div>
+  );
 }
 
 export default function AnalyticsPage() {
@@ -131,7 +160,11 @@ export default function AnalyticsPage() {
       const status = item.data?.[statusCol?.id] || item.data?.status || 'Not Started';
       dist[status] = (dist[status] || 0) + 1;
     });
-    return Object.entries(dist).map(([name, value]) => ({ name, value, color: getStatusColor(name) }));
+    return Object.entries(dist).map(([name, value]) => ({
+      name,
+      value,
+      color: getStatusChartColor(name),
+    }));
   }, [filteredItems, boards]);
 
   const priorityDistribution = useMemo(() => {
@@ -142,7 +175,11 @@ export default function AnalyticsPage() {
       const priority = item.data?.[priorityCol?.id] || item.data?.priority || 'Medium';
       dist[priority] = (dist[priority] || 0) + 1;
     });
-    return Object.entries(dist).map(([name, value]) => ({ name, value, color: getPriorityColor(name) }));
+    return Object.entries(dist).map(([name, value]) => ({
+      name,
+      value,
+      color: getPriorityChartColor(name),
+    }));
   }, [filteredItems, boards]);
 
   // ── Board Performance ──
@@ -154,7 +191,12 @@ export default function AnalyticsPage() {
       return s.toLowerCase() === 'done' || s.toLowerCase() === 'completed';
     }).length;
     const total = boardItems.length;
-    return { ...board, totalTasks: total, completedTasks: completed, completionRate: total > 0 ? Math.round((completed / total) * 100) : 0 };
+    return {
+      ...board,
+      totalTasks: total,
+      completedTasks: completed,
+      completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
+    };
   }), [filteredItems, filteredBoards]);
 
   // ── Sprint Velocity ──
@@ -220,33 +262,40 @@ export default function AnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 bg-[#F5F6F8] dark:bg-gray-900 min-h-screen">
+      <div className="p-6 min-h-screen">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="h-7 bg-muted rounded w-1/4" />
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
               {Array(4).fill(0).map((_, i) => (
-                <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl" />
+                <div key={i} className="h-28 bg-muted rounded-lg" />
               ))}
             </div>
+            <div className="h-72 bg-muted rounded-lg" />
           </div>
         </div>
       </div>
     );
   }
 
+  // Shared chart axis/grid props
+  const axisStyle = { fontSize: 12, fill: 'hsl(var(--muted-foreground))' };
+  const gridStyle = { stroke: 'hsl(0, 0%, 90%)', strokeDasharray: '3 3' };
+
   return (
-    <div className="p-6 bg-[#F5F6F8] dark:bg-gray-900 min-h-screen">
+    <div className="p-6 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {/* ── Header ── */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-[#323338] dark:text-white">Analytics Dashboard</h1>
-            <p className="text-[#676879] dark:text-gray-400 mt-2">Insights and metrics across your boards and sprints</p>
+            <h1 className="text-2xl font-semibold text-foreground">Analytics Dashboard</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Insights and metrics across your boards and sprints
+            </p>
           </div>
           <div className="flex gap-3">
             <Select value={selectedBoard} onValueChange={setSelectedBoard}>
-              <SelectTrigger className="w-48 dark:bg-gray-800 dark:border-gray-700 dark:text-white">
+              <SelectTrigger className="w-48">
                 <SelectValue placeholder="Select board" />
               </SelectTrigger>
               <SelectContent>
@@ -257,7 +306,7 @@ export default function AnalyticsPage() {
               </SelectContent>
             </Select>
             <Select value={selectedTimeRange} onValueChange={setSelectedTimeRange}>
-              <SelectTrigger className="w-40 dark:bg-gray-800 dark:border-gray-700 dark:text-white">
+              <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -267,40 +316,60 @@ export default function AnalyticsPage() {
                 <SelectItem value="365">Last year</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" onClick={handleExport} className="dark:bg-gray-800 dark:border-gray-700 dark:text-white">
+            <Button variant="outline" onClick={handleExport}>
               <Download className="w-4 h-4 mr-2" /> Export
             </Button>
           </div>
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {[
-            { title: "Total Tasks", value: kpi.totalTasks, sub: "Active tasks tracked", icon: Target, gradient: "from-blue-500 to-blue-600", subColor: "text-blue-100" },
-            { title: "Completion Rate", value: `${kpi.completionRate}%`, sub: null, icon: CheckCircle2, gradient: "from-green-500 to-green-600", subColor: "text-green-100", progress: kpi.completionRate },
-            { title: "Overdue Tasks", value: kpi.overdueTasks, sub: "Need attention", icon: Clock, gradient: "from-red-500 to-red-600", subColor: "text-red-100" },
-            { title: "Avg Cycle Time", value: `${cycleTime.average.toFixed(1)}d`, sub: "Creation to completion", icon: Zap, gradient: "from-purple-500 to-purple-600", subColor: "text-purple-100" },
-          ].map((card, i) => (
-            <motion.div key={card.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-              <Card className={`bg-gradient-to-r ${card.gradient} text-white border-0`}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <card.icon className="w-5 h-5" /> {card.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{card.value}</div>
-                  {card.progress != null && <Progress value={card.progress} className="mt-2 bg-white/30" />}
-                  {card.sub && <p className={`${card.subColor} text-sm mt-1`}>{card.sub}</p>}
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+        {/* ── KPI Cards ── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+          {/* Total Tasks */}
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Target className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Total Tasks</span>
+            </div>
+            <div className="text-2xl font-semibold text-foreground">{kpi.totalTasks}</div>
+            <p className="text-sm text-muted-foreground mt-1">Active tasks tracked</p>
+          </div>
+
+          {/* Completion Rate */}
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Completion Rate</span>
+            </div>
+            <div className="text-2xl font-semibold text-foreground">{kpi.completionRate}%</div>
+            <Progress value={kpi.completionRate} className="mt-2" />
+          </div>
+
+          {/* Overdue Tasks */}
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Overdue Tasks</span>
+            </div>
+            <div className="text-2xl font-semibold text-foreground">{kpi.overdueTasks}</div>
+            <p className={`text-sm mt-1 ${kpi.overdueTasks > 0 ? 'text-red-500' : 'text-green-500'}`}>
+              {kpi.overdueTasks > 0 ? 'Need attention' : 'All on track'}
+            </p>
+          </div>
+
+          {/* Avg Cycle Time */}
+          <div className="rounded-lg border border-border bg-card p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Zap className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Avg Cycle Time</span>
+            </div>
+            <div className="text-2xl font-semibold text-foreground">{cycleTime.average.toFixed(1)}d</div>
+            <p className="text-sm text-muted-foreground mt-1">Creation to completion</p>
+          </div>
         </div>
 
-        {/* Tabs */}
+        {/* ── Tabs ── */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 dark:bg-gray-800">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="velocity">Velocity</TabsTrigger>
             <TabsTrigger value="burndown">Burndown</TabsTrigger>
@@ -309,310 +378,311 @@ export default function AnalyticsPage() {
           </TabsList>
 
           {/* ── Overview Tab ── */}
-          <TabsContent value="overview" className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Status Distribution Pie */}
-              <Card className="dark:bg-gray-800 dark:border-gray-700">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 dark:text-white">
-                    <Activity className="w-5 h-5 text-blue-500" /> Task Status Distribution
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {statusDistribution.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={300}>
-                      <PieChart>
-                        <Pie data={statusDistribution} cx="50%" cy="50%" outerRadius={100} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                          {statusDistribution.map((entry, i) => (
-                            <Cell key={i} fill={entry.color || PIE_COLORS[i % PIE_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <p className="text-center text-gray-500 dark:text-gray-400 py-12">No task data available</p>
-                  )}
-                </CardContent>
-              </Card>
+              <div className="rounded-lg border border-border bg-card p-5">
+                <p className="text-sm font-medium text-foreground mb-4 flex items-center gap-2">
+                  <Activity className="w-4 h-4" /> Task Status Distribution
+                </p>
+                {statusDistribution.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={statusDistribution}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {statusDistribution.map((entry, i) => (
+                          <Cell key={i} fill={entry.color || CHART_COLORS[i % CHART_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<ChartTooltip />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-center text-muted-foreground py-12 text-sm">No task data available</p>
+                )}
+              </div>
 
               {/* Priority Distribution Bar */}
-              <Card className="dark:bg-gray-800 dark:border-gray-700">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 dark:text-white">
-                    <TrendingUp className="w-5 h-5 text-orange-500" /> Priority Distribution
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {priorityDistribution.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={priorityDistribution}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis allowDecimals={false} />
-                        <Tooltip />
-                        <Bar dataKey="value" name="Tasks">
-                          {priorityDistribution.map((entry, i) => (
-                            <Cell key={i} fill={entry.color || PIE_COLORS[i % PIE_COLORS.length]} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <p className="text-center text-gray-500 dark:text-gray-400 py-12">No priority data available</p>
-                  )}
-                </CardContent>
-              </Card>
+              <div className="rounded-lg border border-border bg-card p-5">
+                <p className="text-sm font-medium text-foreground mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" /> Priority Distribution
+                </p>
+                {priorityDistribution.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={priorityDistribution}>
+                      <CartesianGrid {...gridStyle} />
+                      <XAxis dataKey="name" tick={axisStyle} />
+                      <YAxis allowDecimals={false} tick={axisStyle} />
+                      <Tooltip content={<ChartTooltip />} />
+                      <Bar dataKey="value" name="Tasks" radius={[4, 4, 0, 0]}>
+                        {priorityDistribution.map((entry, i) => (
+                          <Cell key={i} fill={entry.color || CHART_COLORS[i % CHART_COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-center text-muted-foreground py-12 text-sm">No priority data available</p>
+                )}
+              </div>
             </div>
 
             {/* Board Performance */}
             {selectedBoard === 'all' && boardStats.length > 0 && (
-              <Card className="dark:bg-gray-800 dark:border-gray-700">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 dark:text-white">
-                    <BarChart3 className="w-5 h-5 text-green-500" /> Board Performance
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {boardStats.map((board, index) => (
-                      <motion.div
-                        key={board.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-4 h-4 rounded-lg" style={{ backgroundColor: board.color || '#0073EA' }} />
-                          <div>
-                            <h4 className="font-medium text-gray-900 dark:text-white">{board.title}</h4>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              {board.completedTasks} of {board.totalTasks} tasks completed
-                            </p>
-                          </div>
+              <div className="rounded-lg border border-border bg-card p-5">
+                <p className="text-sm font-medium text-foreground mb-4 flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" /> Board Performance
+                </p>
+                <div className="space-y-3">
+                  {boardStats.map(board => (
+                    <div
+                      key={board.id}
+                      className="flex items-center justify-between p-4 bg-muted/40 rounded-lg transition-colors hover:bg-muted/60"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 rounded-full bg-primary" />
+                        <div>
+                          <h4 className="text-sm font-medium text-foreground">{board.title}</h4>
+                          <p className="text-xs text-muted-foreground">
+                            {board.completedTasks} of {board.totalTasks} tasks completed
+                          </p>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <div className="w-32 h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
-                            <div className="h-full bg-green-500 transition-all duration-500" style={{ width: `${board.completionRate}%` }} />
-                          </div>
-                          <Badge variant="outline" className="min-w-[3rem] justify-center dark:text-white dark:border-gray-600">
-                            {board.completionRate}%
-                          </Badge>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="w-32 h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-green-500 transition-all duration-500 rounded-full"
+                            style={{ width: `${board.completionRate}%` }}
+                          />
                         </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                        <Badge variant="outline" className="min-w-[3rem] justify-center text-xs">
+                          {board.completionRate}%
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </TabsContent>
 
           {/* ── Sprint Velocity Tab ── */}
-          <TabsContent value="velocity" className="space-y-8">
-            <Card className="dark:bg-gray-800 dark:border-gray-700">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 dark:text-white">
-                  <TrendingUp className="w-5 h-5 text-green-500" /> Sprint Velocity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {sprintVelocityData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={400}>
-                    <BarChart data={sprintVelocityData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="sprint" />
-                      <YAxis allowDecimals={false} label={{ value: 'Story Points', angle: -90, position: 'insideLeft' }} />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="committed" fill="#94a3b8" name="Committed" />
-                      <Bar dataKey="completed" fill="#00C875" name="Completed" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="text-center py-16">
-                    <TrendingUp className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">No Sprint Data Yet</h3>
-                    <p className="text-gray-500 dark:text-gray-400">Complete sprints to see velocity trends. Go to Backlog to plan and run sprints.</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          <TabsContent value="velocity" className="space-y-6">
+            <div className="rounded-lg border border-border bg-card p-5">
+              <p className="text-sm font-medium text-foreground mb-4 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" /> Sprint Velocity
+              </p>
+              {sprintVelocityData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={sprintVelocityData}>
+                    <CartesianGrid {...gridStyle} />
+                    <XAxis dataKey="sprint" tick={axisStyle} />
+                    <YAxis
+                      allowDecimals={false}
+                      tick={axisStyle}
+                      label={{ value: 'Story Points', angle: -90, position: 'insideLeft', style: axisStyle }}
+                    />
+                    <Tooltip content={<ChartTooltip />} />
+                    <Legend />
+                    <Bar dataKey="committed" fill="hsl(0, 0%, 64%)" name="Committed" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="completed" fill="hsl(142, 71%, 45%)" name="Completed" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-center py-16">
+                  <TrendingUp className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-base font-medium text-foreground mb-1">No Sprint Data Yet</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Complete sprints to see velocity trends. Go to Backlog to plan and run sprints.
+                  </p>
+                </div>
+              )}
+            </div>
 
-            {/* Average Velocity Card */}
+            {/* Average Velocity Cards */}
             {sprintVelocityData.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="dark:bg-gray-800 dark:border-gray-700 border-l-4 border-l-green-500">
-                  <CardContent className="p-6">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Average Velocity</p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                      {Math.round(sprintVelocityData.reduce((s, d) => s + d.completed, 0) / sprintVelocityData.length)} SP
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="dark:bg-gray-800 dark:border-gray-700 border-l-4 border-l-blue-500">
-                  <CardContent className="p-6">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Commitment Accuracy</p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                      {Math.round(
-                        (sprintVelocityData.reduce((s, d) => s + d.completed, 0) /
-                          Math.max(1, sprintVelocityData.reduce((s, d) => s + d.committed, 0))) * 100
-                      )}%
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="dark:bg-gray-800 dark:border-gray-700 border-l-4 border-l-purple-500">
-                  <CardContent className="p-6">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Sprints Completed</p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">{sprintVelocityData.length}</p>
-                  </CardContent>
-                </Card>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="rounded-lg border border-border bg-card p-5 border-l-4 border-l-green-500">
+                  <p className="text-sm text-muted-foreground">Average Velocity</p>
+                  <p className="text-2xl font-semibold text-foreground mt-1">
+                    {Math.round(sprintVelocityData.reduce((s, d) => s + d.completed, 0) / sprintVelocityData.length)} SP
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-card p-5 border-l-4 border-l-blue-500">
+                  <p className="text-sm text-muted-foreground">Commitment Accuracy</p>
+                  <p className="text-2xl font-semibold text-foreground mt-1">
+                    {Math.round(
+                      (sprintVelocityData.reduce((s, d) => s + d.completed, 0) /
+                        Math.max(1, sprintVelocityData.reduce((s, d) => s + d.committed, 0))) * 100
+                    )}%
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-card p-5 border-l-4 border-l-purple-500">
+                  <p className="text-sm text-muted-foreground">Sprints Completed</p>
+                  <p className="text-2xl font-semibold text-foreground mt-1">{sprintVelocityData.length}</p>
+                </div>
               </div>
             )}
           </TabsContent>
 
           {/* ── Burndown Tab ── */}
-          <TabsContent value="burndown" className="space-y-8">
-            <Card className="dark:bg-gray-800 dark:border-gray-700">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 dark:text-white">
-                  <Target className="w-5 h-5 text-blue-500" /> Burndown Chart
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {burndownData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={400}>
-                    <LineChart data={burndownData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="day" />
-                      <YAxis allowDecimals={false} label={{ value: 'Remaining', angle: -90, position: 'insideLeft' }} />
-                      <Tooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="ideal" stroke="#94a3b8" strokeDasharray="5 5" name="Ideal" strokeWidth={2} />
-                      <Line type="monotone" dataKey="remaining" stroke="#3b82f6" name="Actual" strokeWidth={2} dot={{ fill: '#3b82f6' }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <p className="text-center text-gray-500 dark:text-gray-400 py-12">No burndown data available</p>
-                )}
-              </CardContent>
-            </Card>
+          <TabsContent value="burndown" className="space-y-6">
+            <div className="rounded-lg border border-border bg-card p-5">
+              <p className="text-sm font-medium text-foreground mb-4 flex items-center gap-2">
+                <Target className="w-4 h-4" /> Burndown Chart
+              </p>
+              {burndownData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={400}>
+                  <LineChart data={burndownData}>
+                    <CartesianGrid {...gridStyle} />
+                    <XAxis dataKey="day" tick={axisStyle} />
+                    <YAxis
+                      allowDecimals={false}
+                      tick={axisStyle}
+                      label={{ value: 'Remaining', angle: -90, position: 'insideLeft', style: axisStyle }}
+                    />
+                    <Tooltip content={<ChartTooltip />} />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="ideal"
+                      stroke="hsl(0, 0%, 64%)"
+                      strokeDasharray="5 5"
+                      name="Ideal"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="remaining"
+                      stroke="hsl(217, 91%, 60%)"
+                      name="Actual"
+                      strokeWidth={2}
+                      dot={{ fill: 'hsl(217, 91%, 60%)', r: 3 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-center text-muted-foreground py-12 text-sm">No burndown data available</p>
+              )}
+            </div>
           </TabsContent>
 
           {/* ── Team Performance Tab ── */}
-          <TabsContent value="team" className="space-y-8">
-            <Card className="dark:bg-gray-800 dark:border-gray-700">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 dark:text-white">
-                  <Users className="w-5 h-5 text-orange-500" /> Team Performance Distribution
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {teamData.length > 0 ? (
-                  <>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={teamData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="owner" />
-                        <YAxis allowDecimals={false} />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="completed" fill="#00C875" name="Completed" stackId="a" />
-                        <Bar dataKey="inProgress" fill="#FFCB00" name="In Progress" stackId="a" />
-                        <Bar dataKey="assigned" fill="#C4C4C4" name="Total Assigned" />
-                      </BarChart>
-                    </ResponsiveContainer>
+          <TabsContent value="team" className="space-y-6">
+            <div className="rounded-lg border border-border bg-card p-5">
+              <p className="text-sm font-medium text-foreground mb-4 flex items-center gap-2">
+                <Users className="w-4 h-4" /> Team Performance Distribution
+              </p>
+              {teamData.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={teamData}>
+                      <CartesianGrid {...gridStyle} />
+                      <XAxis dataKey="owner" tick={axisStyle} />
+                      <YAxis allowDecimals={false} tick={axisStyle} />
+                      <Tooltip content={<ChartTooltip />} />
+                      <Legend />
+                      <Bar dataKey="completed" fill="hsl(142, 71%, 45%)" name="Completed" stackId="a" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="inProgress" fill="hsl(38, 92%, 50%)" name="In Progress" stackId="a" />
+                      <Bar dataKey="assigned" fill="hsl(0, 0%, 64%)" name="Total Assigned" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
 
-                    <div className="mt-6 space-y-3">
-                      {teamData.filter(m => m.owner !== 'Unassigned').map((member, i) => (
-                        <div key={i} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                                {member.owner.charAt(0).toUpperCase()}
-                              </div>
-                              <h4 className="font-semibold text-gray-900 dark:text-white">{member.owner}</h4>
+                  <div className="mt-6 space-y-3">
+                    {teamData.filter(m => m.owner !== 'Unassigned').map((member, i) => (
+                      <div key={i} className="p-4 bg-muted/40 rounded-lg">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-semibold">
+                              {member.owner.charAt(0).toUpperCase()}
                             </div>
-                            <Badge variant="outline" className="dark:text-white dark:border-gray-600">
-                              {member.completionRate.toFixed(0)}% completion
-                            </Badge>
+                            <span className="text-sm font-medium text-foreground">{member.owner}</span>
                           </div>
-                          <div className="grid grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <p className="text-gray-500 dark:text-gray-400">Assigned</p>
-                              <p className="font-semibold dark:text-white">{member.assigned}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-500 dark:text-gray-400">Completed</p>
-                              <p className="font-semibold text-green-600">{member.completed}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-500 dark:text-gray-400">In Progress</p>
-                              <p className="font-semibold text-yellow-600">{member.inProgress}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-500 dark:text-gray-400">Avg Days</p>
-                              <p className="font-semibold dark:text-white">{member.avgCompletionTime.toFixed(1)}</p>
-                            </div>
+                          <Badge variant="outline" className="text-xs">
+                            {member.completionRate.toFixed(0)}% completion
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Assigned</p>
+                            <p className="font-semibold text-foreground">{member.assigned}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">Completed</p>
+                            <p className="font-semibold text-green-500">{member.completed}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">In Progress</p>
+                            <p className="font-semibold" style={{ color: 'hsl(38, 92%, 50%)' }}>{member.inProgress}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">Avg Days</p>
+                            <p className="font-semibold text-foreground">{member.avgCompletionTime.toFixed(1)}</p>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center py-16">
-                    <Users className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">No Team Data Yet</h3>
-                    <p className="text-gray-500 dark:text-gray-400">Assign tasks to team members to see performance distribution.</p>
+                      </div>
+                    ))}
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </>
+              ) : (
+                <div className="text-center py-16">
+                  <Users className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-base font-medium text-foreground mb-1">No Team Data Yet</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Assign tasks to team members to see performance distribution.
+                  </p>
+                </div>
+              )}
+            </div>
           </TabsContent>
 
           {/* ── Task Churn Tab ── */}
-          <TabsContent value="churn" className="space-y-8">
-            <Card className="dark:bg-gray-800 dark:border-gray-700">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 dark:text-white">
-                  <ArrowUpDown className="w-5 h-5 text-purple-500" /> Task Churn (Scope Change)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={churnData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="period" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="added" fill="#3b82f6" name="Tasks Added" />
-                    <Bar dataKey="completed" fill="#00C875" name="Tasks Completed" />
-                  </BarChart>
-                </ResponsiveContainer>
+          <TabsContent value="churn" className="space-y-6">
+            <div className="rounded-lg border border-border bg-card p-5">
+              <p className="text-sm font-medium text-foreground mb-4 flex items-center gap-2">
+                <ArrowUpDown className="w-4 h-4" /> Task Churn (Scope Change)
+              </p>
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={churnData}>
+                  <CartesianGrid {...gridStyle} />
+                  <XAxis dataKey="period" tick={axisStyle} />
+                  <YAxis allowDecimals={false} tick={axisStyle} />
+                  <Tooltip content={<ChartTooltip />} />
+                  <Legend />
+                  <Bar dataKey="added" fill="hsl(217, 91%, 60%)" name="Tasks Added" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="completed" fill="hsl(142, 71%, 45%)" name="Tasks Completed" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
 
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {churnData.map((period, i) => (
-                    <Card key={i} className={`border-l-4 ${period.churn > 0 ? 'border-l-red-400' : 'border-l-green-400'} dark:bg-gray-700 dark:border-gray-600`}>
-                      <CardContent className="p-4">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{period.period}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xl font-bold dark:text-white">
-                            {period.churn > 0 ? '+' : ''}{period.churn}
-                          </span>
-                          <span className={`text-sm ${period.churn > 0 ? 'text-red-500' : 'text-green-500'}`}>
-                            {period.churn > 0 ? 'scope creep' : 'net progress'}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          +{period.added} added / {period.completed} completed
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                {churnData.map((period, i) => (
+                  <div
+                    key={i}
+                    className={`rounded-lg border bg-card p-4 border-l-4 ${period.churn > 0 ? 'border-l-red-500' : 'border-l-green-500'}`}
+                  >
+                    <p className="text-xs text-muted-foreground">{period.period}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xl font-semibold text-foreground">
+                        {period.churn > 0 ? '+' : ''}{period.churn}
+                      </span>
+                      <span className={`text-xs ${period.churn > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                        {period.churn > 0 ? 'scope creep' : 'net progress'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      +{period.added} added / {period.completed} completed
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

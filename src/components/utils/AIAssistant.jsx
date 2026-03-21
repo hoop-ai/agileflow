@@ -7,15 +7,14 @@ import { UserStory } from "@/api/entities/UserStory";
 import { getAssignmentSuggestions, getSprintRecommendations } from "@/api/taskAssignment";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { X, Send, Loader2, Sparkles, Users, Calendar, BarChart3 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { X, Send, Loader2, MessageCircle, Users, Calendar, BarChart3 } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 
 const QUICK_ACTIONS = [
-  { label: "Suggest Assignments", icon: Users, command: "/assign" },
-  { label: "Sprint Recommendations", icon: Calendar, command: "/sprint" },
-  { label: "Performance Summary", icon: BarChart3, command: "/performance" },
+  { label: "Suggest Assignments",    icon: Users,    command: "/assign"      },
+  { label: "Sprint Recommendations", icon: Calendar, command: "/sprint"      },
+  { label: "Performance Summary",    icon: BarChart3, command: "/performance" },
 ];
 
 export default function AIAssistant() {
@@ -29,7 +28,6 @@ export default function AIAssistant() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [position, setPosition] = useState('right');
-  const [isHovered, setIsHovered] = useState(false);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -59,7 +57,6 @@ export default function AIAssistant() {
   const processMessage = async (message) => {
     const lower = message.toLowerCase();
 
-    // Built-in commands that use local data + AI engine
     if (lower.startsWith('/assign') || lower.includes('assign') && lower.includes('suggest')) {
       return await handleAssignCommand(message);
     }
@@ -70,7 +67,6 @@ export default function AIAssistant() {
       return await handlePerformanceCommand();
     }
 
-    // For general questions, build context and send to LLM
     const context = await buildContext();
     const enrichedPrompt = `${context}\n\nUser question: ${message}`;
     return await invokeLLM(enrichedPrompt);
@@ -183,7 +179,6 @@ export default function AIAssistant() {
       result += `| Sprints Completed | ${completedSprints.length} |\n`;
       result += `| Avg Sprint Velocity | ${avgVelocity} SP |\n`;
 
-      // Use LLM for an insightful analysis
       const analysisPrompt = `Given these project metrics: ${totalTasks} total tasks, ${completedTasks} completed (${completionRate}%), ${boards.length} boards, ${completedSprints.length} sprints completed with avg velocity ${avgVelocity} SP. Give 2-3 brief, actionable insights about team health and what to focus on next.`;
 
       try {
@@ -222,19 +217,16 @@ export default function AIAssistant() {
   };
 
   const handleQuickAction = (command) => {
-    setInput(command);
-    setTimeout(() => {
-      setInput('');
-      addMessage('user', command);
-      setIsLoading(true);
-      processMessage(command).then(response => {
-        addMessage('assistant', response);
-        setIsLoading(false);
-      }).catch(() => {
-        addMessage('assistant', 'Sorry, I encountered an error. Please try again.');
-        setIsLoading(false);
-      });
-    }, 0);
+    setInput('');
+    addMessage('user', command);
+    setIsLoading(true);
+    processMessage(command).then(response => {
+      addMessage('assistant', response);
+      setIsLoading(false);
+    }).catch(() => {
+      addMessage('assistant', 'Sorry, I encountered an error. Please try again.');
+      setIsLoading(false);
+    });
   };
 
   return (
@@ -243,48 +235,28 @@ export default function AIAssistant() {
       <AnimatePresence>
         {!isOpen && (
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.15 }}
             className={`fixed bottom-6 z-50 flex flex-col items-center gap-2 ${position === 'right' ? 'right-6' : 'left-6'}`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
           >
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-white dark:bg-gray-800 px-3 py-1.5 rounded-full shadow-lg border-2 border-purple-200 dark:border-purple-700"
+            <button
+              onClick={() => setIsOpen(true)}
+              className="bg-foreground text-background rounded-full w-12 h-12 flex items-center justify-center shadow-sm hover:opacity-90 transition-opacity duration-150 cursor-pointer"
+              aria-label="Open AI Assistant"
             >
-              <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 whitespace-nowrap flex items-center gap-1">
-                <Sparkles className="w-3 h-3" /> AI Assistant
-              </p>
-            </motion.div>
+              <MessageCircle size={20} />
+            </button>
 
-            <div className="relative">
-              <motion.button
-                onClick={() => setIsOpen(true)}
-                whileHover={{ scale: 1.1 }}
-                className="h-16 w-16 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 hover:from-purple-600 hover:via-pink-600 hover:to-orange-500 shadow-2xl transition-all flex items-center justify-center text-5xl cursor-pointer border-4 border-white dark:border-gray-800"
-              >
-                <Sparkles className="w-7 h-7 text-white" />
-              </motion.button>
-
-              <AnimatePresence>
-                {isHovered && (
-                  <motion.button
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0 }}
-                    onClick={() => setPosition(position === 'right' ? 'left' : 'right')}
-                    className={`absolute top-0 ${position === 'right' ? '-left-12' : '-right-12'} h-8 w-8 rounded-full bg-white dark:bg-gray-700 shadow-lg flex items-center justify-center text-sm hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border-2 border-purple-300 dark:border-purple-600`}
-                    title={`Move to ${position === 'right' ? 'left' : 'right'}`}
-                  >
-                    {position === 'right' ? '←' : '→'}
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            </div>
+            {/* Move button */}
+            <button
+              onClick={() => setPosition(position === 'right' ? 'left' : 'right')}
+              className="w-7 h-7 rounded-full bg-card border border-border flex items-center justify-center text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              title={`Move to ${position === 'right' ? 'left' : 'right'}`}
+            >
+              {position === 'right' ? '←' : '→'}
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -293,30 +265,31 @@ export default function AIAssistant() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            transition={{ duration: 0.15 }}
             className={`fixed bottom-6 z-50 w-[440px] max-w-[calc(100vw-3rem)] ${position === 'right' ? 'right-6' : 'left-6'}`}
           >
-            <Card className="shadow-2xl border-0 overflow-hidden dark:bg-gray-800">
+            <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden flex flex-col">
               {/* Header */}
-              <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-white font-semibold">AI Assistant</h3>
-                    <p className="text-white/90 text-xs">Assignments, sprints, and insights</p>
-                  </div>
+              <div className="border-b border-border p-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4 text-foreground" />
+                  <h3 className="text-sm font-semibold text-foreground">AI Assistant</h3>
+                  <span className="text-xs text-muted-foreground">Assignments, sprints, and insights</span>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="text-white hover:bg-white/20 h-8 w-8">
-                  <X className="w-5 h-5" />
-                </Button>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
               {/* Quick Actions */}
-              <div className="px-4 py-2 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 flex gap-2 overflow-x-auto">
+              <div className="px-4 py-2 border-b border-border flex gap-2 overflow-x-auto">
                 {QUICK_ACTIONS.map(action => (
                   <Button
                     key={action.command}
@@ -324,7 +297,7 @@ export default function AIAssistant() {
                     size="sm"
                     onClick={() => handleQuickAction(action.command)}
                     disabled={isLoading}
-                    className="flex-shrink-0 text-xs dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600"
+                    className="flex-shrink-0 text-xs"
                   >
                     <action.icon className="w-3 h-3 mr-1" />
                     {action.label}
@@ -333,61 +306,62 @@ export default function AIAssistant() {
               </div>
 
               {/* Messages */}
-              <div className="h-96 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900">
+              <div className="h-96 overflow-y-auto p-4 space-y-4 bg-background">
                 {messages.map((message, index) => (
                   <motion.div
                     key={index}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.1 }}
                     className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
+                      className={
                         message.role === 'user'
-                          ? 'bg-[#0073EA] text-white'
-                          : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
-                      }`}
+                          ? 'max-w-[85%] bg-foreground text-background rounded-lg p-3 text-sm'
+                          : 'max-w-[85%] bg-muted rounded-lg p-3 text-sm text-foreground'
+                      }
                     >
-                      <div className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none">
+                      <div className="leading-relaxed prose prose-sm dark:prose-invert max-w-none">
                         <ReactMarkdown>{message.content}</ReactMarkdown>
                       </div>
                     </div>
                   </motion.div>
                 ))}
                 {isLoading && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3">
+                  <div className="flex justify-start">
+                    <div className="bg-muted rounded-lg px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 text-purple-500 animate-spin" />
-                        <span className="text-sm text-gray-500 dark:text-gray-400">Analyzing...</span>
+                        <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+                        <span className="text-sm text-muted-foreground">Analyzing...</span>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 )}
                 <div ref={messagesEndRef} />
               </div>
 
               {/* Input */}
-              <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+              <div className="border-t border-border p-3">
                 <div className="flex gap-2">
                   <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Ask anything or try /assign, /sprint..."
-                    className="flex-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    className="flex-1"
                     disabled={isLoading}
                   />
                   <Button
+                    size="sm"
                     onClick={handleSend}
                     disabled={!input.trim() || isLoading}
-                    className="bg-[#0073EA] hover:bg-[#0056B3] text-white"
                   >
                     <Send className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
-            </Card>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
