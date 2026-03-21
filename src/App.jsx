@@ -7,6 +7,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
+import SessionExpired from '@/components/common/SessionExpired';
 import LoginPage from '@/pages/Login';
 
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -32,6 +33,11 @@ const AuthenticatedApp = () => {
   // Handle user_not_registered error specifically
   if (authError?.type === 'user_not_registered') {
     return <UserNotRegisteredError />;
+  }
+
+  // Handle session expiry (was authenticated, token refresh failed)
+  if (authError?.type === 'session_expired') {
+    return <SessionExpired />;
   }
 
   // Not authenticated — only allow the login page

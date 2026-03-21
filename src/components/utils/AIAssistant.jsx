@@ -4,7 +4,7 @@ import { Board } from "@/api/entities/Board";
 import { Item } from "@/api/entities/Item";
 import { Sprint } from "@/api/entities/Sprint";
 import { UserStory } from "@/api/entities/UserStory";
-import { getAssignmentSuggestions, formatAssignmentSummary, getSprintRecommendations } from "@/api/taskAssignment";
+import { getAssignmentSuggestions, getSprintRecommendations } from "@/api/taskAssignment";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";

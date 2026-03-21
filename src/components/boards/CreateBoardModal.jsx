@@ -118,16 +118,16 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg dark:bg-gray-800 dark:border-gray-700">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-[#323338]">
+          <DialogTitle className="text-2xl font-bold text-[#323338] dark:text-gray-100">
             Create New Board
           </DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-[#323338] font-medium">
+            <Label htmlFor="title" className="text-[#323338] dark:text-gray-200 font-medium">
               Board Title *
             </Label>
             <Input
@@ -138,14 +138,14 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
                 if (titleError) setTitleError('');
               }}
               placeholder="Enter board title..."
-              className={`rounded-xl h-12 focus:ring-2 focus:ring-[#0073EA]/20 ${titleError ? 'border-red-500 focus:ring-red-200' : 'border-[#E1E5F3]'}`}
+              className={`rounded-xl h-12 focus:ring-2 focus:ring-[#0073EA]/20 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 ${titleError ? 'border-red-500 focus:ring-red-200' : 'border-[#E1E5F3] dark:border-gray-600'}`}
               required
             />
             {titleError && <p className="text-sm text-red-500 mt-1">{titleError}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-[#323338] font-medium">
+            <Label htmlFor="description" className="text-[#323338] dark:text-gray-200 font-medium">
               Description
             </Label>
             <Textarea
@@ -153,12 +153,12 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="What's this board about?"
-              className="rounded-xl border-[#E1E5F3] min-h-20 focus:ring-2 focus:ring-[#0073EA]/20"
+              className="rounded-xl border-[#E1E5F3] dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 min-h-20 focus:ring-2 focus:ring-[#0073EA]/20"
             />
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[#323338] font-medium">Board Color</Label>
+            <Label className="text-[#323338] dark:text-gray-200 font-medium">Board Color</Label>
             <div className="flex gap-2 flex-wrap">
               {colorOptions.map((color) => (
                 <button
@@ -166,8 +166,8 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, color: color.value }))}
                   className={`w-8 h-8 rounded-lg border-2 transition-all ${
-                    formData.color === color.value 
-                      ? 'border-[#323338] scale-110' 
+                    formData.color === color.value
+                      ? 'border-[#323338] dark:border-white scale-110'
                       : 'border-transparent hover:scale-105'
                   }`}
                   style={{ backgroundColor: color.value }}
@@ -178,12 +178,12 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[#323338] font-medium">Visibility</Label>
+            <Label className="text-[#323338] dark:text-gray-200 font-medium">Visibility</Label>
             <Select
               value={formData.visibility}
               onValueChange={(value) => setFormData(prev => ({ ...prev, visibility: value }))}
             >
-              <SelectTrigger className="rounded-xl border-[#E1E5F3] h-12">
+              <SelectTrigger className="rounded-xl border-[#E1E5F3] dark:border-gray-600 dark:bg-gray-700 dark:text-white h-12">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

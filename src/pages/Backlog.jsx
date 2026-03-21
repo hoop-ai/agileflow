@@ -289,7 +289,7 @@ export default function BacklogPage() {
             {loadingStories ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-gray-600 mt-4">Loading backlog...</p>
+                <p className="text-gray-600 dark:text-gray-400 mt-4">Loading backlog...</p>
               </div>
             ) : sortedStories.length === 0 ? (
               <div className="text-center py-12">
@@ -363,16 +363,16 @@ export default function BacklogPage() {
 
 const StoryCard = ({ story, onClick, isDragging }) => {
   const priorityColors = {
-    critical: 'bg-red-100 text-red-800 border-red-300',
-    high: 'bg-orange-100 text-orange-800 border-orange-300',
-    medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-    low: 'bg-gray-100 text-gray-800 border-gray-300'
+    critical: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700',
+    high: 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700',
+    medium: 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700',
+    low: 'bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600'
   };
 
   const statusColors = {
-    backlog: 'bg-gray-100 text-gray-700',
-    ready: 'bg-green-100 text-green-700',
-    in_progress: 'bg-blue-100 text-blue-700'
+    backlog: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+    ready: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    in_progress: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
   };
 
   return (

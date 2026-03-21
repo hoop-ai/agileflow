@@ -91,11 +91,11 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-[#2563EB] to-[#1D4ED8] rounded-2xl mb-4">
             <Briefcase className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900">AgileFlow</h1>
-          <p className="text-gray-600 mt-2">Project Management Made Simple</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white">AgileFlow</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">Project Management Made Simple</p>
         </div>
 
-        <Card className="shadow-xl border-0">
+        <Card className="shadow-xl border-0 dark:bg-gray-800 dark:border-gray-700">
           <CardHeader>
             <CardTitle>
               {mode === 'login' && 'Welcome Back'}
@@ -143,7 +143,7 @@ export default function LoginPage() {
 
                 <div className="relative my-4">
                   <Separator />
-                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-xs text-gray-500">
+                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 px-2 text-xs text-gray-500 dark:text-gray-400">
                     or continue with email
                   </span>
                 </div>
@@ -222,11 +222,11 @@ export default function LoginPage() {
               )}
 
               {error && (
-                <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">{error}</p>
+                <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-lg">{error}</p>
               )}
 
               {success && (
-                <p className="text-sm text-green-600 bg-green-50 p-3 rounded-lg flex items-center gap-2">
+                <p className="text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30 p-3 rounded-lg flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" />
                   {success}
                 </p>
@@ -253,7 +253,7 @@ export default function LoginPage() {
                 )}
               </Button>
 
-              <div className="text-center text-sm text-gray-600 space-y-2">
+              <div className="text-center text-sm text-gray-600 dark:text-gray-400 space-y-2">
                 {mode === 'login' && (
                   <p>
                     Don&apos;t have an account?{' '}

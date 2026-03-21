@@ -11,13 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import {
-  BarChart3, TrendingUp, Target, Clock, Folder, Activity,
+  BarChart3, TrendingUp, Target, Clock, Activity,
   CheckCircle2, Download, Users, Zap, ArrowUpDown
 } from "lucide-react";
 import { subDays, isAfter, isBefore } from 'date-fns';
 import { motion } from "framer-motion";
 import {
-  BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell,
+  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import {

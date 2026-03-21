@@ -1,31 +1,74 @@
-import React from 'react';
+import { ShieldX, LogOut, Mail } from 'lucide-react';
+import { supabase } from '@/api/supabaseClient';
 
-const UserNotRegisteredError = () => {
+export default function UserNotRegisteredError() {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/login';
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-white to-slate-50">
-      <div className="max-w-md w-full p-8 bg-white rounded-lg shadow-lg border border-slate-100">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 mb-6 rounded-full bg-orange-100">
-            <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 dark:bg-slate-950">
+      <div className="max-w-lg w-full">
+        <div className="text-center space-y-8">
+          {/* Illustration */}
+          <div className="relative mx-auto w-48 h-48">
+            <div className="absolute inset-0 rounded-full bg-orange-50 dark:bg-orange-950/30" />
+            <div className="absolute inset-4 rounded-full bg-orange-100/60 dark:bg-orange-900/20 flex items-center justify-center">
+              <ShieldX className="w-20 h-20 text-orange-400 dark:text-orange-500" />
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-4">Access Restricted</h1>
-          <p className="text-slate-600 mb-8">
-            You are not registered to use this application. Please contact the app administrator to request access.
-          </p>
-          <div className="p-4 bg-slate-50 rounded-md text-sm text-slate-600">
-            <p>If you believe this is an error, you can:</p>
-            <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>Verify you are logged in with the correct account</li>
-              <li>Contact the app administrator for access</li>
-              <li>Try logging out and back in again</li>
+
+          {/* Message */}
+          <div className="space-y-3">
+            <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">
+              Access Restricted
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
+              Your account isn't registered to use this application. Contact your workspace administrator to request access.
+            </p>
+          </div>
+
+          {/* Help Card */}
+          <div className="mx-auto max-w-sm p-4 rounded-lg bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-left">
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Things to try:
+            </p>
+            <ul className="space-y-2">
+              <li className="flex items-start gap-2 text-sm text-slate-500 dark:text-slate-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 mt-1.5 flex-shrink-0" />
+                Make sure you're signed in with the correct account
+              </li>
+              <li className="flex items-start gap-2 text-sm text-slate-500 dark:text-slate-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 mt-1.5 flex-shrink-0" />
+                Ask your admin to add your email to the workspace
+              </li>
+              <li className="flex items-start gap-2 text-sm text-slate-500 dark:text-slate-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 mt-1.5 flex-shrink-0" />
+                Try logging out and signing in again
+              </li>
             </ul>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 rounded-lg transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out & Try Again
+            </button>
+            <a
+              href="mailto:support@agileflow.dev"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            >
+              <Mail className="w-4 h-4" />
+              Contact Support
+            </a>
           </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default UserNotRegisteredError;
+}
