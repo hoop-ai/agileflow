@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 export default function StatsOverview({ boards, items, isLoading }) {
   const completedItems = items.filter(item => item.data?.status === 'done').length;
   const pendingItems = items.filter(item => !item.data?.status || item.data?.status !== 'done').length;
-  const completionRate = items.length > 0 ? Math.round((completedItems / items.length) * 100) : 0;
 
   const stats = [
     {
@@ -32,8 +31,8 @@ export default function StatsOverview({ boards, items, isLoading }) {
       iconBg: 'bg-amber-50 dark:bg-amber-950',
     },
     {
-      title: "Completion Rate",
-      value: `${completionRate}%`,
+      title: "Total Tasks",
+      value: items.length,
       icon: TrendingUp,
       iconColor: 'text-purple-500',
       iconBg: 'bg-purple-50 dark:bg-purple-950',

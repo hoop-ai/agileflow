@@ -69,7 +69,7 @@ export default function RecentBoards({ boards, isLoading, onCreateBoard }) {
             </div>
           ) : (
             <div>
-              {boards.slice(0, 6).map((board, index) => (
+              {boards.slice(0, 10).map((board, index) => (
                 <motion.div
                   key={board.id}
                   initial={{ opacity: 0, x: -10 }}

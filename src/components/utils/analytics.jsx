@@ -3,7 +3,7 @@
  * Provides metrics calculation for boards, sprints, and team performance.
  */
 
-import { format, differenceInDays, subDays, isAfter, isBefore, eachDayOfInterval } from 'date-fns';
+import { format, differenceInDays, subDays, isAfter, isBefore, eachDayOfInterval, endOfDay } from 'date-fns';
 
 // ─── Completion Trends ──────────────────────────────────────────────
 
@@ -98,9 +98,10 @@ export function calculateBurndown(items, sprintStartDate, sprintEndDate) {
   return eachDayOfInterval({ start, end }).map((date, index) => {
     const idealRemaining = Math.max(0, totalItems - (totalItems / days) * index);
 
+    const dayEnd = endOfDay(date);
     const completedByDate = items.filter(item => {
       const itemDate = new Date(item.updated_date);
-      return isBefore(itemDate, date) && isStatusDone(item);
+      return isBefore(itemDate, dayEnd) && isStatusDone(item);
     }).length;
 
     return {
@@ -123,8 +124,9 @@ export function calculateSprintBurndown(stories, sprintStartDate, sprintEndDate)
   return eachDayOfInterval({ start, end }).map((date, index) => {
     const idealRemaining = Math.max(0, totalPoints - (totalPoints / days) * index);
 
+    const dayEnd = endOfDay(date);
     const completedPoints = stories
-      .filter(s => s.updated_date && isBefore(new Date(s.updated_date), date) && s.status === 'done')
+      .filter(s => s.updated_date && isBefore(new Date(s.updated_date), dayEnd) && s.status === 'done')
       .reduce((sum, s) => sum + (s.story_points || 0), 0);
 
     return {
@@ -234,8 +236,9 @@ export function calculatePriorityHealth(items, board) {
 // ─── Task Churn ─────────────────────────────────────────────────────
 
 /**
- * Calculate task churn: tasks added and removed over time periods.
- * Positive churn = scope creep, negative = scope reduction.
+ * Calculate task churn: tasks added and removed mid-sprint.
+ * Positive churn = scope creep (more added than removed).
+ * Negative churn = scope reduction (more removed/completed than added).
  */
 export function calculateTaskChurn(items, periodDays = 7, periodsCount = 4) {
   const now = new Date();
@@ -250,7 +253,8 @@ export function calculateTaskChurn(items, periodDays = 7, periodsCount = 4) {
       return isAfter(created, periodStart) && isBefore(created, periodEnd);
     }).length;
 
-    const completed = items.filter(item => {
+    // Tasks resolved/completed during the period (scope leaving the sprint)
+    const removed = items.filter(item => {
       const updated = new Date(item.updated_date);
       return isAfter(updated, periodStart) && isBefore(updated, periodEnd) && isStatusDone(item);
     }).length;
@@ -258,8 +262,8 @@ export function calculateTaskChurn(items, periodDays = 7, periodsCount = 4) {
     periods.unshift({
       period: `Week ${periodsCount - i}`,
       added,
-      completed,
-      churn: added - completed,
+      removed,
+      churn: added - removed,
     });
   }
 

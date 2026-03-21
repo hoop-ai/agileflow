@@ -604,9 +604,9 @@ export default function AnalyticsPage() {
                       <YAxis allowDecimals={false} tick={axisStyle} />
                       <Tooltip content={<ChartTooltip />} />
                       <Legend />
-                      <Bar dataKey="completed" fill="hsl(142, 71%, 45%)" name="Completed" stackId="a" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="inProgress" fill="hsl(38, 92%, 50%)" name="In Progress" stackId="a" />
-                      <Bar dataKey="assigned" fill="hsl(0, 0%, 64%)" name="Total Assigned" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="assigned" fill="hsl(217, 91%, 60%)" name="Assigned" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="completed" fill="hsl(142, 71%, 45%)" name="Completed" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="inProgress" fill="hsl(38, 92%, 50%)" name="In Progress" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
 
@@ -662,41 +662,53 @@ export default function AnalyticsPage() {
           <TabsContent value="churn" className="space-y-6">
             <div className="rounded-lg border border-border bg-card p-5">
               <p className="text-sm font-medium text-foreground mb-4 flex items-center gap-2">
-                <ArrowUpDown className="w-4 h-4" /> Task Churn (Scope Change)
+                <ArrowUpDown className="w-4 h-4" /> Task Churn (Mid-Sprint Scope Change)
               </p>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={churnData}>
-                  <CartesianGrid {...gridStyle} />
-                  <XAxis dataKey="period" tick={axisStyle} />
-                  <YAxis allowDecimals={false} tick={axisStyle} />
-                  <Tooltip content={<ChartTooltip />} />
-                  <Legend />
-                  <Bar dataKey="added" fill="hsl(217, 91%, 60%)" name="Tasks Added" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="completed" fill="hsl(142, 71%, 45%)" name="Tasks Completed" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              {churnData.length > 0 && churnData.some(p => p.added > 0 || p.removed > 0) ? (
+                <>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart data={churnData}>
+                      <CartesianGrid {...gridStyle} />
+                      <XAxis dataKey="period" tick={axisStyle} />
+                      <YAxis allowDecimals={false} tick={axisStyle} />
+                      <Tooltip content={<ChartTooltip />} />
+                      <Legend />
+                      <Bar dataKey="added" fill="hsl(217, 91%, 60%)" name="Added Mid-Sprint" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="removed" fill="hsl(0, 84%, 60%)" name="Removed Mid-Sprint" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
 
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                {churnData.map((period, i) => (
-                  <div
-                    key={i}
-                    className={`rounded-lg border bg-card p-4 border-l-4 ${period.churn > 0 ? 'border-l-red-500' : 'border-l-green-500'}`}
-                  >
-                    <p className="text-xs text-muted-foreground">{period.period}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xl font-semibold text-foreground">
-                        {period.churn > 0 ? '+' : ''}{period.churn}
-                      </span>
-                      <span className={`text-xs ${period.churn > 0 ? 'text-red-500' : 'text-green-500'}`}>
-                        {period.churn > 0 ? 'scope creep' : 'net progress'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      +{period.added} added / {period.completed} completed
-                    </p>
+                  <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {churnData.map((period, i) => (
+                      <div
+                        key={i}
+                        className={`rounded-lg border border-border bg-card p-4 border-l-4 ${period.churn > 0 ? 'border-l-red-500' : period.churn < 0 ? 'border-l-green-500' : 'border-l-gray-400'}`}
+                      >
+                        <p className="text-xs text-muted-foreground">{period.period}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xl font-semibold text-foreground">
+                            {period.churn > 0 ? '+' : ''}{period.churn}
+                          </span>
+                          <span className={`text-xs ${period.churn > 0 ? 'text-red-500' : period.churn < 0 ? 'text-green-500' : 'text-muted-foreground'}`}>
+                            {period.churn > 0 ? 'scope creep' : period.churn < 0 ? 'scope reduced' : 'no change'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          +{period.added} added / -{period.removed} removed
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </>
+              ) : (
+                <div className="text-center py-16">
+                  <ArrowUpDown className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-base font-medium text-foreground mb-1">No Churn Data Yet</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Task churn tracks scope changes during sprints. Add tasks to boards and run sprints to see churn metrics.
+                  </p>
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>

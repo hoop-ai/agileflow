@@ -38,10 +38,10 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit }) 
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: index * 0.05 }}
       >
-        <Card className="border border-border hover:shadow-sm transition-all duration-200 group rounded-lg overflow-hidden">
+        <Card className="border border-border hover:shadow-sm transition-all duration-200 group rounded-lg overflow-hidden cursor-pointer">
           <div className="flex items-center">
             <div
-              className="w-1.5 h-16 flex-shrink-0" // Thicker color strip for list view
+              className="w-1.5 h-16 flex-shrink-0"
               style={{ backgroundColor: boardColor }}
             />
             <CardContent className="p-3 flex-1">
@@ -66,12 +66,12 @@ export default function BoardCard({ board, viewMode, index, onDelete, onEdit }) 
                   </div>
                 </Link>
                 <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-                  <Badge 
-                    variant="outline" 
+                  <Badge
+                    variant="outline"
                     className={`border-none text-xs px-2 py-0.5 rounded-full ${
-                      board.visibility === 'private' 
-                        ? 'bg-rose-100 text-rose-700' 
-                        : 'bg-emerald-100 text-emerald-700'
+                      board.visibility === 'private'
+                        ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
+                        : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
                     }`}
                   >
                     {board.visibility === 'private' ? (

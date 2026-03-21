@@ -54,7 +54,7 @@ export default function PerformanceMonitor() {
     <div className="space-y-6 p-6">
       <div>
         <h2 className="text-2xl font-bold text-foreground mb-2">Performance Monitor</h2>
-        <p className="text-gray-600">Real-time system metrics and health status</p>
+        <p className="text-muted-foreground">Real-time system metrics and health status</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -77,7 +77,7 @@ export default function PerformanceMonitor() {
               value={(metrics.pageLoadTime / 3000) * 100} 
               className="mt-3"
             />
-            <p className="text-xs text-gray-600 mt-2">Target: {'<'}1000ms</p>
+            <p className="text-xs text-muted-foreground mt-2">Target: {'<'}1000ms</p>
           </CardContent>
         </Card>
 
@@ -100,7 +100,7 @@ export default function PerformanceMonitor() {
               value={(metrics.apiResponseTime / 600) * 100} 
               className="mt-3"
             />
-            <p className="text-xs text-gray-600 mt-2">Target: {'<'}200ms</p>
+            <p className="text-xs text-muted-foreground mt-2">Target: {'<'}200ms</p>
           </CardContent>
         </Card>
 
@@ -123,7 +123,7 @@ export default function PerformanceMonitor() {
               value={metrics.memoryUsage} 
               className="mt-3"
             />
-            <p className="text-xs text-gray-600 mt-2">Target: {'<'}50%</p>
+            <p className="text-xs text-muted-foreground mt-2">Target: {'<'}50%</p>
           </CardContent>
         </Card>
 
@@ -139,7 +139,7 @@ export default function PerformanceMonitor() {
             <div className="text-3xl font-bold text-blue-500">
               {metrics.activeUsers}
             </div>
-            <p className="text-xs text-gray-600 mt-2">Currently online</p>
+            <p className="text-xs text-muted-foreground mt-2">Currently online</p>
           </CardContent>
         </Card>
 
@@ -162,7 +162,7 @@ export default function PerformanceMonitor() {
               value={(metrics.errorRate / 5) * 100} 
               className="mt-3"
             />
-            <p className="text-xs text-gray-600 mt-2">Target: {'<'}0.5%</p>
+            <p className="text-xs text-muted-foreground mt-2">Target: {'<'}0.5%</p>
           </CardContent>
         </Card>
 
@@ -182,7 +182,7 @@ export default function PerformanceMonitor() {
               value={metrics.cacheHitRate} 
               className="mt-3"
             />
-            <p className="text-xs text-gray-600 mt-2">Target: {'>'}80%</p>
+            <p className="text-xs text-muted-foreground mt-2">Target: {'>'}80%</p>
           </CardContent>
         </Card>
       </div>
