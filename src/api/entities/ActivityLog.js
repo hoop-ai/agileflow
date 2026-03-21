@@ -1,8 +1,13 @@
 import { supabase } from '../supabaseClient';
 
+async function getAuthUser() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user || null;
+}
+
 export const ActivityLog = {
   async list(limit = 50) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     if (!user) throw new Error('Authentication required');
     const { data, error } = await supabase
       .from('activity_log')
@@ -15,7 +20,7 @@ export const ActivityLog = {
   },
 
   async log(action, entityType, entityId, entityTitle, metadata = {}) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     if (!user) throw new Error('Authentication required');
     const { data, error } = await supabase
       .from('activity_log')
@@ -34,7 +39,7 @@ export const ActivityLog = {
   },
 
   async filterByEntity(entityType, entityId) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     if (!user) throw new Error('Authentication required');
     const { data, error } = await supabase
       .from('activity_log')

@@ -1,6 +1,11 @@
 // src/api/entities/Item.js
 import { supabase } from '../supabaseClient';
 
+async function getAuthUser() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user || null;
+}
+
 function parseSortField(sortField) {
   if (!sortField) return { column: 'created_date', ascending: false };
   const ascending = !sortField.startsWith('-');
@@ -37,7 +42,7 @@ export const Item = {
   },
 
   async create(itemData) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     if (!user) throw new Error('Authentication required');
     const { data, error } = await supabase.from('items').insert(itemData).select().single();
     if (error) throw error;

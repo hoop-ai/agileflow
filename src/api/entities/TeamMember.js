@@ -1,5 +1,10 @@
 import { supabase } from '../supabaseClient';
 
+async function getAuthUser() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user || null;
+}
+
 export const TeamMember = {
   async listByBoard(boardId) {
     const { data, error } = await supabase
@@ -12,7 +17,7 @@ export const TeamMember = {
   },
 
   async add(boardId, userId, role = 'editor') {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     const { data, error } = await supabase
       .from('team_members')
       .insert({ board_id: boardId, user_id: userId, role, invited_by: user.id })

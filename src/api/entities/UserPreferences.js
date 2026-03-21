@@ -1,8 +1,13 @@
 import { supabase } from '../supabaseClient';
 
+async function getAuthUser() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user || null;
+}
+
 export const UserPreferences = {
   async get() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     if (!user) throw new Error('Authentication required');
     const { data, error } = await supabase
       .from('user_preferences')
@@ -18,7 +23,7 @@ export const UserPreferences = {
   },
 
   async create(prefs) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     if (!user) throw new Error('Authentication required');
     const { data, error } = await supabase
       .from('user_preferences')
@@ -30,7 +35,7 @@ export const UserPreferences = {
   },
 
   async update(updates) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     if (!user) throw new Error('Authentication required');
     const { data, error } = await supabase
       .from('user_preferences')

@@ -1,8 +1,13 @@
 import { supabase } from '../supabaseClient';
 
+async function getAuthUser() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user || null;
+}
+
 export const User = {
   async me() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     if (!user) throw new Error('Not authenticated');
     const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
     if (error) throw error;
@@ -10,7 +15,7 @@ export const User = {
   },
 
   async updateMe(updates) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     const { data, error } = await supabase.from('profiles').update(updates).eq('id', user.id).select().single();
     if (error) throw error;
     return data;

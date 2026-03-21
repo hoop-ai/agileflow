@@ -1,8 +1,13 @@
 import { supabase } from '../supabaseClient';
 
+async function getAuthUser() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user || null;
+}
+
 export const Notification = {
   async list(limit = 50) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     if (!user) throw new Error('Authentication required');
     let query = supabase
       .from('notifications')
@@ -16,7 +21,7 @@ export const Notification = {
   },
 
   async unreadCount() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     if (!user) return 0;
     const { count, error } = await supabase
       .from('notifications')
@@ -39,7 +44,7 @@ export const Notification = {
   },
 
   async markAllAsRead() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     const { error } = await supabase
       .from('notifications')
       .update({ is_read: true })
@@ -49,7 +54,7 @@ export const Notification = {
   },
 
   async create(notificationData) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     const { data, error } = await supabase
       .from('notifications')
       .insert({ ...notificationData, user_id: user.id })
@@ -65,7 +70,7 @@ export const Notification = {
   },
 
   async deleteAll() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     const { error } = await supabase
       .from('notifications')
       .delete()

@@ -1,5 +1,10 @@
 import { supabase } from '../supabaseClient';
 
+async function getAuthUser() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user || null;
+}
+
 function parseSortField(sortField) {
   if (!sortField) return { column: 'created_date', ascending: false };
   const ascending = !sortField.startsWith('-');
@@ -9,7 +14,7 @@ function parseSortField(sortField) {
 
 export const UserStory = {
   async list(sortField, limit) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     if (!user) throw new Error('Authentication required');
     const { column, ascending } = parseSortField(sortField);
     let query = supabase.from('user_stories').select('*').eq('user_id', user.id).order(column, { ascending });
@@ -26,7 +31,7 @@ export const UserStory = {
   },
 
   async filter(filters, sortField) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     if (!user) throw new Error('Authentication required');
     const { column, ascending } = parseSortField(sortField);
     let query = supabase.from('user_stories').select('*').eq('user_id', user.id);
@@ -40,7 +45,7 @@ export const UserStory = {
   },
 
   async create(storyData) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     const { data, error } = await supabase.from('user_stories').insert({ ...storyData, user_id: user.id }).select().single();
     if (error) throw error;
     return data;
