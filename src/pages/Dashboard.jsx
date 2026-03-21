@@ -24,6 +24,7 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [errorDetail, setErrorDetail] = useState('');
 
   useEffect(() => {
     loadDashboardData();
@@ -32,22 +33,27 @@ export default function Dashboard() {
   const loadDashboardData = async () => {
     setIsLoading(true);
     setHasError(false);
+    setErrorDetail('');
 
-    // User profile failure is non-fatal — boards and items are what matter
+    // User profile failure is non-fatal
     User.me()
       .then(setUser)
       .catch(() => {});
 
     try {
       const [boardsData, itemsData] = await Promise.all([
-        Board.list("-updated_date", 10),
-        Item.list("-updated_date", 20),
+        Board.list("-updated_date", 10).catch((err) => {
+          console.error("Board.list failed:", err);
+          throw err;
+        }),
+        Item.list("-updated_date", 20).catch(() => []),
       ]);
-      setBoards(boardsData);
-      setItems(itemsData);
+      setBoards(boardsData || []);
+      setItems(itemsData || []);
     } catch (error) {
       console.error("Dashboard data load failed:", error);
       setHasError(true);
+      setErrorDetail(error?.message || error?.code || String(error));
     }
 
     setIsLoading(false);
@@ -90,9 +96,14 @@ export default function Dashboard() {
           </div>
           <h2 className="text-lg font-semibold text-foreground">Failed to load dashboard</h2>
           <p className="text-sm text-muted-foreground">
-            There was a problem connecting to the database. This can happen if the database tables
+            There was a problem loading your data. This can happen if the database tables
             haven&apos;t been set up yet, or if your session has expired.
           </p>
+          {errorDetail && (
+            <p className="text-xs text-muted-foreground bg-muted p-2 rounded-md font-mono break-all">
+              {errorDetail}
+            </p>
+          )}
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
             <Button onClick={loadDashboardData} className="gap-2">
               <RefreshCw className="w-4 h-4" />

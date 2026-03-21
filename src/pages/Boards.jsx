@@ -28,7 +28,7 @@ export default function Boards() {
   const [boards, setBoards] = useState([]);
   const [filteredBoards, setFilteredBoards] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
+  const [loadError, setLoadError] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingBoard, setEditingBoard] = useState(null);
@@ -45,13 +45,13 @@ export default function Boards() {
 
   const loadBoards = async () => {
     setIsLoading(true);
-    setLoadError(false);
+    setLoadError(null);
     try {
       const data = await Board.list("-updated_date");
-      setBoards(data);
+      setBoards(data || []);
     } catch (error) {
       console.error("Error loading boards:", error);
-      setLoadError(true);
+      setLoadError(error?.message || String(error));
     }
     setIsLoading(false);
   };
@@ -137,6 +137,11 @@ export default function Boards() {
           <AlertCircle className="w-10 h-10 text-muted-foreground" />
           <h2 className="text-lg font-semibold text-foreground">Failed to load boards</h2>
           <p className="text-sm text-muted-foreground">There was a problem fetching your boards.</p>
+          {loadError && (
+            <p className="text-xs text-muted-foreground bg-muted p-2 rounded-md font-mono break-all max-w-md">
+              {loadError}
+            </p>
+          )}
           <Button variant="outline" onClick={loadBoards}>
             <RefreshCw className="w-4 h-4 mr-2" />
             Try again
