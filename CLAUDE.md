@@ -54,6 +54,68 @@ supabase/
 └── schema.sql        # Database schema with RLS policies (run in Supabase SQL Editor)
 ```
 
+## CRITICAL: No AI Fingerprints
+**Never leave any trace that AI tools were used to build this project.** This applies to:
+- **Code comments**: No "AI-generated", "Claude", "GPT", "Copilot", "Base44", or similar references
+- **Commit messages**: No "Co-Authored-By: Claude" or AI tool attribution lines
+- **Variable/function names**: No names suggesting AI generation
+- **README/docs**: Write as if human developers built everything
+- **Console logs**: No AI-related debug messages
+- All code should read as if written by the team (Abed, Jendawy). Write natural, human-style comments when needed.
+
+## Work Execution
+
+### Parallel Agent Teams
+Use subagents aggressively to maximize speed. Break work into independent streams and run them in parallel:
+- **Frontend + Backend in parallel** — UI changes and entity/API changes can run simultaneously
+- **Page-level parallelism** — fixes or features across different pages are independent, run them concurrently
+- **Build + Lint as parallel checks** — always run both, never skip either
+- When a task has 2+ independent subtasks, launch agents for each in a single message
+
+### Task Continuity (CRITICAL)
+**Never abandon in-progress work when a new user message arrives.** The user may interrupt with new ideas, feature suggestions, or corrections mid-task. When this happens:
+1. **Acknowledge** the new idea
+2. **Note it** (add to todos or mention you'll handle it next)
+3. **Finish** the current work first — complete the build, commit, or verification step you're on
+4. **Then** start the new request
+
+The user may also accidentally stop a response. If you detect incomplete work from a prior turn (uncommitted changes, failing build, half-written feature), **resume and finish it** before starting anything new.
+
+### Subtask Breakdown
+For any non-trivial feature, break it into subtasks and track them. Use TodoWrite to create a checklist, mark items done as you go, and give the user visibility into progress. Group subtasks by what can run in parallel vs. what's sequential.
+
+## Development Standards
+
+### Mandatory Workflow (Every Change)
+1. **Understand** — Read the relevant code before modifying it
+2. **Implement** — Write clean, well-structured code
+3. **Verify** — Run `npm run build && npm run lint` — both must pass with zero errors
+4. **Test** — Click through the feature in the browser, check DevTools console for errors
+5. **Review** — Check dark mode, empty states, error handling, and loading states
+6. **Commit** — Clean commit message, no AI fingerprints
+
+### Code Quality Rules
+- **Comments**: Brief, professional, explain *why* not *what*. Write as the dev team, not as an AI.
+- **No dead code**: Remove unused imports, commented-out blocks, and orphaned functions
+- **Consistent naming**: camelCase for variables/functions, PascalCase for components
+- **Error handling**: Every async operation needs try/catch with user-facing feedback (toast or inline error)
+- **Loading states**: Every async data fetch shows a spinner or skeleton
+- **Empty states**: Every list/grid handles zero items gracefully
+- **Dark mode**: Every new/modified component must include `dark:` Tailwind variants
+
+### Testing & Verification
+See `.claude/docs/verification-plan.md` for the full Software Verification Plan (SVP) — functional test cases for every feature, security checks, and cross-cutting concerns.
+
+See `.claude/docs/validation-plan.md` for the Software Validation Plan (SVaP) — performance targets, responsive design checks, accessibility, browser compatibility, and acceptance criteria.
+
+### Feature Completeness (PRD Phases)
+The PRD (`.claude/docs/PRD.md` Section 9) tracks implementation progress across 5 phases:
+- **Phase 1** (Core Platform): ✅ Complete
+- **Phase 2** (Agile Workflow): ✅ Mostly complete — sprint capacity/guard need verification
+- **Phase 3** (Advanced Analytics): Needs sprint velocity, churn, burndown, distribution charts
+- **Phase 4** (AI Intelligence): Needs task assignment engine, sprint recommendations
+- **Phase 5** (Polish & Performance): Needs perf audit, cross-browser, accessibility, mobile polish
+
 ## Key Conventions
 
 ### Pages & Routing
@@ -128,9 +190,8 @@ VITE_OPENROUTER_API_KEY=<your-openrouter-api-key>
 3. Deploy — Vercel auto-detects Vite and configures build
 
 ## Git Workflow
-- `origin` → `hoop-ai/project-management-system` (your fork — push here)
-- `upstream` → `Jendawy/project-management-system` (original repo — fetch only)
-- Sync upstream: `git fetch upstream && git merge upstream/main`
+- `origin` → `hoop-ai/project-management-system` (independent repo — push here)
+- No upstream remote — this is a standalone project
 
 ## Subagents
 See `.claude/agents/` for specialized agents:
