@@ -279,6 +279,45 @@ DO $$ BEGIN
 END $$;
 
 -- ============================================================
+-- HELPER FUNCTIONS (bypass RLS for cross-table lookups)
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.is_board_owner(board_id UUID, user_id UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.boards b WHERE b.id = board_id AND b.user_id = user_id
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+CREATE OR REPLACE FUNCTION public.get_team_board_ids(uid UUID)
+RETURNS SETOF UUID AS $$
+  SELECT board_id FROM public.team_members WHERE user_id = uid;
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+CREATE OR REPLACE FUNCTION public.get_team_role(bid UUID, uid UUID)
+RETURNS TEXT AS $$
+  SELECT role FROM public.team_members WHERE board_id = bid AND user_id = uid LIMIT 1;
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+CREATE OR REPLACE FUNCTION public.can_access_board(bid UUID, uid UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.boards WHERE id = bid AND user_id = uid
+  ) OR EXISTS (
+    SELECT 1 FROM public.team_members WHERE board_id = bid AND user_id = uid
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+CREATE OR REPLACE FUNCTION public.can_edit_board(bid UUID, uid UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.boards WHERE id = bid AND user_id = uid
+  ) OR EXISTS (
+    SELECT 1 FROM public.team_members WHERE board_id = bid AND user_id = uid AND role IN ('owner', 'editor')
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+-- ============================================================
 -- ROW LEVEL SECURITY
 -- ============================================================
 
@@ -305,36 +344,44 @@ CREATE POLICY "Admins can update any profile" ON public.profiles FOR UPDATE USIN
   EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
 
--- Boards
+-- Boards (uses helper functions to avoid recursion with team_members)
 DROP POLICY IF EXISTS "Users can view own boards" ON public.boards;
 DROP POLICY IF EXISTS "Users can create boards" ON public.boards;
 DROP POLICY IF EXISTS "Users can update own boards" ON public.boards;
 DROP POLICY IF EXISTS "Users can delete own boards" ON public.boards;
-CREATE POLICY "Users can view own boards" ON public.boards FOR SELECT USING (
-  auth.uid() = user_id OR id IN (SELECT board_id FROM public.team_members WHERE user_id = auth.uid())
+DROP POLICY IF EXISTS "boards_select" ON public.boards;
+DROP POLICY IF EXISTS "boards_insert" ON public.boards;
+DROP POLICY IF EXISTS "boards_update" ON public.boards;
+DROP POLICY IF EXISTS "boards_delete" ON public.boards;
+CREATE POLICY "boards_select" ON public.boards FOR SELECT USING (
+  auth.uid() = user_id OR id IN (SELECT public.get_team_board_ids(auth.uid()))
 );
-CREATE POLICY "Users can create boards" ON public.boards FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update own boards" ON public.boards FOR UPDATE USING (
-  auth.uid() = user_id OR id IN (SELECT board_id FROM public.team_members WHERE user_id = auth.uid() AND role IN ('owner', 'editor'))
+CREATE POLICY "boards_insert" ON public.boards FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "boards_update" ON public.boards FOR UPDATE USING (
+  auth.uid() = user_id OR public.get_team_role(id, auth.uid()) IN ('owner', 'editor')
 );
-CREATE POLICY "Users can delete own boards" ON public.boards FOR DELETE USING (auth.uid() = user_id);
+CREATE POLICY "boards_delete" ON public.boards FOR DELETE USING (auth.uid() = user_id);
 
--- Items
+-- Items (uses helper functions to check board access)
 DROP POLICY IF EXISTS "Users can view items on accessible boards" ON public.items;
 DROP POLICY IF EXISTS "Users can create items on accessible boards" ON public.items;
 DROP POLICY IF EXISTS "Users can update items on accessible boards" ON public.items;
 DROP POLICY IF EXISTS "Users can delete items on accessible boards" ON public.items;
-CREATE POLICY "Users can view items on accessible boards" ON public.items FOR SELECT USING (
-  board_id IN (SELECT id FROM public.boards WHERE user_id = auth.uid() UNION SELECT board_id FROM public.team_members WHERE user_id = auth.uid())
+DROP POLICY IF EXISTS "items_select" ON public.items;
+DROP POLICY IF EXISTS "items_insert" ON public.items;
+DROP POLICY IF EXISTS "items_update" ON public.items;
+DROP POLICY IF EXISTS "items_delete" ON public.items;
+CREATE POLICY "items_select" ON public.items FOR SELECT USING (
+  public.can_access_board(board_id, auth.uid())
 );
-CREATE POLICY "Users can create items on accessible boards" ON public.items FOR INSERT WITH CHECK (
-  board_id IN (SELECT id FROM public.boards WHERE user_id = auth.uid() UNION SELECT board_id FROM public.team_members WHERE user_id = auth.uid() AND role IN ('owner', 'editor'))
+CREATE POLICY "items_insert" ON public.items FOR INSERT WITH CHECK (
+  public.can_edit_board(board_id, auth.uid())
 );
-CREATE POLICY "Users can update items on accessible boards" ON public.items FOR UPDATE USING (
-  board_id IN (SELECT id FROM public.boards WHERE user_id = auth.uid() UNION SELECT board_id FROM public.team_members WHERE user_id = auth.uid() AND role IN ('owner', 'editor'))
+CREATE POLICY "items_update" ON public.items FOR UPDATE USING (
+  public.can_edit_board(board_id, auth.uid())
 );
-CREATE POLICY "Users can delete items on accessible boards" ON public.items FOR DELETE USING (
-  board_id IN (SELECT id FROM public.boards WHERE user_id = auth.uid() UNION SELECT board_id FROM public.team_members WHERE user_id = auth.uid() AND role IN ('owner', 'editor'))
+CREATE POLICY "items_delete" ON public.items FOR DELETE USING (
+  public.can_edit_board(board_id, auth.uid())
 );
 
 -- Calendar Events
@@ -377,22 +424,26 @@ CREATE POLICY "Users can create notifications" ON public.notifications FOR INSER
 CREATE POLICY "Users can update own notifications" ON public.notifications FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own notifications" ON public.notifications FOR DELETE USING (auth.uid() = user_id);
 
--- Team Members
+-- Team Members (uses helper functions to avoid recursion with boards)
 DROP POLICY IF EXISTS "Team members can view board teams" ON public.team_members;
 DROP POLICY IF EXISTS "Board owners can manage team members" ON public.team_members;
 DROP POLICY IF EXISTS "Board owners can update team members" ON public.team_members;
 DROP POLICY IF EXISTS "Board owners can delete team members" ON public.team_members;
-CREATE POLICY "Team members can view board teams" ON public.team_members FOR SELECT USING (
-  user_id = auth.uid() OR board_id IN (SELECT id FROM public.boards WHERE user_id = auth.uid())
+DROP POLICY IF EXISTS "team_members_select" ON public.team_members;
+DROP POLICY IF EXISTS "team_members_insert" ON public.team_members;
+DROP POLICY IF EXISTS "team_members_update" ON public.team_members;
+DROP POLICY IF EXISTS "team_members_delete" ON public.team_members;
+CREATE POLICY "team_members_select" ON public.team_members FOR SELECT USING (
+  user_id = auth.uid() OR public.is_board_owner(board_id, auth.uid())
 );
-CREATE POLICY "Board owners can manage team members" ON public.team_members FOR INSERT WITH CHECK (
-  board_id IN (SELECT id FROM public.boards WHERE user_id = auth.uid())
+CREATE POLICY "team_members_insert" ON public.team_members FOR INSERT WITH CHECK (
+  public.is_board_owner(board_id, auth.uid())
 );
-CREATE POLICY "Board owners can update team members" ON public.team_members FOR UPDATE USING (
-  board_id IN (SELECT id FROM public.boards WHERE user_id = auth.uid())
+CREATE POLICY "team_members_update" ON public.team_members FOR UPDATE USING (
+  public.is_board_owner(board_id, auth.uid())
 );
-CREATE POLICY "Board owners can delete team members" ON public.team_members FOR DELETE USING (
-  board_id IN (SELECT id FROM public.boards WHERE user_id = auth.uid())
+CREATE POLICY "team_members_delete" ON public.team_members FOR DELETE USING (
+  public.is_board_owner(board_id, auth.uid())
 );
 
 -- User Preferences

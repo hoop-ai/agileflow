@@ -25,9 +25,6 @@ import {
   Sun,
   Moon,
   LogOut,
-  ChevronRight,
-  Keyboard,
-  BookOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,7 +39,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -315,122 +311,13 @@ function ThemeToggle() {
   );
 }
 
-const helpSections = [
-  {
-    title: 'Getting Started',
-    icon: BookOpen,
-    items: [
-      { q: 'How do I create a board?', a: 'Go to the Boards page and click "Create Board." Choose a name, color, and optional description. Your board will appear in the listing and on the dashboard.' },
-      { q: 'How do I add tasks?', a: 'Open a board, then click "+ Add Item" at the bottom of any status column. Type a title and press Enter. You can then click the task to add details, assignees, and due dates.' },
-      { q: 'How do I invite team members?', a: 'Team collaboration is managed through your board settings. Open a board, click the team icon in the header, and add collaborators by email.' },
-    ],
-  },
-  {
-    title: 'Boards & Tasks',
-    icon: Folder,
-    items: [
-      { q: 'How do I change task status?', a: 'Click the status cell on any task row to open the status picker. You can also drag and drop tasks between columns in Kanban view.' },
-      { q: 'What views are available?', a: 'Each board supports Table view (default spreadsheet-style), Kanban view (drag-and-drop columns), and Timeline view. Switch views using the view selector in the board header.' },
-      { q: 'How do I filter and sort?', a: 'Use the filter bar at the top of your board to filter by person, status, priority, or date. Click any column header to sort by that field.' },
-    ],
-  },
-  {
-    title: 'Sprints & Backlog',
-    icon: ListOrdered,
-    items: [
-      { q: 'How do I create a sprint?', a: 'Go to the Backlog page, click "Create Sprint," set a name, start/end dates, and capacity. Then drag user stories from the backlog into the sprint.' },
-      { q: 'What are user stories?', a: 'User stories represent features or requirements. Create them in the Backlog page with a title, description, priority, and story points estimate.' },
-      { q: 'How does sprint planning work?', a: 'Open a sprint and click "Plan Sprint." You\'ll see available stories ranked by priority. Drag them into the sprint until you reach the capacity target.' },
-    ],
-  },
-  {
-    title: 'Keyboard Shortcuts',
-    icon: Keyboard,
-    items: [
-      { q: 'Search', a: 'Press Ctrl+K (or ⌘K on Mac) to open the global search dialog from anywhere.' },
-      { q: 'Navigation', a: 'Use the sidebar links to navigate between Dashboard, Boards, Backlog, Calendar, and Analytics.' },
-      { q: 'Theme toggle', a: 'Click the moon/sun icon in the sidebar to switch between dark and light mode instantly.' },
-    ],
-  },
-];
-
-function HelpCenterDialog({ open, onOpenChange }) {
-  const [expandedSection, setExpandedSection] = useState(null);
-  const [expandedItem, setExpandedItem] = useState(null);
-
-  useEffect(() => {
-    if (!open) {
-      setExpandedSection(null);
-      setExpandedItem(null);
-    }
-  }, [open]);
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[80vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Help Center</DialogTitle>
-          <DialogDescription>
-            Browse topics below to learn how AgileFlow works.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="overflow-y-auto flex-1 -mx-6 px-6 space-y-1">
-          {helpSections.map((section, si) => {
-            const isOpen = expandedSection === si;
-            const SectionIcon = section.icon;
-            return (
-              <div key={section.title}>
-                <button
-                  onClick={() => {
-                    setExpandedSection(isOpen ? null : si);
-                    setExpandedItem(null);
-                  }}
-                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-md text-sm font-medium text-foreground hover:bg-accent transition-colors cursor-pointer"
-                >
-                  <SectionIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  <span className="flex-1 text-left">{section.title}</span>
-                  <ChevronRight className={cn(
-                    "w-4 h-4 text-muted-foreground transition-transform duration-150",
-                    isOpen && "rotate-90"
-                  )} />
-                </button>
-                {isOpen && (
-                  <div className="ml-4 pl-3 border-l border-border space-y-0.5 mb-2">
-                    {section.items.map((item, ii) => {
-                      const itemOpen = expandedItem === `${si}-${ii}`;
-                      return (
-                        <div key={ii}>
-                          <button
-                            onClick={() => setExpandedItem(itemOpen ? null : `${si}-${ii}`)}
-                            className="w-full text-left px-3 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
-                          >
-                            {item.q}
-                          </button>
-                          {itemOpen && (
-                            <p className="px-3 py-2 text-sm text-muted-foreground leading-relaxed">
-                              {item.a}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function LayoutContent({ children }) {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [helpOpen, setHelpOpen] = useState(false);
+
 
   const isMac = typeof navigator !== 'undefined' &&
     (navigator.platform?.includes('Mac') || navigator.userAgent?.includes('Mac'));
@@ -520,13 +407,13 @@ function LayoutContent({ children }) {
 
       {/* Bottom section */}
       <div className="border-t border-border px-3 py-2 space-y-0.5">
-        <button
-          onClick={() => setHelpOpen(true)}
+        <Link
+          to={createPageUrl("Help")}
           className="flex items-center gap-2 w-full px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
         >
           <HelpCircle className="w-4 h-4 flex-shrink-0" />
           <span>Help Center</span>
-        </button>
+        </Link>
 
         <ThemeToggle />
 
@@ -640,7 +527,6 @@ function LayoutContent({ children }) {
       </main>
 
       <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
-      <HelpCenterDialog open={helpOpen} onOpenChange={setHelpOpen} />
       <AIAssistant />
     </div>
   );

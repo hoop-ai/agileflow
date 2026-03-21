@@ -142,8 +142,8 @@ function HelpArticle({ article, category, onNavigate }) {
   const [activeTocId, setActiveTocId] = useState("");
 
   const headings = useMemo(() => {
-    if (!article?.sections) return [];
-    return article.sections
+    if (!article?.content) return [];
+    return article.content
       .filter((s) => s.type === "heading")
       .map((s) => ({
         id: slugify(s.text),
@@ -192,7 +192,7 @@ function HelpArticle({ article, category, onNavigate }) {
             items={[
               { label: "Help Center", onClick: () => onNavigate?.("home") },
               ...(category
-                ? [{ label: category.name, onClick: () => onNavigate?.("category", category.id) }]
+                ? [{ label: category.title, onClick: () => onNavigate?.("category", category.id) }]
                 : []),
               { label: article.title },
             ]}
@@ -209,7 +209,7 @@ function HelpArticle({ article, category, onNavigate }) {
         <Separator className="mb-6" />
 
         <div>
-          {article.sections?.map((section, index) => (
+          {article.content?.map((section, index) => (
             <SectionRenderer key={index} section={section} />
           ))}
         </div>

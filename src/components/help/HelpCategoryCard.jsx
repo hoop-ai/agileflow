@@ -51,7 +51,7 @@ function HelpCategoryCard({ category, onSelect }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <h3 className="text-sm font-semibold text-foreground truncate">
-            {category?.name}
+            {category?.title}
           </h3>
           <Badge variant="secondary" className="text-xs flex-shrink-0">
             {articleCount} {articleCount === 1 ? "article" : "articles"}

@@ -76,7 +76,7 @@ function HelpSidebar({
     categories?.forEach((cat) => {
       cat.articles?.forEach((article) => {
         if (article.title.toLowerCase().includes(query)) {
-          results.push({ ...article, categoryName: cat.name });
+          results.push({ ...article, categoryName: cat.title });
         }
       });
     });
@@ -145,7 +145,7 @@ function HelpSidebar({
                       )}
                     />
                     {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
-                    <span className="truncate">{category.name}</span>
+                    <span className="truncate">{category.title}</span>
                   </button>
 
                   <div

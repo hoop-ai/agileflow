@@ -20,16 +20,21 @@ function pickValidColumns(data) {
   return cleaned;
 }
 
+async function getAuthUser() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user || null;
+}
+
 export const Board = {
   async list(sortField, limit) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     if (!user) throw new Error('Authentication required');
     const { column, ascending } = parseSortField(sortField);
     let query = supabase.from('boards').select('*').eq('user_id', user.id).order(column, { ascending });
     if (limit) query = query.limit(limit);
     const { data, error } = await query;
     if (error) throw error;
-    return data;
+    return data || [];
   },
 
   async get(id) {
@@ -47,11 +52,11 @@ export const Board = {
     query = query.order(column, { ascending });
     const { data, error } = await query;
     if (error) throw error;
-    return data;
+    return data || [];
   },
 
   async create(boardData) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAuthUser();
     if (!user) throw new Error('Authentication required');
     const cleaned = pickValidColumns({ ...boardData, user_id: user.id });
     const { data, error } = await supabase.from('boards').insert(cleaned).select().single();
