@@ -19,7 +19,9 @@ import {
   Palette,
   Save,
   CheckCircle2,
-  LogOut
+  LogOut,
+  AlertCircle,
+  RefreshCw
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -28,6 +30,7 @@ export default function SettingsPage() {
   const { theme: currentTheme, setTheme: updateTheme } = useTheme();
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -64,6 +67,7 @@ export default function SettingsPage() {
 
   const loadUserSettings = async () => {
     setIsLoading(true);
+    setLoadError(false);
     try {
       const userData = await UserService.me();
       setUser(userData);
@@ -91,11 +95,7 @@ export default function SettingsPage() {
       });
     } catch (error) {
       console.error('Error loading user settings:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load your settings. Please try again.",
-        variant: "destructive",
-      });
+      setLoadError(true);
     }
     setIsLoading(false);
   };
@@ -148,7 +148,11 @@ export default function SettingsPage() {
   };
 
   const handleLogout = () => {
-    supabase.auth.signOut();
+    if (supabase) {
+      supabase.auth.signOut();
+    } else {
+      window.location.href = '/login';
+    }
   };
 
   if (isLoading) {
@@ -157,6 +161,28 @@ export default function SettingsPage() {
         <div className="flex flex-col items-center justify-center py-12">
           <div className="w-8 h-8 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-muted-foreground mt-3">Loading settings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertCircle className="w-10 h-10 text-muted-foreground" />
+          <h2 className="text-lg font-semibold text-foreground">Failed to load settings</h2>
+          <p className="text-sm text-muted-foreground">There was a problem fetching your account data.</p>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={loadUserSettings}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Try again
+            </Button>
+            <Button variant="ghost" onClick={handleLogout}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign out
+            </Button>
+          </div>
         </div>
       </div>
     );

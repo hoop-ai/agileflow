@@ -6,7 +6,7 @@ import { Board } from "@/api/entities/Board";
 import { Item } from "@/api/entities/Item";
 import { Notification } from "@/api/entities/Notification";
 import { supabase } from "@/api/supabaseClient";
-import { ThemeProvider } from "@/components/utils/ThemeProvider";
+import { ThemeProvider, useTheme } from "@/components/utils/ThemeProvider";
 import AIAssistant from "@/components/utils/AIAssistant";
 import {
   LayoutGrid,
@@ -21,7 +21,13 @@ import {
   ListOrdered,
   Calendar as CalendarIconMenu,
   Shield,
-  CheckCheck
+  CheckCheck,
+  Sun,
+  Moon,
+  LogOut,
+  ChevronRight,
+  Keyboard,
+  BookOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +42,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -147,7 +154,7 @@ function SearchDialog({ open, onOpenChange }) {
                 <button
                   key={b.id}
                   onClick={() => handleSelect('board', b)}
-                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent transition-colors flex items-center gap-3"
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent transition-colors flex items-center gap-3 cursor-pointer"
                 >
                   <span className="text-lg">{b.icon || '📋'}</span>
                   <div>
@@ -167,7 +174,7 @@ function SearchDialog({ open, onOpenChange }) {
                 <button
                   key={item.id}
                   onClick={() => handleSelect('item', item)}
-                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent transition-colors"
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-accent transition-colors cursor-pointer"
                 >
                   <p className="font-medium text-foreground text-sm">{item.title}</p>
                   {item.data?.status && (
@@ -232,24 +239,23 @@ function NotificationsDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-md h-9 w-9 relative"
+        <button
+          className="flex items-center gap-2 w-full px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer relative"
         >
-          <Bell className="w-5 h-5" />
+          <Bell className="w-4 h-4 flex-shrink-0" />
+          <span>Notifications</span>
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center font-bold">
+            <span className="ml-auto w-5 h-5 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center font-bold">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
-        </Button>
+        </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-80" align="end">
+      <DropdownMenuContent className="w-80" side="right" align="end">
         <div className="flex items-center justify-between px-2 py-1.5">
           <DropdownMenuLabel>Notifications</DropdownMenuLabel>
           {unreadCount > 0 && (
-            <Button variant="ghost" size="sm" onClick={handleMarkAllRead} className="text-xs h-7 text-muted-foreground">
+            <Button variant="ghost" size="sm" onClick={handleMarkAllRead} className="text-xs h-7 text-muted-foreground cursor-pointer">
               <CheckCheck className="w-3 h-3 mr-1" />
               Mark all read
             </Button>
@@ -294,11 +300,140 @@ function NotificationsDropdown() {
   );
 }
 
-function LayoutContent({ children, currentPageName }) {
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === 'dark';
+
+  return (
+    <button
+      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      className="flex items-center gap-2 w-full px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+    >
+      {isDark ? <Sun className="w-4 h-4 flex-shrink-0" /> : <Moon className="w-4 h-4 flex-shrink-0" />}
+      <span>{isDark ? 'Light mode' : 'Dark mode'}</span>
+    </button>
+  );
+}
+
+const helpSections = [
+  {
+    title: 'Getting Started',
+    icon: BookOpen,
+    items: [
+      { q: 'How do I create a board?', a: 'Go to the Boards page and click "Create Board." Choose a name, color, and optional description. Your board will appear in the listing and on the dashboard.' },
+      { q: 'How do I add tasks?', a: 'Open a board, then click "+ Add Item" at the bottom of any status column. Type a title and press Enter. You can then click the task to add details, assignees, and due dates.' },
+      { q: 'How do I invite team members?', a: 'Team collaboration is managed through your board settings. Open a board, click the team icon in the header, and add collaborators by email.' },
+    ],
+  },
+  {
+    title: 'Boards & Tasks',
+    icon: Folder,
+    items: [
+      { q: 'How do I change task status?', a: 'Click the status cell on any task row to open the status picker. You can also drag and drop tasks between columns in Kanban view.' },
+      { q: 'What views are available?', a: 'Each board supports Table view (default spreadsheet-style), Kanban view (drag-and-drop columns), and Timeline view. Switch views using the view selector in the board header.' },
+      { q: 'How do I filter and sort?', a: 'Use the filter bar at the top of your board to filter by person, status, priority, or date. Click any column header to sort by that field.' },
+    ],
+  },
+  {
+    title: 'Sprints & Backlog',
+    icon: ListOrdered,
+    items: [
+      { q: 'How do I create a sprint?', a: 'Go to the Backlog page, click "Create Sprint," set a name, start/end dates, and capacity. Then drag user stories from the backlog into the sprint.' },
+      { q: 'What are user stories?', a: 'User stories represent features or requirements. Create them in the Backlog page with a title, description, priority, and story points estimate.' },
+      { q: 'How does sprint planning work?', a: 'Open a sprint and click "Plan Sprint." You\'ll see available stories ranked by priority. Drag them into the sprint until you reach the capacity target.' },
+    ],
+  },
+  {
+    title: 'Keyboard Shortcuts',
+    icon: Keyboard,
+    items: [
+      { q: 'Search', a: 'Press Ctrl+K (or ⌘K on Mac) to open the global search dialog from anywhere.' },
+      { q: 'Navigation', a: 'Use the sidebar links to navigate between Dashboard, Boards, Backlog, Calendar, and Analytics.' },
+      { q: 'Theme toggle', a: 'Click the moon/sun icon in the sidebar to switch between dark and light mode instantly.' },
+    ],
+  },
+];
+
+function HelpCenterDialog({ open, onOpenChange }) {
+  const [expandedSection, setExpandedSection] = useState(null);
+  const [expandedItem, setExpandedItem] = useState(null);
+
+  useEffect(() => {
+    if (!open) {
+      setExpandedSection(null);
+      setExpandedItem(null);
+    }
+  }, [open]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg max-h-[80vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Help Center</DialogTitle>
+          <DialogDescription>
+            Browse topics below to learn how AgileFlow works.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="overflow-y-auto flex-1 -mx-6 px-6 space-y-1">
+          {helpSections.map((section, si) => {
+            const isOpen = expandedSection === si;
+            const SectionIcon = section.icon;
+            return (
+              <div key={section.title}>
+                <button
+                  onClick={() => {
+                    setExpandedSection(isOpen ? null : si);
+                    setExpandedItem(null);
+                  }}
+                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-md text-sm font-medium text-foreground hover:bg-accent transition-colors cursor-pointer"
+                >
+                  <SectionIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <span className="flex-1 text-left">{section.title}</span>
+                  <ChevronRight className={cn(
+                    "w-4 h-4 text-muted-foreground transition-transform duration-150",
+                    isOpen && "rotate-90"
+                  )} />
+                </button>
+                {isOpen && (
+                  <div className="ml-4 pl-3 border-l border-border space-y-0.5 mb-2">
+                    {section.items.map((item, ii) => {
+                      const itemOpen = expandedItem === `${si}-${ii}`;
+                      return (
+                        <div key={ii}>
+                          <button
+                            onClick={() => setExpandedItem(itemOpen ? null : `${si}-${ii}`)}
+                            className="w-full text-left px-3 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+                          >
+                            {item.q}
+                          </button>
+                          {itemOpen && (
+                            <p className="px-3 py-2 text-sm text-muted-foreground leading-relaxed">
+                              {item.a}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function LayoutContent({ children }) {
   const location = useLocation();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+
+  const isMac = typeof navigator !== 'undefined' &&
+    (navigator.platform?.includes('Mac') || navigator.userAgent?.includes('Mac'));
 
   useEffect(() => {
     loadUser();
@@ -314,6 +449,10 @@ function LayoutContent({ children, currentPageName }) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   const loadUser = async () => {
     try {
@@ -335,200 +474,173 @@ function LayoutContent({ children, currentPageName }) {
     .join('')
     .toUpperCase() || 'U';
 
-  return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <nav className="bg-background border-b border-border sticky top-0 z-50">
-        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14">
+  const sidebarContent = (
+    <div className="flex flex-col h-full">
+      {/* Top: Logo + Search */}
+      <div className="p-4 space-y-3">
+        <Link to={createPageUrl("Dashboard")} className="flex items-center cursor-pointer">
+          <span className="text-lg font-semibold text-foreground">AgileFlow</span>
+        </Link>
 
-            {/* Logo */}
-            <div className="flex items-center">
-              <Link to={createPageUrl("Dashboard")} className="flex-shrink-0 flex items-center">
-                <span className="text-lg font-semibold text-foreground">AgileFlow</span>
-              </Link>
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="flex items-center w-full px-3 py-1.5 border border-border rounded-md bg-background text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors text-sm cursor-pointer"
+        >
+          <Search className="h-4 w-4 mr-2 flex-shrink-0" />
+          <span>Search...</span>
+          <kbd className="ml-auto text-xs bg-muted px-1.5 py-0.5 rounded">
+            {isMac ? '⌘K' : 'Ctrl+K'}
+          </kbd>
+        </button>
+      </div>
 
-              {/* Desktop nav items */}
-              <div className="hidden md:ml-8 md:flex md:items-center md:space-x-1">
-                {navItems.map((item) => {
-                  const isActive = location.pathname === item.url;
-                  return (
-                    <Link
-                      key={item.title}
-                      to={item.url}
-                      className={cn(
-                        "px-3 py-1.5 rounded-md text-sm transition-colors duration-150",
-                        isActive
-                          ? "bg-accent text-foreground font-medium"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                      aria-current={isActive ? 'page' : undefined}
-                    >
-                      {item.title}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Search bar — desktop */}
-            <div className="hidden md:flex flex-1 justify-center px-2 lg:ml-6 lg:justify-end">
-              <div className="max-w-lg w-full lg:max-w-xs">
-                <button
-                  onClick={() => setSearchOpen(true)}
-                  className="flex items-center w-full px-3 py-1.5 border border-border rounded-md bg-background text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors text-sm"
-                >
-                  <Search className="h-4 w-4 mr-2 flex-shrink-0" />
-                  <span>Search everything...</span>
-                  <kbd className="ml-auto text-xs bg-muted px-1.5 py-0.5 rounded">⌘K</kbd>
-                </button>
-              </div>
-            </div>
-
-            {/* Right-side icons — desktop */}
-            <div className="hidden md:ml-4 md:flex md:items-center md:space-x-1">
-              <NotificationsDropdown />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-md h-9 w-9"
-              >
-                <HelpCircle className="w-5 h-5" />
-              </Button>
-              <Link to={createPageUrl("Settings")}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-md h-9 w-9"
-                >
-                  <Settings className="w-5 h-5" />
-                </Button>
-              </Link>
-
-              {/* User avatar dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="rounded-full h-9 w-9 p-0">
-                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", getAvatarColor(currentUser?.full_name))}>
-                      <span className="font-semibold text-xs">{userInitials}</span>
-                    </div>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48" align="end">
-                  <DropdownMenuLabel>
-                    {currentUser?.full_name || 'My Account'}
-                    {isAdmin && (
-                      <Badge variant="secondary" className="ml-2 text-xs">Admin</Badge>
-                    )}
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to={createPageUrl("Settings")}>Settings</Link>
-                  </DropdownMenuItem>
-                  {isAdmin && (
-                    <DropdownMenuItem asChild>
-                      <Link to={createPageUrl("Admin")}>Admin Panel</Link>
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => supabase.auth.signOut()}>
-                    Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-
-            {/* Mobile hamburger */}
-            <div className="md:hidden flex items-center">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-md h-9 w-9"
-              >
-                <span className="sr-only">Open main menu</span>
-                {mobileMenuOpen ? (
-                  <X className="block h-5 w-5" aria-hidden="true" />
-                ) : (
-                  <MenuIcon className="block h-5 w-5" aria-hidden="true" />
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-border bg-background">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              {navItems.map((item) => {
-                const isActive = location.pathname === item.url;
-                return (
-                  <Link
-                    key={item.title}
-                    to={item.url}
-                    className={cn(
-                      "block px-3 py-2 rounded-md text-base transition-colors duration-150",
-                      isActive
-                        ? "bg-accent text-foreground font-medium"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {item.title}
-                  </Link>
-                );
-              })}
-            </div>
-
-            <div className="pt-3 pb-3 border-t border-border">
-              <div className="px-2">
-                <button
-                  onClick={() => { setMobileMenuOpen(false); setSearchOpen(true); }}
-                  className="flex items-center w-full px-3 py-2 border border-border rounded-md bg-background text-muted-foreground text-sm"
-                >
-                  <Search className="h-4 w-4 mr-2 flex-shrink-0" />
-                  Search everything...
-                </button>
-              </div>
-            </div>
-
-            <div className="pt-3 pb-3 border-t border-border">
-              <div className="flex items-center px-5">
-                <div className="flex-shrink-0">
-                  <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", getAvatarColor(currentUser?.full_name))}>
-                    <span className="font-semibold text-sm">{userInitials}</span>
-                  </div>
-                </div>
-                <div className="ml-3">
-                  <div className="text-base font-medium text-foreground">{currentUser?.full_name || 'User Name'}</div>
-                  <div className="text-sm text-muted-foreground">{currentUser?.email || 'user@example.com'}</div>
-                </div>
-              </div>
-              <div className="mt-3 px-2 space-y-1">
-                <Link
-                  to={createPageUrl("Settings")}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-3 py-2 rounded-md text-base text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-150"
-                >
-                  Settings
-                </Link>
-                <button
-                  onClick={() => { setMobileMenuOpen(false); supabase.auth.signOut(); }}
-                  className="block w-full text-left px-3 py-2 rounded-md text-base text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-150"
-                >
-                  Sign out
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.url;
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.title}
+              to={item.url}
+              className={cn(
+                "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors cursor-pointer",
+                isActive
+                  ? "bg-accent text-foreground font-medium"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+              )}
+              aria-current={isActive ? 'page' : undefined}
+            >
+              <Icon className="w-4 h-4 flex-shrink-0" />
+              <span>{item.title}</span>
+            </Link>
+          );
+        })}
       </nav>
 
-      <main className="flex-1 overflow-y-auto overflow-x-hidden">
+      {/* Bottom section */}
+      <div className="border-t border-border px-3 py-2 space-y-0.5">
+        <button
+          onClick={() => setHelpOpen(true)}
+          className="flex items-center gap-2 w-full px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+        >
+          <HelpCircle className="w-4 h-4 flex-shrink-0" />
+          <span>Help Center</span>
+        </button>
+
+        <ThemeToggle />
+
+        <NotificationsDropdown />
+
+        <Link
+          to={createPageUrl("Settings")}
+          className="flex items-center gap-2 w-full px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+        >
+          <Settings className="w-4 h-4 flex-shrink-0" />
+          <span>Settings</span>
+        </Link>
+      </div>
+
+      {/* User profile */}
+      <div className="border-t border-border p-3">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-3 w-full p-2 rounded-md hover:bg-accent transition-colors cursor-pointer">
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0", getAvatarColor(currentUser?.full_name))}>
+                <span className="font-semibold text-xs">{userInitials}</span>
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-sm font-medium text-foreground truncate">
+                  {currentUser?.full_name || 'User'}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {currentUser?.email || ''}
+                </p>
+              </div>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-48" side="right" align="end">
+            <DropdownMenuLabel>
+              {currentUser?.full_name || 'My Account'}
+              {isAdmin && (
+                <Badge variant="secondary" className="ml-2 text-xs">Admin</Badge>
+              )}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild className="cursor-pointer">
+              <Link to={createPageUrl("Settings")}>Settings</Link>
+            </DropdownMenuItem>
+            {isAdmin && (
+              <DropdownMenuItem asChild className="cursor-pointer">
+                <Link to={createPageUrl("Admin")}>Admin Panel</Link>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => supabase ? supabase.auth.signOut() : (window.location.href = '/login')}
+              className="cursor-pointer"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex md:flex-col fixed inset-y-0 left-0 w-60 bg-card border-r border-border z-40">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Mobile sidebar */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 w-60 bg-card border-r border-border z-50 md:hidden transform transition-transform duration-200 ease-in-out",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="absolute top-3 right-3">
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile header bar */}
+      <div className="md:hidden sticky top-0 z-30 bg-background border-b border-border px-4 h-14 flex items-center">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+        >
+          <MenuIcon className="w-5 h-5" />
+          <span className="sr-only">Open menu</span>
+        </button>
+        <span className="ml-3 text-lg font-semibold text-foreground">AgileFlow</span>
+      </div>
+
+      {/* Main content */}
+      <main className="md:ml-60 min-h-screen">
         {children}
       </main>
 
       <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+      <HelpCenterDialog open={helpOpen} onOpenChange={setHelpOpen} />
       <AIAssistant />
     </div>
   );

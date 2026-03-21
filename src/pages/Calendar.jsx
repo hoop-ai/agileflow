@@ -14,7 +14,9 @@ import {
   Users,
   MapPin,
   Clock,
-  X
+  X,
+  AlertCircle,
+  RefreshCw
 } from "lucide-react";
 import {
   format,
@@ -57,6 +59,7 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     loadEvents();
@@ -64,16 +67,13 @@ export default function CalendarPage() {
 
   const loadEvents = async () => {
     setIsLoading(true);
+    setLoadError(false);
     try {
       const eventsData = await CalendarEvent.list('-start_date');
       setEvents(eventsData);
     } catch (error) {
       console.error("Error loading events:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load calendar events. Please try again.",
-        variant: "destructive",
-      });
+      setLoadError(true);
     }
     setIsLoading(false);
   };
@@ -259,6 +259,33 @@ export default function CalendarPage() {
       </div>
     );
   };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 bg-background min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-3"></div>
+          <p className="text-sm text-muted-foreground">Loading calendar...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="p-6 bg-background min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertCircle className="w-10 h-10 text-muted-foreground" />
+          <h2 className="text-lg font-semibold text-foreground">Failed to load calendar</h2>
+          <p className="text-sm text-muted-foreground">There was a problem fetching your events.</p>
+          <Button variant="outline" onClick={loadEvents}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Try again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-background min-h-screen">

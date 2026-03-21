@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { TeamMember } from "@/api/entities/TeamMember";
 import {
   ArrowLeft,
   Star,
@@ -14,8 +15,6 @@ import {
   Edit3,
   Save,
   UserPlus,
-  Mail,
-  MessageSquare,
   Zap,
   UserMinus
 } from "lucide-react";
@@ -76,12 +75,31 @@ export default function BoardHeader({
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(board?.title || '');
   const [lastSaved, setLastSaved] = useState(new Date());
-  const [collaborators] = useState([
-    { id: 1, name: 'John Doe', avatar: 'JD', online: true, role: 'Owner' },
-    { id: 2, name: 'Jane Smith', avatar: 'JS', online: true, role: 'Editor' },
-    { id: 3, name: 'Mike Johnson', avatar: 'MJ', online: false, role: 'Viewer' },
-    { id: 4, name: 'Sarah Wilson', avatar: 'SW', online: true, role: 'Editor' },
-  ]);
+  const [collaborators, setCollaborators] = useState([]);
+
+  useEffect(() => {
+    if (board?.id) {
+      TeamMember.listByBoard(board.id)
+        .then((members) => {
+          setCollaborators(
+            members.map((m) => ({
+              id: m.id,
+              name: m.profiles?.full_name || m.profiles?.email || 'Unknown',
+              avatar: (m.profiles?.full_name || '??')
+                .split(' ')
+                .map((n) => n[0])
+                .join('')
+                .toUpperCase()
+                .slice(0, 2),
+              role: m.role || 'editor',
+            }))
+          );
+        })
+        .catch(() => {
+          setCollaborators([]);
+        });
+    }
+  }, [board?.id]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -296,69 +314,57 @@ export default function BoardHeader({
                 <TooltipContent>Manage automations</TooltipContent>
               </Tooltip>
 
-              <Popover>
-                <PopoverTrigger asChild>
-                  <div className="flex items-center -space-x-2 cursor-pointer">
-                    {collaborators.slice(0, 3).map((user, index) => (
-                      <Tooltip key={user.id}>
-                        <TooltipTrigger asChild>
-                          <div
-                            className={cn("w-8 h-8 rounded-full border-2 border-background flex items-center justify-center text-xs font-medium relative", getAvatarColor(user.name))}
-                          >
-                            {user.avatar}
-                            {user.online && (
-                              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border border-background" />
-                            )}
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>{user.name} ({user.role})</TooltipContent>
-                      </Tooltip>
-                    ))}
-                    {collaborators.length > 3 && (
-                      <div className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-muted-foreground text-xs">
-                        +{collaborators.length - 3}
-                      </div>
-                    )}
-                  </div>
-                </PopoverTrigger>
-                <PopoverContent className="w-80">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-foreground">Team ({collaborators.length})</h4>
-                      <Button size="sm" variant="outline">
-                        <UserPlus className="w-3 h-3 mr-1" />
-                        Invite
-                      </Button>
-                    </div>
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {collaborators.map((user) => (
-                        <div key={user.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent transition-colors duration-150">
-                          <div className="flex items-center gap-3">
-                            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium relative", getAvatarColor(user.name))}>
+              {collaborators.length > 0 && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <div className="flex items-center -space-x-2 cursor-pointer">
+                      {collaborators.slice(0, 3).map((user) => (
+                        <Tooltip key={user.id}>
+                          <TooltipTrigger asChild>
+                            <div
+                              className={cn("w-8 h-8 rounded-full border-2 border-background flex items-center justify-center text-xs font-medium", getAvatarColor(user.name))}
+                            >
                               {user.avatar}
-                              {user.online && (
-                                <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full border border-background" />
-                              )}
                             </div>
-                            <div>
-                              <p className="text-sm font-medium text-foreground">{user.name}</p>
-                              <p className="text-xs text-muted-foreground">{user.role}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="icon" className="h-6 w-6">
-                              <Mail className="w-3 h-3" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-6 w-6">
-                              <MessageSquare className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
+                          </TooltipTrigger>
+                          <TooltipContent>{user.name} ({user.role})</TooltipContent>
+                        </Tooltip>
                       ))}
+                      {collaborators.length > 3 && (
+                        <div className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-muted-foreground text-xs">
+                          +{collaborators.length - 3}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium text-foreground">Team ({collaborators.length})</h4>
+                        <Button size="sm" variant="outline">
+                          <UserPlus className="w-3 h-3 mr-1" />
+                          Invite
+                        </Button>
+                      </div>
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {collaborators.map((user) => (
+                          <div key={user.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent transition-colors duration-150">
+                            <div className="flex items-center gap-3">
+                              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium", getAvatarColor(user.name))}>
+                                {user.avatar}
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-foreground">{user.name}</p>
+                                <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
             </div>
           </div>
         </div>

@@ -136,7 +136,7 @@ export default function LoginPage() {
                     {mode === 'login' && (
                       <button
                         type="button"
-                        className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+                        className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline cursor-pointer"
                         onClick={() => switchMode('forgot')}
                       >
                         Forgot password?
@@ -208,7 +208,7 @@ export default function LoginPage() {
                     Don&apos;t have an account?{' '}
                     <button
                       type="button"
-                      className="text-foreground font-medium underline-offset-4 hover:underline"
+                      className="text-foreground font-medium underline-offset-4 hover:underline cursor-pointer"
                       onClick={() => switchMode('signup')}
                     >
                       Sign Up
@@ -220,7 +220,7 @@ export default function LoginPage() {
                     Already have an account?{' '}
                     <button
                       type="button"
-                      className="text-foreground font-medium underline-offset-4 hover:underline"
+                      className="text-foreground font-medium underline-offset-4 hover:underline cursor-pointer"
                       onClick={() => switchMode('login')}
                     >
                       Log In
@@ -230,7 +230,7 @@ export default function LoginPage() {
                 {(mode === 'forgot' || mode === 'reset') && (
                   <button
                     type="button"
-                    className="text-foreground font-medium underline-offset-4 hover:underline inline-flex items-center gap-1"
+                    className="text-foreground font-medium underline-offset-4 hover:underline cursor-pointer inline-flex items-center gap-1"
                     onClick={() => switchMode('login')}
                   >
                     <ArrowLeft className="w-3 h-3" />

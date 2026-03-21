@@ -5,10 +5,11 @@ import { Item } from "@/api/entities/Item";
 import { User } from "@/api/entities/User";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Folder, BarChart3, ArrowRight } from "lucide-react";
+import { Folder, BarChart3, ArrowRight, AlertTriangle, RefreshCw, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
+import { supabase } from "@/api/supabaseClient";
 
 import StatsOverview from "../components/dashboard/StatsOverview";
 import RecentBoards from "../components/dashboard/RecentBoards";
@@ -17,10 +18,12 @@ import QuickActions from "../components/dashboard/QuickActions";
 
 export default function Dashboard() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [boards, setBoards] = useState([]);
   const [items, setItems] = useState([]);
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -28,25 +31,31 @@ export default function Dashboard() {
 
   const loadDashboardData = async () => {
     setIsLoading(true);
+    setHasError(false);
+
+    // User profile failure is non-fatal — boards and items are what matter
+    User.me()
+      .then(setUser)
+      .catch(() => {});
+
     try {
-      const [boardsData, itemsData, userData] = await Promise.all([
+      const [boardsData, itemsData] = await Promise.all([
         Board.list("-updated_date", 10),
         Item.list("-updated_date", 20),
-        User.me()
       ]);
-
       setBoards(boardsData);
       setItems(itemsData);
-      setUser(userData);
     } catch (error) {
-      console.error("Error loading dashboard data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load dashboard data. Please try again.",
-        variant: "destructive",
-      });
+      console.error("Dashboard data load failed:", error);
+      setHasError(true);
     }
+
     setIsLoading(false);
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/login");
   };
 
   const handleCreateBoard = async (boardData) => {
@@ -71,6 +80,33 @@ export default function Dashboard() {
   };
 
   const pendingTasks = items.filter(item => !item.data?.status || item.data?.status !== 'done').length;
+
+  if (!isLoading && hasError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-center space-y-4 max-w-sm px-6">
+          <div className="flex justify-center">
+            <AlertTriangle className="w-10 h-10 text-destructive" />
+          </div>
+          <h2 className="text-lg font-semibold text-foreground">Failed to load dashboard</h2>
+          <p className="text-sm text-muted-foreground">
+            There was a problem connecting to the database. This can happen if the database tables
+            haven&apos;t been set up yet, or if your session has expired.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+            <Button onClick={loadDashboardData} className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Retry
+            </Button>
+            <Button variant="outline" onClick={handleSignOut} className="gap-2">
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-8 bg-background min-h-screen transition-colors">

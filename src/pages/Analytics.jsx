@@ -3,7 +3,6 @@ import { Board } from "@/api/entities/Board";
 import { Item } from "@/api/entities/Item";
 import { Sprint } from "@/api/entities/Sprint";
 import { UserStory } from "@/api/entities/UserStory";
-import { useToast } from "@/components/ui/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import {
   BarChart3, TrendingUp, Target, Clock, Activity,
-  CheckCircle2, Download, Users, Zap, ArrowUpDown
+  CheckCircle2, Download, Users, Zap, ArrowUpDown,
+  AlertCircle, RefreshCw
 } from "lucide-react";
 import { subDays, isAfter, isBefore } from 'date-fns';
 import {
@@ -80,7 +80,6 @@ function ChartTooltip({ active, payload, label }) {
 }
 
 export default function AnalyticsPage() {
-  const { toast } = useToast();
   const [boards, setBoards] = useState([]);
   const [items, setItems] = useState([]);
   const [sprints, setSprints] = useState([]);
@@ -89,6 +88,7 @@ export default function AnalyticsPage() {
   const [selectedTimeRange, setSelectedTimeRange] = useState('30');
   const [activeTab, setActiveTab] = useState('overview');
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -96,6 +96,7 @@ export default function AnalyticsPage() {
 
   const loadData = async () => {
     setIsLoading(true);
+    setLoadError(false);
     try {
       const [boardsData, itemsData, sprintsData, storiesData] = await Promise.all([
         Board.list("-updated_date"),
@@ -109,11 +110,7 @@ export default function AnalyticsPage() {
       setStories(storiesData);
     } catch (error) {
       console.error("Error loading analytics data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load analytics data. Please try again.",
-        variant: "destructive",
-      });
+      setLoadError(true);
     }
     setIsLoading(false);
   };
@@ -272,6 +269,24 @@ export default function AnalyticsPage() {
               ))}
             </div>
             <div className="h-72 bg-muted rounded-lg" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="p-6 min-h-screen">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col items-center justify-center py-24 gap-4">
+            <AlertCircle className="w-10 h-10 text-muted-foreground" />
+            <h2 className="text-lg font-semibold text-foreground">Failed to load analytics</h2>
+            <p className="text-sm text-muted-foreground">There was a problem fetching your data.</p>
+            <Button variant="outline" onClick={loadData}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Try again
+            </Button>
           </div>
         </div>
       </div>

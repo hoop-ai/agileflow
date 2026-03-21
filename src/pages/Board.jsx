@@ -6,17 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { 
-  Plus, 
-  Search, 
-  Filter, 
+import {
+  Plus,
+  Search,
+  Filter,
   Users,
-  // MoreHorizontal, // Removed as it's no longer directly used here for panel controls
   ArrowLeft,
   SortAsc,
   Eye,
   EyeOff,
-  Group as GroupIcon
+  Group as GroupIcon,
+  AlertCircle,
+  RefreshCw
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -51,6 +52,7 @@ export default function BoardPage() {
   const [board, setBoard] = useState(null);
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItems, setSelectedItems] = useState(new Set());
   const [currentView, setCurrentView] = useState('table');
@@ -86,12 +88,13 @@ export default function BoardPage() {
 
   const loadBoardAndItems = async () => {
     setIsLoading(true);
+    setLoadError(false);
     try {
       const boardDataPromise = Board.filter({ id: boardId });
       const itemsDataPromise = Item.filter({ board_id: boardId }, "order_index");
-      
+
       const [boardResponse, itemsData] = await Promise.all([boardDataPromise, itemsDataPromise]);
-      
+
       if (boardResponse.length > 0) {
         setBoard(boardResponse[0]);
       } else {
@@ -101,11 +104,7 @@ export default function BoardPage() {
     } catch (error) {
       console.error("Error loading board and items:", error);
       setBoard(null);
-      toast({
-        title: "Error",
-        description: "Failed to load board data. Please try again.",
-        variant: "destructive",
-      });
+      setLoadError(true);
     }
     setIsLoading(false);
   };
@@ -442,12 +441,36 @@ export default function BoardPage() {
 
   const visibleColumns = (board?.columns || []).filter(col => !hiddenColumns?.has(col.id));
 
-  if (isLoading && !board) {
+  if (isLoading) {
     return (
       <div className="p-8 bg-background min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-lg text-foreground">Loading board...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="p-8 bg-background min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertCircle className="w-10 h-10 text-muted-foreground" />
+          <h2 className="text-lg font-semibold text-foreground">Failed to load board</h2>
+          <p className="text-sm text-muted-foreground">There was a problem fetching this board.</p>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={loadBoardAndItems}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Try again
+            </Button>
+            <Link to={createPageUrl("Boards")}>
+              <Button variant="ghost">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Boards
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     );

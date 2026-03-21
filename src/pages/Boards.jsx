@@ -6,14 +6,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Grid3X3, 
+import {
+  Plus,
+  Search,
+  Filter,
+  Grid3X3,
   LayoutList,
   Folder,
-  BarChart
+  BarChart,
+  AlertCircle,
+  RefreshCw
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -26,6 +28,7 @@ export default function Boards() {
   const [boards, setBoards] = useState([]);
   const [filteredBoards, setFilteredBoards] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingBoard, setEditingBoard] = useState(null);
@@ -42,16 +45,13 @@ export default function Boards() {
 
   const loadBoards = async () => {
     setIsLoading(true);
+    setLoadError(false);
     try {
       const data = await Board.list("-updated_date");
       setBoards(data);
     } catch (error) {
       console.error("Error loading boards:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load boards. Please try again.",
-        variant: "destructive",
-      });
+      setLoadError(true);
     }
     setIsLoading(false);
   };
@@ -129,6 +129,22 @@ export default function Boards() {
       });
     }
   };
+
+  if (loadError) {
+    return (
+      <div className="p-4 md:p-6 bg-background min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertCircle className="w-10 h-10 text-muted-foreground" />
+          <h2 className="text-lg font-semibold text-foreground">Failed to load boards</h2>
+          <p className="text-sm text-muted-foreground">There was a problem fetching your boards.</p>
+          <Button variant="outline" onClick={loadBoards}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Try again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 bg-background min-h-screen">
