@@ -221,13 +221,15 @@ VITE_OPENROUTER_API_KEY=<your-openrouter-api-key>
 4. Copy project URL and anon key to `.env.local`
 
 ## Deployment (Vercel)
-1. Connect GitHub repo `hoop-ai/project-management-system` to Vercel
+1. Connect GitHub repo `hoop-ai/agileflow` to Vercel
 2. Set environment variables (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_OPENROUTER_API_KEY)
-3. Deploy — Vercel auto-detects Vite and configures build
+3. Production branch: `main` — Vercel auto-deploys on every push to main
 
 ## Git Workflow
-- `origin` → `hoop-ai/project-management-system` (independent repo — push here)
-- No upstream remote — this is a standalone project
+- `origin` → `hoop-ai/agileflow` (our repo — push here)
+- **Always work on `main` branch** — Vercel deploys from `main`
+- After every commit, push to origin: `git push origin main`
+- Every `git push` to `main` triggers a Vercel deployment automatically
 
 ## Subagents
 See `.claude/agents/` for specialized agents:
