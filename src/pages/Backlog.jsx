@@ -114,7 +114,7 @@ export default function BacklogPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-900 p-6 transition-colors">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -132,7 +132,7 @@ export default function BacklogPage() {
             <Button
               onClick={() => setShowPlanningModal(true)}
               variant="outline"
-              className="border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50"
+              className="border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50 dark:border-purple-700 dark:hover:border-purple-500 dark:hover:bg-purple-900/30 dark:text-purple-300"
             >
               <CalendarPlus className="w-4 h-4 mr-2" />
               Plan Sprint
@@ -200,15 +200,15 @@ export default function BacklogPage() {
 
         {/* Active Sprints Alert */}
         {activeSprints.length > 0 && (
-          <Card className="mb-6 border-l-4 border-l-blue-500 bg-blue-50">
+          <Card className="mb-6 border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-gray-700">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <Clock className="w-5 h-5 text-blue-600" />
                 <div>
-                  <p className="font-semibold text-blue-900">
+                  <p className="font-semibold text-blue-900 dark:text-blue-200">
                     {activeSprints.length} Active Sprint{activeSprints.length > 1 ? 's' : ''}
                   </p>
-                  <p className="text-sm text-blue-700">
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
                     {activeSprints.map(s => s.name).join(', ')}
                   </p>
                 </div>
@@ -218,7 +218,7 @@ export default function BacklogPage() {
         )}
 
         {/* Filters */}
-        <Card className="mb-6">
+        <Card className="mb-6 dark:bg-gray-800 dark:border-gray-700">
           <CardContent className="p-4">
             <div className="flex gap-4 items-center">
               <div className="relative flex-1">
@@ -249,9 +249,9 @@ export default function BacklogPage() {
         </Card>
 
         {/* Backlog List */}
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 dark:text-white">
               <ListOrdered className="w-5 h-5" />
               Prioritized Backlog
               <Badge variant="secondary" className="ml-2">
@@ -268,8 +268,8 @@ export default function BacklogPage() {
             ) : sortedStories.length === 0 ? (
               <div className="text-center py-12">
                 <Target className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No stories in backlog</h3>
-                <p className="text-gray-600 mb-6">Start by creating your first user story</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No stories in backlog</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">Start by creating your first user story</p>
                 <Button onClick={() => setShowCreateModal(true)}>
                   <Plus className="w-4 h-4 mr-2" />
                   Create User Story
@@ -352,37 +352,37 @@ const StoryCard = ({ story, onClick, isDragging }) => {
   return (
     <motion.div
       whileHover={{ scale: 1.01 }}
-      className={`p-4 bg-white rounded-lg border-2 cursor-pointer transition-all ${
-        isDragging ? 'shadow-2xl border-blue-500' : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
+      className={`p-4 bg-white dark:bg-gray-800 rounded-lg border-2 cursor-pointer transition-all ${
+        isDragging ? 'shadow-2xl border-blue-500' : 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-md'
       }`}
       onClick={onClick}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <Badge className={priorityColors[story.priority] || priorityColors.medium} variant="outline">
-              {story.priority || 'medium'}
+            <Badge className={priorityColors[story.priority]} variant="outline">
+              {story.priority}
             </Badge>
-            {story.story_points != null && story.story_points > 0 && (
+            {story.story_points && (
               <Badge variant="secondary" className="bg-purple-100 text-purple-800">
                 {story.story_points} SP
               </Badge>
             )}
-            {story.status && story.status !== 'backlog' && (
-              <Badge className={statusColors[story.status] || statusColors.backlog}>
+            {story.status !== 'backlog' && (
+              <Badge className={statusColors[story.status]}>
                 {story.status.replace('_', ' ')}
               </Badge>
             )}
           </div>
           
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{story.title || 'Untitled Story'}</h3>
-          {story.description && <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{story.description}</p>}
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{story.title}</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{story.description}</p>
 
           <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 dark:text-gray-400">
-            {Array.isArray(story.acceptance_criteria) && story.acceptance_criteria.length > 0 && (
+            {story.acceptance_criteria && (
               <span className="flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3" />
-                {story.acceptance_criteria.filter(c => c?.completed).length}/{story.acceptance_criteria.length} criteria
+                {story.acceptance_criteria.filter(c => c.completed).length}/{story.acceptance_criteria.length} criteria
               </span>
             )}
             {story.assigned_to && (
