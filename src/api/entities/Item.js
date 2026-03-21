@@ -18,6 +18,12 @@ export const Item = {
     return data;
   },
 
+  async get(id) {
+    const { data, error } = await supabase.from('items').select('*').eq('id', id).single();
+    if (error) throw error;
+    return data;
+  },
+
   async filter(filters, sortField) {
     const { column, ascending } = parseSortField(sortField);
     let query = supabase.from('items').select('*');

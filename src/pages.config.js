@@ -55,6 +55,7 @@ import Backlog from './pages/Backlog';
 import Calendar from './pages/Calendar';
 import Performance from './pages/Performance';
 import Settings from './pages/Settings';
+import Admin from './pages/Admin';
 import __Layout from './Layout.jsx';
 
 
@@ -67,6 +68,7 @@ export const PAGES = {
     "Calendar": Calendar,
     "Performance": Performance,
     "Settings": Settings,
+    "Admin": Admin,
 }
 
 export const pagesConfig = {

@@ -11,10 +11,8 @@ export const AuthProvider = ({ children }) => {
   const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
-    // Check initial session
     checkSession();
 
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         setUser(session.user);
@@ -76,6 +74,31 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const loginWithOAuth = async (provider) => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/`
+      }
+    });
+    if (error) throw error;
+    return data;
+  };
+
+  const resetPassword = async (email) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/login?reset=true`
+    });
+    if (error) throw error;
+    return data;
+  };
+
+  const updatePassword = async (newPassword) => {
+    const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+    return data;
+  };
+
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -84,12 +107,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const navigateToLogin = () => {
-    // In Supabase, we handle login in-app, not via redirect
-    // This is kept for API compatibility — components can check isAuthenticated
     window.location.href = '/login';
   };
 
-  // Combined user object for backward compatibility
   const combinedUser = profile ? { ...profile, email: user?.email } : null;
 
   return (
@@ -102,6 +122,9 @@ export const AuthProvider = ({ children }) => {
       appPublicSettings: null,
       login,
       signup,
+      loginWithOAuth,
+      resetPassword,
+      updatePassword,
       logout,
       navigateToLogin,
       checkAppState: checkSession

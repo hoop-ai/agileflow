@@ -17,6 +17,24 @@ export const Sprint = {
     return data;
   },
 
+  async get(id) {
+    const { data, error } = await supabase.from('sprints').select('*').eq('id', id).single();
+    if (error) throw error;
+    return data;
+  },
+
+  async filter(filters, sortField) {
+    const { column, ascending } = parseSortField(sortField);
+    let query = supabase.from('sprints').select('*');
+    Object.entries(filters).forEach(([key, value]) => {
+      query = query.eq(key, value);
+    });
+    query = query.order(column, { ascending });
+    const { data, error } = await query;
+    if (error) throw error;
+    return data;
+  },
+
   async create(sprintData) {
     const { data: { user } } = await supabase.auth.getUser();
     const { data, error } = await supabase.from('sprints').insert({ ...sprintData, user_id: user.id }).select().single();

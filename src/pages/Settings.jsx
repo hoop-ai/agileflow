@@ -68,25 +68,26 @@ export default function SettingsPage() {
       const userData = await UserService.me();
       setUser(userData);
       
+      const s = userData.settings || {};
       setSettings({
         full_name: userData.full_name || '',
         email: userData.email || '',
-        job_title: userData.job_title || '',
-        department: userData.department || '',
-        email_notifications: userData.email_notifications !== false,
-        task_assignments: userData.task_assignments !== false,
-        mentions: userData.mentions !== false,
-        due_date_reminders: userData.due_date_reminders !== false,
-        sprint_updates: userData.sprint_updates !== false,
-        daily_digest: userData.daily_digest || false,
+        job_title: s.job_title || '',
+        department: s.department || '',
+        email_notifications: s.email_notifications !== false,
+        task_assignments: s.task_assignments !== false,
+        mentions: s.mentions !== false,
+        due_date_reminders: s.due_date_reminders !== false,
+        sprint_updates: s.sprint_updates !== false,
+        daily_digest: s.daily_digest || false,
         theme: userData.theme || currentTheme || 'light',
-        language: userData.language || 'en',
-        timezone: userData.timezone || 'UTC',
-        date_format: userData.date_format || 'MM/DD/YYYY',
-        week_start: userData.week_start || 'sunday',
-        profile_visibility: userData.profile_visibility || 'team',
-        show_email: userData.show_email !== false,
-        activity_tracking: userData.activity_tracking !== false
+        language: s.language || 'en',
+        timezone: s.timezone || 'UTC',
+        date_format: s.date_format || 'MM/DD/YYYY',
+        week_start: s.week_start || 'sunday',
+        profile_visibility: s.profile_visibility || 'team',
+        show_email: s.show_email !== false,
+        activity_tracking: s.activity_tracking !== false
       });
     } catch (error) {
       console.error('Error loading user settings:', error);
@@ -97,37 +98,39 @@ export default function SettingsPage() {
   const handleSaveSettings = async () => {
     setIsSaving(true);
     setSaveSuccess(false);
-    
+
     try {
       await UserService.updateMe({
         full_name: settings.full_name,
-        job_title: settings.job_title,
-        department: settings.department,
-        email_notifications: settings.email_notifications,
-        task_assignments: settings.task_assignments,
-        mentions: settings.mentions,
-        due_date_reminders: settings.due_date_reminders,
-        sprint_updates: settings.sprint_updates,
-        daily_digest: settings.daily_digest,
         theme: settings.theme,
-        language: settings.language,
-        timezone: settings.timezone,
-        date_format: settings.date_format,
-        week_start: settings.week_start,
-        profile_visibility: settings.profile_visibility,
-        show_email: settings.show_email,
-        activity_tracking: settings.activity_tracking
+        settings: {
+          job_title: settings.job_title,
+          department: settings.department,
+          email_notifications: settings.email_notifications,
+          task_assignments: settings.task_assignments,
+          mentions: settings.mentions,
+          due_date_reminders: settings.due_date_reminders,
+          sprint_updates: settings.sprint_updates,
+          daily_digest: settings.daily_digest,
+          language: settings.language,
+          timezone: settings.timezone,
+          date_format: settings.date_format,
+          week_start: settings.week_start,
+          profile_visibility: settings.profile_visibility,
+          show_email: settings.show_email,
+          activity_tracking: settings.activity_tracking
+        }
       });
-      
+
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
-      
+
       await loadUserSettings();
     } catch (error) {
       console.error('Error saving settings:', error);
       alert('Failed to save settings. Please try again.');
     }
-    
+
     setIsSaving(false);
   };
 

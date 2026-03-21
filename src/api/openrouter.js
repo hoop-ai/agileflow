@@ -5,13 +5,17 @@ const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 
 // Model cascade: free/cheap -> paid cheap
 const MODEL_CASCADE = [
-  'openai/gpt-4o-mini',           // Very cheap, reliable
-  'meta-llama/llama-3.3-8b-instruct:free', // Free
-  'google/gemini-2.0-flash-001',  // Very cheap
-  'anthropic/claude-3.5-haiku',   // Cheap paid fallback
+  'openai/gpt-4o-mini',
+  'meta-llama/llama-3.3-8b-instruct:free',
+  'google/gemini-2.0-flash-001',
+  'anthropic/claude-3.5-haiku',
 ];
 
 async function callModel(model, messages) {
+  if (!OPENROUTER_API_KEY) {
+    throw new Error('OpenRouter API key not configured. Set VITE_OPENROUTER_API_KEY in .env.local');
+  }
+
   const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -23,7 +27,7 @@ async function callModel(model, messages) {
     body: JSON.stringify({
       model,
       messages,
-      max_tokens: 1024,
+      max_tokens: 2048,
       temperature: 0.7,
     }),
   });
@@ -41,30 +45,35 @@ export async function invokeLLM(prompt) {
   const messages = [
     {
       role: 'system',
-      content: `You are an AI assistant for AgileFlow, an Agile/Scrum project management application.
+      content: `You are an AI assistant for AgileFlow, an Agile/Scrum project management application (similar to ClickUp/Monday.com).
 
 The app includes:
 - Dashboard: Overview of all boards, tasks, and activities
-- Boards: Create and manage project boards with customizable columns and groups
-- Backlog: Manage user stories and sprint planning
+- Boards: Create and manage project boards with customizable columns, groups, Kanban view, and table view
+- Backlog: Manage user stories, story points, and sprint planning
 - Calendar: View and schedule team events and deadlines
-- Analytics: Track performance metrics and insights
+- Analytics: Track performance metrics, completion rates, and insights
 - Settings: Customize theme, notifications, and preferences
+- Admin Panel: User management and role assignments (admin only)
+- AI Assistant: Context-aware help with access to user's project data
 
-Provide helpful, concise responses. If the user asks how to do something, explain the steps clearly.`
+You have access to the user's actual project data which will be included in their messages. Use this data to give specific, actionable advice. For example:
+- If they have overdue tasks, proactively mention them
+- Suggest sprint planning based on their backlog
+- Help them organize and prioritize work
+
+Be concise, helpful, and specific. Use markdown formatting for clarity.`
     },
     { role: 'user', content: prompt }
   ];
 
-  // Try models in cascade order
   for (const model of MODEL_CASCADE) {
     try {
       return await callModel(model, messages);
     } catch (error) {
       console.warn(`Model ${model} failed:`, error.message);
-      // Continue to next model
     }
   }
 
-  throw new Error('All AI models failed. Please try again later.');
+  throw new Error('All AI models failed. Please check your OpenRouter API key and try again.');
 }
