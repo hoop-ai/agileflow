@@ -70,17 +70,23 @@ export function calculateVelocity(items, periodDays = 7) {
 /**
  * Calculate sprint velocity from completed sprints.
  * Returns story points completed per sprint for the velocity chart.
+ * Supports both `name` (legacy) and `title` sprint fields, and both
+ * `committed_points` and `capacity` for the committed point count.
  */
 export function calculateSprintVelocity(sprints) {
-  return sprints
+  const completed = sprints
     .filter(s => s.status === 'completed')
     .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
     .map(sprint => ({
-      sprint: sprint.name,
-      committed: sprint.committed_points || 0,
-      completed: sprint.completed_points || 0,
-      velocity: sprint.velocity || sprint.completed_points || 0,
+      sprint: sprint.title || sprint.name || 'Sprint',
+      committed: sprint.committed_points ?? sprint.capacity ?? 0,
+      completed: sprint.completed_points ?? 0,
     }));
+
+  const totalCompleted = completed.reduce((sum, s) => sum + s.completed, 0);
+  const avgVelocity = completed.length > 0 ? Math.round(totalCompleted / completed.length) : 0;
+
+  return completed.map(s => ({ ...s, avgVelocity }));
 }
 
 // ─── Burndown Chart ─────────────────────────────────────────────────

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   BarChart3, TrendingUp, Target, Clock, Activity,
   CheckCircle2, Download, Users, Zap, ArrowUpDown,
-  AlertCircle, RefreshCw
+  AlertCircle, RefreshCw, GitCompareArrows
 } from "lucide-react";
 import { subDays, isAfter, isBefore } from 'date-fns';
 import {
@@ -238,6 +238,24 @@ export default function AnalyticsPage() {
 
   // ── Cycle Time ──
   const cycleTime = useMemo(() => calculateCycleTime(filteredItems), [filteredItems]);
+
+  // ── Sprint Comparison — planned capacity vs actual completed points ──
+  const sprintComparisonData = useMemo(() => {
+    return sprints
+      .filter(s => s.status === 'completed')
+      .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
+      .map(s => {
+        const planned = s.capacity ?? 0;
+        const actual = s.completed_points ?? 0;
+        const completion = planned > 0 ? Math.round((actual / planned) * 100) : null;
+        return {
+          sprint: s.title || `Sprint ${s.id.slice(0, 6)}`,
+          planned,
+          actual,
+          completion,
+        };
+      });
+  }, [sprints]);
 
   // ── Export ──
   const handleExport = () => {
