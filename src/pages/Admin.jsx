@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { User as UserService } from '@/api/entities/User';
-import { deleteUserAccount } from '@/api/admin';
+import { deleteUserAccount, listManagedUsers, updateManagedUserEmail } from '@/api/admin';
 import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -39,6 +39,7 @@ import {
   Check,
   MoreHorizontal,
   Trash2,
+  MailWarning,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -60,7 +61,6 @@ import InfoTooltip from "@/components/common/InfoTooltip";
 import ModuleHelp from "@/components/common/ModuleHelp";
 import { usePermissions } from "@/hooks/usePermissions";
 import { getLoginUrl, getPasswordResetRedirectUrl } from '@/lib/auth-redirects';
-import { getAdminAuthEmail } from '@/lib/auth-admin';
 
 const AVATAR_COLORS = [
   'bg-blue-600 text-white',
@@ -136,15 +136,28 @@ export default function AdminPage() {
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['admin-users'],
-    queryFn: () => UserService.listAll(),
+    queryFn: () => listManagedUsers(),
     enabled: canManageUsers,
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: ({ id, updates }) => UserService.updateUser(id, updates),
+    mutationFn: async ({ id, updates, authEmail }) => {
+      const emailChanged =
+        typeof authEmail === 'string' &&
+        authEmail.trim().toLowerCase() !== (updates.currentEmail || '').trim().toLowerCase();
+
+      if (emailChanged) {
+        await updateManagedUserEmail(id, authEmail);
+      }
+
+      const profileUpdates = { ...updates };
+      delete profileUpdates.currentEmail;
+
+      return UserService.updateUser(id, profileUpdates);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast({ title: 'User updated', description: 'Changes have been saved.' });
+      toast({ title: 'User updated', description: 'Profile and sign-in email changes have been saved.' });
     },
     onError: (error) => {
       showErrorToast(toast, 'Failed to update user', error);
@@ -152,8 +165,7 @@ export default function AdminPage() {
   });
 
   const resetPasswordMutation = useMutation({
-    mutationFn: async (userId) => {
-      const authEmail = await getAdminAuthEmail(userId);
+    mutationFn: async (authEmail) => {
       const { error } = await supabase.auth.resetPasswordForEmail(authEmail, {
         redirectTo: getPasswordResetRedirectUrl(),
       });
@@ -388,7 +400,8 @@ export default function AdminPage() {
                     const roleConfig = ROLE_CONFIG[role] || ROLE_CONFIG.member;
                     const isCurrentUser = u.id === currentUser?.id;
                     const isProtectedUser = isCurrentUser || isSuperAdminEmail(u.email);
-                    const isActive = u.updated_at && (new Date() - new Date(u.updated_at)) < 24 * 60 * 60 * 1000;
+                    const isActiveDate = u.last_sign_in_at || u.updated_at;
+                    const isActive = isActiveDate && (new Date() - new Date(isActiveDate)) < 24 * 60 * 60 * 1000;
 
                     return (
                       <tr
@@ -419,6 +432,12 @@ export default function AdminPage() {
                                 )}
                               </div>
                               <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                              {u.email_mismatch && (
+                                <p className="text-[11px] text-amber-600 dark:text-amber-400 inline-flex items-center gap-1 mt-0.5">
+                                  <MailWarning className="w-3 h-3 shrink-0" />
+                                  Profile email was out of sync with Auth and has been corrected for admin actions.
+                                </p>
+                              )}
                               {u.job_title && (
                                 <p className="text-xs text-muted-foreground truncate md:hidden">{u.job_title}</p>
                               )}
@@ -440,7 +459,7 @@ export default function AdminPage() {
                         </td>
                         <td className="py-3 px-4 hidden lg:table-cell">
                           <span className="text-sm text-muted-foreground">
-                            {formatDate(u.updated_at)}
+                            {formatDate(u.last_sign_in_at || u.updated_at)}
                           </span>
                         </td>
                         <td className="py-3 px-4 hidden sm:table-cell">
@@ -548,9 +567,9 @@ export default function AdminPage() {
           user={editingUser}
           isCurrentUser={editingUser.id === currentUser?.id}
           onClose={() => setEditingUser(null)}
-          onSave={(updates) => {
+          onSave={({ updates, authEmail }) => {
             updateUserMutation.mutate(
-              { id: editingUser.id, updates },
+              { id: editingUser.id, updates, authEmail },
               { onSuccess: () => setEditingUser(null) }
             );
           }}
@@ -578,7 +597,7 @@ export default function AdminPage() {
               Cancel
             </Button>
             <Button
-              onClick={() => resetPasswordMutation.mutate(resetPasswordUser?.id)}
+              onClick={() => resetPasswordMutation.mutate(resetPasswordUser?.email)}
               disabled={resetPasswordMutation.isPending}
             >
               {resetPasswordMutation.isPending ? 'Sending...' : 'Send Reset Email'}
@@ -646,13 +665,14 @@ function EditUserDialog({ user, isCurrentUser, onClose, onSave, isSaving }) {
   const handleSave = () => {
     const updates = {
       full_name: form.full_name.trim(),
+      currentEmail: user.email || '',
       job_title: form.job_title.trim(),
       department: form.department.trim(),
       description: form.description.trim(),
       skills: form.skills.split(',').map(s => s.trim()).filter(Boolean),
       role: form.role,
     };
-    onSave(updates);
+    onSave({ updates, authEmail: form.email.trim() });
   };
 
   const role = form.role;
@@ -693,11 +713,18 @@ function EditUserDialog({ user, isCurrentUser, onClose, onSave, isSaving }) {
                 id="edit-email"
                 type="email"
                 value={form.email}
+                onChange={(e) => handleChange('email', e.target.value)}
                 placeholder="user@example.com"
-                disabled
-                className="bg-muted"
+                className="bg-muted/40"
               />
-              <p className="text-xs text-muted-foreground">Email changes must be done through Supabase Auth, not the profile editor.</p>
+              <p className="text-xs text-muted-foreground">
+                This updates the user&apos;s real sign-in email in Supabase Auth and syncs the profile email to match.
+              </p>
+              {user.email_mismatch && user.profile_email && (
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  Previous profile email mismatch detected. Profile had <span className="font-medium">{user.profile_email}</span>, but Auth uses <span className="font-medium">{user.email}</span>.
+                </p>
+              )}
             </div>
           </div>
 
