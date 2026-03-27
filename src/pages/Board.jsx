@@ -57,6 +57,179 @@ const generateId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
 
+function UnassignedView({ board, items, onUpdateItem }) {
+  const [editingItemId, setEditingItemId] = useState(null);
+  const [assignValue, setAssignValue] = useState("");
+
+  // Find person/people column
+  const personColumn = board?.columns?.find(col => col.type === 'people');
+  const statusColumn = board?.columns?.find(col => col.type === 'status');
+  const priorityColumn = board?.columns?.find(col => col.type === 'priority');
+  const dateColumn = board?.columns?.find(col => col.type === 'date');
+
+  const personColId = personColumn?.id;
+
+  // Filter items that have no assigned person
+  const unassignedItems = items.filter(item => {
+    if (!personColId) return true;
+    const val = item.data?.[personColId];
+    return !val || (typeof val === 'string' && val.trim() === '');
+  });
+
+  const getStatusColor = (status) => {
+    if (!statusColumn?.options?.choices) return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+    const choice = statusColumn.options.choices.find(c => c.label === status);
+    if (choice?.color) {
+      return `text-white`;
+    }
+    return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+  };
+
+  const getStatusBgColor = (status) => {
+    if (!statusColumn?.options?.choices) return undefined;
+    const choice = statusColumn.options.choices.find(c => c.label === status);
+    return choice?.color || undefined;
+  };
+
+  const getPriorityColor = (priority) => {
+    const colors = {
+      'Critical': 'bg-red-500 text-white',
+      'High': 'bg-orange-500 text-white',
+      'Medium': 'bg-yellow-500 text-white',
+      'Low': 'bg-blue-500 text-white',
+    };
+    return colors[priority] || 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+  };
+
+  const handleAssign = async (itemId) => {
+    if (!personColId || !assignValue.trim()) return;
+    await onUpdateItem(itemId, {
+      data: {
+        ...items.find(i => i.id === itemId)?.data,
+        [personColId]: assignValue.trim()
+      }
+    });
+    setEditingItemId(null);
+    setAssignValue("");
+  };
+
+  return (
+    <div className="p-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30">
+          <Users className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">Unassigned Tasks</h2>
+          <p className="text-sm text-muted-foreground">
+            {unassignedItems.length} {unassignedItems.length === 1 ? 'task' : 'tasks'} without an assignee
+          </p>
+        </div>
+      </div>
+
+      {unassignedItems.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <Check className="w-12 h-12 mx-auto mb-3 text-green-500" />
+          <h3 className="text-lg font-medium mb-1">All tasks are assigned</h3>
+          <p className="text-sm">Every task on this board has an owner.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {unassignedItems.map(item => {
+            const statusVal = statusColumn ? item.data?.[statusColumn.id] : null;
+            const priorityVal = priorityColumn ? item.data?.[priorityColumn.id] : null;
+            const dateVal = dateColumn ? item.data?.[dateColumn.id] : null;
+            const groupName = board?.groups?.find(g => g.id === item.group_id)?.title;
+
+            return (
+              <Card key={item.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-4 flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium text-foreground truncate">
+                        {item.title}
+                      </span>
+                      {groupName && (
+                        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                          {groupName}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      {statusVal && (
+                        <Badge
+                          className={getStatusColor(statusVal)}
+                          style={getStatusBgColor(statusVal) ? { backgroundColor: getStatusBgColor(statusVal) } : undefined}
+                          variant={getStatusBgColor(statusVal) ? undefined : "secondary"}
+                        >
+                          {statusVal}
+                        </Badge>
+                      )}
+                      {priorityVal && (
+                        <Badge className={getPriorityColor(priorityVal)}>
+                          {priorityVal}
+                        </Badge>
+                      )}
+                      {dateVal && (
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Calendar className="w-3 h-3" />
+                          {new Date(dateVal).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {editingItemId === item.id ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={assignValue}
+                          onChange={(e) => setAssignValue(e.target.value)}
+                          placeholder="Enter name..."
+                          className="h-8 w-40 text-sm"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleAssign(item.id);
+                            if (e.key === 'Escape') {
+                              setEditingItemId(null);
+                              setAssignValue("");
+                            }
+                          }}
+                        />
+                        <Button
+                          size="sm"
+                          className="h-8"
+                          onClick={() => handleAssign(item.id)}
+                          disabled={!assignValue.trim()}
+                        >
+                          <Check className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-1.5"
+                        onClick={() => {
+                          setEditingItemId(item.id);
+                          setAssignValue("");
+                        }}
+                      >
+                        <UserPlus className="w-3.5 h-3.5" />
+                        Assign
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function BoardPage() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
