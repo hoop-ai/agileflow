@@ -35,6 +35,8 @@ import {
 import { motion } from "framer-motion";
 
 import CreateEventModal from "../components/calendar/CreateEventModal";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
+import { AIExplainButton } from "@/components/ai/AIExplainButton";
 
 // Semantic Tailwind color classes for event types — no hex values
 const eventTypeConfig = {
