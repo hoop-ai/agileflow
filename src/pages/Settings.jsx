@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { usePermissions } from "@/hooks/usePermissions";
 import { User as UserService } from "@/api/entities/User";
 import { supabase } from "@/api/supabaseClient";
 import { useTheme } from "@/components/utils/ThemeProvider";
@@ -31,6 +32,7 @@ import ModuleHelp from "@/components/common/ModuleHelp";
 
 export default function SettingsPage() {
   const { toast } = useToast();
+  const { canEditOwnProfile } = usePermissions();
   const { theme: currentTheme, setTheme: updateTheme } = useTheme();
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -309,6 +311,7 @@ export default function SettingsPage() {
                       value={settings.full_name}
                       onChange={(e) => setSettings(prev => ({ ...prev, full_name: e.target.value }))}
                       placeholder="Enter your full name"
+                      disabled={!canEditOwnProfile}
                     />
                   </div>
 
@@ -333,6 +336,7 @@ export default function SettingsPage() {
                       value={settings.job_title}
                       onChange={(e) => setSettings(prev => ({ ...prev, job_title: e.target.value }))}
                       placeholder="e.g., Product Manager"
+                      disabled={!canEditOwnProfile}
                     />
                   </div>
 
@@ -346,6 +350,7 @@ export default function SettingsPage() {
                       value={settings.department}
                       onChange={(e) => setSettings(prev => ({ ...prev, department: e.target.value }))}
                       placeholder="e.g., Engineering"
+                      disabled={!canEditOwnProfile}
                     />
                   </div>
                 </div>
@@ -363,8 +368,9 @@ export default function SettingsPage() {
                       value={settings.description || ""}
                       onChange={(e) => setSettings(prev => ({ ...prev, description: e.target.value }))}
                       placeholder="Tell your team about yourself, your experience, and what you're working on..."
-                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                       rows={3}
+                      disabled={!canEditOwnProfile}
                     />
                   </div>
 
@@ -378,6 +384,7 @@ export default function SettingsPage() {
                       value={Array.isArray(settings.skills) ? settings.skills.join(", ") : (settings.skills || "")}
                       onChange={(e) => setSettings(prev => ({ ...prev, skills: e.target.value.split(",").map(s => s.trim()).filter(Boolean) }))}
                       placeholder="e.g. React, Project Management, UX Design"
+                      disabled={!canEditOwnProfile}
                     />
                     <p className="text-xs text-muted-foreground">Comma-separated list of your skills</p>
                   </div>
@@ -631,7 +638,7 @@ export default function SettingsPage() {
         <div className="fixed bottom-6 right-6 z-50">
           <Button
             onClick={handleSaveSettings}
-            disabled={isSaving}
+            disabled={isSaving || !canEditOwnProfile}
             variant={saveSuccess ? "default" : "default"}
             className="rounded-full h-14 px-8 shadow-sm font-medium"
           >

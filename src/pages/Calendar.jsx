@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { usePermissions } from "@/hooks/usePermissions";
 import { CalendarEvent } from "@/api/entities/CalendarEvent";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -63,6 +64,7 @@ function getEventConfig(eventType) {
 
 export default function CalendarPage() {
   const { toast } = useToast();
+  const { canCreateEvent, canEditEvent } = usePermissions();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -173,6 +175,7 @@ export default function CalendarPage() {
               <TooltipContent side="bottom" className="text-xs">Filter events by type (meeting, deadline, milestone, etc.)</TooltipContent>
             </Tooltip>
           </TooltipProvider>
+          {canCreateEvent && (
           <TooltipProvider delayDuration={200}>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -189,6 +192,7 @@ export default function CalendarPage() {
               <TooltipContent side="bottom" className="text-xs">Schedule a new event — meeting, deadline, milestone, or any other type</TooltipContent>
             </Tooltip>
           </TooltipProvider>
+          )}
         </div>
       </div>
     );
@@ -582,6 +586,7 @@ export default function CalendarPage() {
                 )}
 
                 <div className="flex justify-between pt-4 border-t border-border">
+                  {canEditEvent ? (
                   <TooltipProvider delayDuration={200}>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -599,6 +604,7 @@ export default function CalendarPage() {
                       <TooltipContent side="top" className="text-xs">Permanently delete this event</TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
+                  ) : <div />}
                   <Button variant="outline" onClick={() => setSelectedEvent(null)}>
                     Close
                   </Button>

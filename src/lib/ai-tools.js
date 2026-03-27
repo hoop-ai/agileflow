@@ -4,13 +4,19 @@ import { Item } from "@/api/entities/Item";
 import { UserStory } from "@/api/entities/UserStory";
 import { suggestAssignees, suggestSprintComposition } from "@/lib/ai-assignment";
 
-// OpenRouter-compatible tool schemas
+function generateId() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
 export const AI_TOOLS = [
   {
     type: "function",
     function: {
       name: "listTeamMembers",
-      description: "List all team members with their roles, job titles, skills, and descriptions. Use this to find who to assign tasks to.",
+      description:
+        "List all team members with their profiles, skills, roles, and current task workload. " +
+        "Use when the user asks who is on the team, who is available, or before assigning tasks. " +
+        "PROCESS: Call this before assignTask or suggestAssignment to confirm member IDs.",
       parameters: { type: "object", properties: {}, required: [] },
     },
   },
@@ -18,23 +24,70 @@ export const AI_TOOLS = [
     type: "function",
     function: {
       name: "listBoards",
-      description: "List all boards available to the current user. Returns board names, IDs, and column structure.",
+      description:
+        "List all boards available to the current user, including their column structure and groups. " +
+        "Use when the user references a board by name, asks to see boards, or before creating/updating tasks. " +
+        "PROCESS: Call this first when you need a board_id or want to understand a board's columns.",
       parameters: { type: "object", properties: {}, required: [] },
     },
   },
   {
     type: "function",
     function: {
+      name: "createBoard",
+      description:
+        "Create a new board with a custom column set and groups. " +
+        "Use when the user asks to create, add, or set up a new board. " +
+        "PROCESS: Confirm the title and desired columns with the user if not specified. " +
+        "Default columns will be applied if none are provided.",
+      parameters: {
+        type: "object",
+        properties: {
+          title: { type: "string", description: "Board title (required)" },
+          description: { type: "string", description: "Optional description for the board" },
+          columns: {
+            type: "array",
+            description: "Column definitions. Each entry needs title and type. Defaults are Status, Person, Text, Priority if omitted.",
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string" },
+                type: {
+                  type: "string",
+                  enum: ["text", "status", "person", "date", "number", "checkbox", "priority", "tags", "dropdown", "budget"],
+                },
+              },
+              required: ["title", "type"],
+            },
+          },
+          groups: {
+            type: "array",
+            description: "Group (section) names. Defaults to ['Tasks'] if omitted.",
+            items: { type: "object", properties: { title: { type: "string" } }, required: ["title"] },
+          },
+        },
+        required: ["title"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "createTask",
-      description: "Create a new task on a board. Requires board_id and title. Optionally set group_id, status, and assignee_id.",
+      description:
+        "Create a new task on a board. " +
+        "Use when the user asks to add, create, or make a new task or item. " +
+        "PROCESS: First call listBoards to get the board_id and column structure. " +
+        "Call listTeamMembers if the user wants to assign someone. Then call this tool.",
       parameters: {
         type: "object",
         properties: {
           board_id: { type: "string", description: "UUID of the board to create the task on" },
           title: { type: "string", description: "Title of the task" },
-          group_id: { type: "string", description: "Optional group ID within the board" },
-          status: { type: "string", description: "Task status (e.g. 'To Do', 'In Progress', 'Done')" },
+          group_id: { type: "string", description: "Optional group ID within the board; defaults to the first group" },
+          status: { type: "string", description: "Initial status value (e.g. 'To Do', 'In Progress', 'Done')" },
           assignee_id: { type: "string", description: "UUID of the user to assign the task to" },
+          priority: { type: "string", description: "Priority value (e.g. 'High', 'Medium', 'Low')" },
         },
         required: ["board_id", "title"],
       },
@@ -43,13 +96,76 @@ export const AI_TOOLS = [
   {
     type: "function",
     function: {
+      name: "updateTask",
+      description:
+        "Update properties of an existing task such as title, status, assignee, or priority. " +
+        "Use when the user asks to change, edit, update, or modify a task. " +
+        "PROCESS: Call listTasks or getTaskDetails to confirm the task_id first if the user only gave a title.",
+      parameters: {
+        type: "object",
+        properties: {
+          task_id: { type: "string", description: "UUID of the task to update (required)" },
+          title: { type: "string", description: "New title for the task" },
+          status: { type: "string", description: "New status value" },
+          assignee_id: { type: "string", description: "UUID of the new assignee" },
+          priority: { type: "string", description: "New priority value" },
+          updates: {
+            type: "object",
+            description: "Freeform map of column_id to value for any other column types",
+            additionalProperties: true,
+          },
+        },
+        required: ["task_id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "deleteTask",
+      description:
+        "Permanently delete a task from a board. " +
+        "Use only when the user explicitly asks to delete or remove a task. " +
+        "PROCESS: Confirm the task exists via getTaskDetails first, then call this tool.",
+      parameters: {
+        type: "object",
+        properties: {
+          task_id: { type: "string", description: "UUID of the task to delete (required)" },
+        },
+        required: ["task_id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "getTaskDetails",
+      description:
+        "Fetch detailed information about a specific task, including all column values resolved to human-readable labels and assignee name. " +
+        "Use when the user asks about a specific task or before updating/deleting one. " +
+        "PROCESS: Use this to confirm a task exists and inspect its current state.",
+      parameters: {
+        type: "object",
+        properties: {
+          task_id: { type: "string", description: "UUID of the task to inspect (required)" },
+        },
+        required: ["task_id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "assignTask",
-      description: "Assign an existing task to a team member by searching for their name.",
+      description:
+        "Assign an existing task to a team member by searching for their name. " +
+        "Use when the user says 'assign [task] to [person]'. " +
+        "PROCESS: This tool resolves the assignee by name search. After updating, it re-reads the task to verify the change was saved.",
       parameters: {
         type: "object",
         properties: {
           task_id: { type: "string", description: "UUID of the task to assign" },
-          assignee_name: { type: "string", description: "Full name or partial name of the person to assign to" },
+          assignee_name: { type: "string", description: "Full or partial name of the person to assign" },
         },
         required: ["task_id", "assignee_name"],
       },
@@ -59,12 +175,15 @@ export const AI_TOOLS = [
     type: "function",
     function: {
       name: "listTasks",
-      description: "List tasks on a specific board. Can filter by status or assignee.",
+      description:
+        "List tasks on a board with resolved column names and assignee display names. " +
+        "Use when the user asks to see tasks, show what's on a board, or find tasks by status or person. " +
+        "PROCESS: Call listBoards first to get the board_id if the user referred to the board by name.",
       parameters: {
         type: "object",
         properties: {
-          board_id: { type: "string", description: "UUID of the board" },
-          status: { type: "string", description: "Filter by status" },
+          board_id: { type: "string", description: "UUID of the board to list tasks from" },
+          status: { type: "string", description: "Filter by status value (e.g. 'In Progress')" },
           assignee_id: { type: "string", description: "Filter by assignee UUID" },
         },
         required: ["board_id"],
@@ -74,14 +193,54 @@ export const AI_TOOLS = [
   {
     type: "function",
     function: {
+      name: "updateBoard",
+      description:
+        "Update a board's title or description. " +
+        "Use when the user asks to rename or edit a board's metadata. " +
+        "PROCESS: Call listBoards to confirm the board_id before calling this.",
+      parameters: {
+        type: "object",
+        properties: {
+          board_id: { type: "string", description: "UUID of the board to update (required)" },
+          title: { type: "string", description: "New title for the board" },
+          description: { type: "string", description: "New description for the board" },
+        },
+        required: ["board_id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "deleteBoard",
+      description:
+        "Permanently delete a board and all its tasks. " +
+        "Use only when the user explicitly asks to delete or remove a board. " +
+        "PROCESS: Confirm the board exists via listBoards first. This is irreversible.",
+      parameters: {
+        type: "object",
+        properties: {
+          board_id: { type: "string", description: "UUID of the board to delete (required)" },
+        },
+        required: ["board_id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "suggestAssignment",
-      description: "Suggest the best team member to assign a task to, based on skills match, current workload, and completion history. Provide either a task_id (existing task) or a task title and board_id (for a new/hypothetical task).",
+      description:
+        "Recommend the best team member to assign a task to, scored by skills match, current workload, and completion history. " +
+        "Use when the user asks who should do a task or wants an AI-driven assignment recommendation. " +
+        "PROCESS: Returns ranked candidates with scores and reasoning. The top candidate's ID is included — " +
+        "pass it directly to assignTask or createTask if the user confirms.",
       parameters: {
         type: "object",
         properties: {
           task_id: { type: "string", description: "UUID of an existing task to find the best assignee for" },
           board_id: { type: "string", description: "UUID of the board (required if no task_id)" },
-          task_title: { type: "string", description: "Title/description of the task (used if no task_id)" },
+          task_title: { type: "string", description: "Task title or description (used if no task_id)" },
         },
         required: [],
       },
@@ -91,7 +250,10 @@ export const AI_TOOLS = [
     type: "function",
     function: {
       name: "suggestSprintPlan",
-      description: "Suggest which backlog stories to include in the next sprint based on team capacity, skills, and story priorities. Optionally specify a capacity in story points.",
+      description:
+        "Suggest which backlog stories to include in the next sprint, optimized for team capacity and story priorities. " +
+        "Use when the user asks for a sprint plan, sprint recommendations, or what to work on next sprint. " +
+        "PROCESS: Reads all backlog stories automatically. Optionally accepts a capacity in story points.",
       parameters: {
         type: "object",
         properties: {
@@ -103,12 +265,22 @@ export const AI_TOOLS = [
   },
 ];
 
-// Tool execution functions
 export async function executeTool(name, args) {
   try {
     switch (name) {
       case "listTeamMembers": {
-        const users = await User.listAll();
+        const [users, allItems] = await Promise.all([User.listAll(), Item.list()]);
+
+        const workloadMap = {};
+        for (const item of allItems || []) {
+          const data = item.data || {};
+          for (const val of Object.values(data)) {
+            if (typeof val === "string" && val.length === 36) {
+              workloadMap[val] = (workloadMap[val] || 0) + 1;
+            }
+          }
+        }
+
         return users.map(u => ({
           id: u.id,
           name: u.full_name,
@@ -118,6 +290,7 @@ export async function executeTool(name, args) {
           department: u.department || null,
           description: u.description || null,
           skills: u.skills || [],
+          active_tasks: workloadMap[u.id] || 0,
         }));
       }
 
@@ -132,33 +305,80 @@ export async function executeTool(name, args) {
         }));
       }
 
+      case "createBoard": {
+        const { title, description, columns, groups } = args;
+
+        const defaultColumns = [
+          { id: generateId(), title: "Status", type: "status" },
+          { id: generateId(), title: "Person", type: "person" },
+          { id: generateId(), title: "Text", type: "text" },
+          { id: generateId(), title: "Priority", type: "status" },
+        ];
+
+        const resolvedColumns = columns && columns.length > 0
+          ? columns.map(c => ({ id: generateId(), title: c.title, type: c.type }))
+          : defaultColumns;
+
+        const defaultGroups = [{ id: generateId(), title: "Tasks" }];
+        const resolvedGroups = groups && groups.length > 0
+          ? groups.map(g => ({ id: generateId(), title: g.title }))
+          : defaultGroups;
+
+        try {
+          const created = await Board.create({
+            title,
+            description: description || "",
+            columns: resolvedColumns,
+            groups: resolvedGroups,
+          });
+          return {
+            success: true,
+            board_id: created.id,
+            title: created.title,
+            columns: resolvedColumns.map(c => ({ id: c.id, title: c.title, type: c.type })),
+            groups: resolvedGroups.map(g => ({ id: g.id, title: g.title })),
+          };
+        } catch (err) {
+          return { error: `Failed to create board: ${err.message}` };
+        }
+      }
+
       case "createTask": {
-        const { board_id, title, group_id, status, assignee_id } = args;
+        const { board_id, title, group_id, status, assignee_id, priority } = args;
+
         let boards;
         try {
           boards = await Board.filter({ id: board_id });
-        } catch (err) {
-          return { error: `Could not access board (${board_id}). It may belong to another user or not exist.` };
+        } catch {
+          return { error: `Could not access board (${board_id}). It may not exist or belong to another user.` };
         }
         const board = boards?.[0];
-        if (!board) return { error: `Board not found (${board_id}). Make sure this board exists and belongs to your workspace.` };
+        if (!board) return { error: `Board not found (${board_id}).` };
 
-        const targetGroup = group_id || (board.groups?.[0]?.id) || "default";
-        const taskData = {
-          board_id,
-          title,
-          group_id: targetGroup,
-          data: {},
-        };
+        if (assignee_id) {
+          try {
+            const user = await User.getById(assignee_id);
+            if (!user) return { error: `Assignee not found (${assignee_id}). Use listTeamMembers to get valid IDs.` };
+          } catch {
+            return { error: `Assignee not found (${assignee_id}). Use listTeamMembers to get valid IDs.` };
+          }
+        }
+
+        const targetGroup = group_id || board.groups?.[0]?.id || "default";
+        const taskData = { board_id, title, group_id: targetGroup, data: {} };
 
         if (status) {
           const statusCol = board.columns?.find(c => c.type === "status");
           if (statusCol) taskData.data[statusCol.id] = status;
         }
-
         if (assignee_id) {
           const personCol = board.columns?.find(c => c.type === "person");
           if (personCol) taskData.data[personCol.id] = assignee_id;
+        }
+        if (priority) {
+          const priorityCols = board.columns?.filter(c => c.type === "status");
+          const priorityCol = priorityCols?.find(c => c.title.toLowerCase().includes("priority")) || priorityCols?.[1];
+          if (priorityCol) taskData.data[priorityCol.id] = priority;
         }
 
         try {
@@ -169,68 +389,290 @@ export async function executeTool(name, args) {
         }
       }
 
+      case "updateTask": {
+        const { task_id, title, status, assignee_id, priority, updates } = args;
+
+        let task;
+        try {
+          task = await Item.get(task_id);
+        } catch {
+          return { error: `Task not found (${task_id}).` };
+        }
+        if (!task) return { error: `Task not found (${task_id}).` };
+
+        let board;
+        try {
+          const boards = await Board.filter({ id: task.board_id });
+          board = boards?.[0];
+        } catch {
+          return { error: "Could not access the board this task belongs to." };
+        }
+
+        const patch = {};
+        if (title !== undefined) patch.title = title;
+
+        const mergedData = { ...(task.data || {}) };
+
+        if (status !== undefined) {
+          const statusCol = board?.columns?.find(c => c.type === "status");
+          if (statusCol) mergedData[statusCol.id] = status;
+        }
+        if (assignee_id !== undefined) {
+          const personCol = board?.columns?.find(c => c.type === "person");
+          if (personCol) mergedData[personCol.id] = assignee_id;
+        }
+        if (priority !== undefined) {
+          const priorityCols = board?.columns?.filter(c => c.type === "status");
+          const priorityCol = priorityCols?.find(c => c.title.toLowerCase().includes("priority")) || priorityCols?.[1];
+          if (priorityCol) mergedData[priorityCol.id] = priority;
+        }
+        if (updates && typeof updates === "object") {
+          Object.assign(mergedData, updates);
+        }
+
+        patch.data = mergedData;
+
+        try {
+          const updated = await Item.update(task_id, patch);
+          return { success: true, task_id: updated.id, title: updated.title, data: updated.data };
+        } catch (err) {
+          return { error: `Failed to update task: ${err.message}` };
+        }
+      }
+
+      case "deleteTask": {
+        const { task_id } = args;
+
+        let task;
+        try {
+          task = await Item.get(task_id);
+        } catch {
+          return { error: `Task not found (${task_id}).` };
+        }
+        if (!task) return { error: `Task not found (${task_id}).` };
+
+        try {
+          await Item.delete(task_id);
+          return { success: true, deleted_task: task.title };
+        } catch (err) {
+          return { error: `Failed to delete task: ${err.message}` };
+        }
+      }
+
+      case "getTaskDetails": {
+        const { task_id } = args;
+
+        let task;
+        try {
+          task = await Item.get(task_id);
+        } catch {
+          return { error: `Task not found (${task_id}).` };
+        }
+        if (!task) return { error: `Task not found (${task_id}).` };
+
+        let board;
+        try {
+          const boards = await Board.filter({ id: task.board_id });
+          board = boards?.[0];
+        } catch {
+          board = null;
+        }
+
+        const resolvedData = {};
+        let assigneeName = null;
+
+        if (board?.columns && task.data) {
+          for (const [colId, val] of Object.entries(task.data)) {
+            const col = board.columns.find(c => c.id === colId);
+            const label = col ? col.title : colId;
+            resolvedData[label] = val;
+
+            if (col?.type === "person" && typeof val === "string" && val.length === 36) {
+              try {
+                const user = await User.getById(val);
+                if (user) assigneeName = user.full_name;
+              } catch {
+                // non-fatal
+              }
+            }
+          }
+        }
+
+        return {
+          id: task.id,
+          title: task.title,
+          board_id: task.board_id,
+          board_title: board?.title || null,
+          group_id: task.group_id,
+          assignee: assigneeName,
+          fields: resolvedData,
+          created_date: task.created_date,
+        };
+      }
+
       case "assignTask": {
         const { task_id, assignee_name } = args;
+
         const users = await User.search(assignee_name);
-        if (!users || users.length === 0) return { error: `No team member found matching "${assignee_name}"` };
+        if (!users || users.length === 0) {
+          return { error: `No team member found matching "${assignee_name}". Use listTeamMembers to see all members.` };
+        }
         const assignee = users[0];
 
-        const task = await Item.get(task_id);
-        if (!task) return { error: "Task not found" };
+        let task;
+        try {
+          task = await Item.get(task_id);
+        } catch {
+          return { error: `Task not found (${task_id}).` };
+        }
+        if (!task) return { error: `Task not found (${task_id}).` };
 
         let boards;
         try {
           boards = await Board.filter({ id: task.board_id });
-        } catch (err) {
-          return { error: `Could not access the task's board. It may belong to another user.` };
+        } catch {
+          return { error: "Could not access the board this task belongs to." };
         }
         const board = boards?.[0];
-        if (!board) return { error: "Could not find the board this task belongs to." };
-        const personCol = board.columns?.find(c => c.type === "person");
+        if (!board) return { error: "Board not found for this task." };
 
-        if (personCol) {
-          const updatedData = { ...task.data, [personCol.id]: assignee.id };
-          await Item.update(task_id, { data: updatedData });
-          return { success: true, task: task.title, assigned_to: assignee.full_name };
+        const personCol = board.columns?.find(c => c.type === "person");
+        if (!personCol) return { error: "This board does not have a Person column for assignments." };
+
+        const mergedData = { ...(task.data || {}), [personCol.id]: assignee.id };
+        await Item.update(task_id, { data: mergedData });
+
+        // Verify the update was persisted
+        let verified;
+        try {
+          verified = await Item.get(task_id);
+        } catch {
+          return { error: "Task was updated but verification read failed." };
         }
-        return { error: "Board doesn't have a person column for assignments" };
+
+        const savedAssignee = verified?.data?.[personCol.id];
+        if (savedAssignee !== assignee.id) {
+          return { error: "Assignment was submitted but the saved value did not match. Please try again." };
+        }
+
+        return {
+          success: true,
+          task: task.title,
+          assigned_to: assignee.full_name,
+          assignee_id: assignee.id,
+          verified: true,
+        };
       }
 
       case "listTasks": {
         const { board_id, status, assignee_id } = args;
+
         let items;
         try {
           items = await Item.filter({ board_id });
-        } catch (err) {
-          return { error: `Could not access tasks for board (${board_id}). It may belong to another user.` };
+        } catch {
+          return { error: `Could not access tasks for board (${board_id}).` };
         }
+
+        let boards;
+        try {
+          boards = await Board.filter({ id: board_id });
+        } catch {
+          boards = [];
+        }
+        const board = boards[0];
+        const columns = board?.columns || [];
+        const statusCol = columns.find(c => c.type === "status");
+        const personCol = columns.find(c => c.type === "person");
 
         let filtered = items || [];
-        if (status || assignee_id) {
-          let boards;
-          try {
-            boards = await Board.filter({ id: board_id });
-          } catch {
-            boards = [];
-          }
-          const board = boards[0];
-          const statusCol = board?.columns?.find(c => c.type === "status");
-          const personCol = board?.columns?.find(c => c.type === "person");
-
-          if (status && statusCol) {
-            filtered = filtered.filter(i => i.data?.[statusCol.id] === status);
-          }
-          if (assignee_id && personCol) {
-            filtered = filtered.filter(i => i.data?.[personCol.id] === assignee_id);
-          }
+        if (status && statusCol) {
+          filtered = filtered.filter(i => i.data?.[statusCol.id] === status);
+        }
+        if (assignee_id && personCol) {
+          filtered = filtered.filter(i => i.data?.[personCol.id] === assignee_id);
         }
 
-        return filtered.map(i => ({
-          id: i.id,
-          title: i.title,
-          group_id: i.group_id,
-          data: i.data,
-        }));
+        // Batch resolve unique assignee IDs
+        const assigneeIds = [...new Set(
+          filtered.map(i => personCol && i.data?.[personCol.id]).filter(Boolean)
+        )];
+        const assigneeMap = {};
+        await Promise.all(
+          assigneeIds.map(async id => {
+            try {
+              const u = await User.getById(id);
+              if (u) assigneeMap[id] = u.full_name;
+            } catch {
+              // non-fatal
+            }
+          })
+        );
+
+        return filtered.map(i => {
+          const resolvedFields = {};
+          for (const col of columns) {
+            const val = i.data?.[col.id];
+            if (val !== undefined && val !== null) {
+              resolvedFields[col.title] = col.type === "person" ? (assigneeMap[val] || val) : val;
+            }
+          }
+          return {
+            id: i.id,
+            title: i.title,
+            group_id: i.group_id,
+            assignee: personCol ? (assigneeMap[i.data?.[personCol.id]] || null) : null,
+            fields: resolvedFields,
+          };
+        });
+      }
+
+      case "updateBoard": {
+        const { board_id, title, description } = args;
+
+        let boards;
+        try {
+          boards = await Board.filter({ id: board_id });
+        } catch {
+          return { error: `Board not found (${board_id}).` };
+        }
+        const board = boards?.[0];
+        if (!board) return { error: `Board not found (${board_id}).` };
+
+        const patch = {};
+        if (title !== undefined) patch.title = title;
+        if (description !== undefined) patch.description = description;
+
+        if (Object.keys(patch).length === 0) {
+          return { error: "No fields to update were provided." };
+        }
+
+        try {
+          const updated = await Board.update(board_id, patch);
+          return { success: true, board_id: updated.id, title: updated.title, description: updated.description };
+        } catch (err) {
+          return { error: `Failed to update board: ${err.message}` };
+        }
+      }
+
+      case "deleteBoard": {
+        const { board_id } = args;
+
+        let boards;
+        try {
+          boards = await Board.filter({ id: board_id });
+        } catch {
+          return { error: `Board not found (${board_id}).` };
+        }
+        const board = boards?.[0];
+        if (!board) return { error: `Board not found (${board_id}).` };
+
+        try {
+          await Board.delete(board_id);
+          return { success: true, deleted_board: board.title };
+        } catch (err) {
+          return { error: `Failed to delete board: ${err.message}` };
+        }
       }
 
       case "suggestAssignment": {
@@ -241,13 +683,13 @@ export async function executeTool(name, args) {
 
         if (task_id) {
           task = await Item.get(task_id);
-          if (!task) return { error: "Task not found" };
+          if (!task) return { error: "Task not found." };
           targetBoardId = task.board_id;
         } else if (board_id && task_title) {
           task = { title: task_title, data: {} };
           targetBoardId = board_id;
         } else {
-          return { error: "Provide either task_id, or both board_id and task_title" };
+          return { error: "Provide either task_id, or both board_id and task_title." };
         }
 
         let boards;
@@ -257,7 +699,7 @@ export async function executeTool(name, args) {
           return { error: "Could not access the board." };
         }
         const board = boards?.[0];
-        if (!board) return { error: "Board not found" };
+        if (!board) return { error: "Board not found." };
 
         const [members, allItems] = await Promise.all([
           User.listAll(),
@@ -266,9 +708,11 @@ export async function executeTool(name, args) {
 
         const suggestions = suggestAssignees(task, members, allItems, board.columns || []);
         const top = suggestions.slice(0, 5);
+        const topCandidate = top[0];
 
         return {
           task: task.title,
+          top_candidate_id: topCandidate?.member?.id || null,
           suggestions: top.map(s => ({
             name: s.member.name,
             id: s.member.id,
@@ -290,7 +734,6 @@ export async function executeTool(name, args) {
           User.listAll(),
         ]);
 
-        // Filter to unassigned/backlog stories (no sprint_id)
         const backlogStories = (stories || []).filter(s => !s.sprint_id);
         if (backlogStories.length === 0) {
           return { message: "No stories in the backlog to plan with." };

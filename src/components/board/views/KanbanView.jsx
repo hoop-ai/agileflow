@@ -157,7 +157,7 @@ const KanbanCard = ({ item, index, board, groupingType, onEdit }) => {
   );
 };
 
-export default function KanbanView({ board, items, isLoading, onUpdateItem, onDeleteItem, onReorderItems, onUpdateBoard }) {
+export default function KanbanView({ board, items, isLoading, onUpdateItem, onDeleteItem, onReorderItems, onUpdateBoard, readOnly }) {
   const [groupBy, setGroupBy] = useState('status');
   const [editingTask, setEditingTask] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -309,7 +309,7 @@ export default function KanbanView({ board, items, isLoading, onUpdateItem, onDe
     }
   }
 
-  const handleDragEnd = (result) => {
+  const handleDragEnd = readOnly ? () => {} : (result) => {
     const { source, destination, draggableId } = result;
 
     if (!destination) return;
@@ -518,7 +518,7 @@ export default function KanbanView({ board, items, isLoading, onUpdateItem, onDe
                         index={index}
                         board={board}
                         groupingType={groupBy}
-                        onEdit={handleEditTask}
+                        onEdit={readOnly ? undefined : handleEditTask}
                       />
                     ))}
                     {provided.placeholder}

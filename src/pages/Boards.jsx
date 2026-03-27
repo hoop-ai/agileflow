@@ -23,10 +23,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import CreateBoardModal from "../components/boards/CreateBoardModal";
 import EditBoardModal from "../components/boards/EditBoardModal";
 import BoardCard from "../components/boards/BoardCard";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function Boards() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { canCreateBoard, canEditBoard, canDeleteBoard } = usePermissions();
   const [boards, setBoards] = useState([]);
   const [filteredBoards, setFilteredBoards] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -155,13 +157,15 @@ export default function Boards() {
               Manage your projects and workflows
             </p>
           </div>
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            className="rounded-lg h-10 px-5 font-medium text-sm transition-colors duration-150"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Board
-          </Button>
+          {canCreateBoard && (
+            <Button
+              onClick={() => setShowCreateModal(true)}
+              className="rounded-lg h-10 px-5 font-medium text-sm transition-colors duration-150"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Board
+            </Button>
+          )}
         </div>
 
         {/* Controls */}
@@ -285,8 +289,8 @@ export default function Boards() {
                   board={board}
                   viewMode={viewMode}
                   index={index}
-                  onDelete={handleDeleteBoard}
-                  onEdit={handleOpenEditModal}
+                  onDelete={canDeleteBoard ? handleDeleteBoard : undefined}
+                  onEdit={canEditBoard ? handleOpenEditModal : undefined}
                 />
               ))}
             </div>

@@ -42,6 +42,7 @@ import CalendarView from "../components/board/views/CalendarView";
 import TimelineView from "../components/board/views/TimelineView";
 
 import AnalyticsPanel from "../components/board/analytics/AnalyticsPanel";
+import { usePermissions } from "@/hooks/usePermissions";
 import InfoTooltip from "../components/common/InfoTooltip";
 import ModuleHelp from "../components/common/ModuleHelp";
 import { AIExplainButton } from "../components/ai/AIExplainButton";
@@ -232,6 +233,7 @@ function UnassignedView({ board, items, onUpdateItem }) {
 
 export default function BoardPage() {
   const { toast } = useToast();
+  const { canCreateItem, canEditItem, canDeleteItem, canDragItem, canEditBoard } = usePermissions();
   const [searchParams] = useSearchParams();
   const boardId = searchParams.get('id');
 
@@ -861,13 +863,14 @@ export default function BoardPage() {
                   group={group}
                   items={groupedItems[group.id] || []}
                   columns={visibleColumns}
-                  onAddItem={handleAddItem}
-                  onUpdateItem={handleUpdateItem}
-                  onDeleteItem={handleDeleteItem} 
-                  onReorderItems={handleReorderItems} 
-                  onUpdateColumn={handleUpdateColumn}
-                  onDeleteColumn={handleDeleteColumn}
-                  onAddColumn={() => setShowNewColumnModal(true)}
+                  onAddItem={canCreateItem ? handleAddItem : undefined}
+                  onUpdateItem={canEditItem ? handleUpdateItem : undefined}
+                  onDeleteItem={canDeleteItem ? handleDeleteItem : undefined}
+                  onReorderItems={canDragItem ? handleReorderItems : undefined}
+                  onUpdateColumn={canEditBoard ? handleUpdateColumn : undefined}
+                  onDeleteColumn={canEditBoard ? handleDeleteColumn : undefined}
+                  onAddColumn={canEditBoard ? () => setShowNewColumnModal(true) : undefined}
+                  readOnly={!canEditItem}
                   isLoading={isLoading && items.length === 0}
                   selectedItems={selectedItems}
                   onSelectItem={(itemId, selected) => {
@@ -887,13 +890,15 @@ export default function BoardPage() {
                 <div className="p-8 text-center text-muted-foreground">
                   <h3 className="text-xl font-medium mb-2">No groups yet!</h3>
                   <p className="mb-4">Start by adding your first group to organize your tasks.</p>
-                  <Button
-                    className="rounded-lg h-10 px-4 font-medium"
-                    onClick={() => setShowNewGroupModal(true)}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add First Group
-                  </Button>
+                  {canEditBoard && (
+                    <Button
+                      className="rounded-lg h-10 px-4 font-medium"
+                      onClick={() => setShowNewGroupModal(true)}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add First Group
+                    </Button>
+                  )}
                 </div>
               )}
 
@@ -920,38 +925,39 @@ export default function BoardPage() {
               board={board}
               items={sortedItems}
               isLoading={isLoading}
-              onAddItem={handleAddItem}
-              onUpdateItem={handleUpdateItem}
-              onDeleteItem={handleDeleteItem}
-              onReorderItems={handleReorderItems}
-              onUpdateBoard={async (updates) => {
+              onAddItem={canCreateItem ? handleAddItem : undefined}
+              onUpdateItem={canEditItem ? handleUpdateItem : undefined}
+              onDeleteItem={canDeleteItem ? handleDeleteItem : undefined}
+              onReorderItems={canDragItem ? handleReorderItems : undefined}
+              readOnly={!canEditItem}
+              onUpdateBoard={canEditBoard ? async (updates) => {
                 try {
                   const updated = await Board.update(board.id, updates);
                   setBoard(updated);
                 } catch (error) {
                   console.error("Error updating board:", error);
                 }
-              }}
+              } : undefined}
             />
           )}
 
           {currentView === 'calendar' && (
             <CalendarView
               board={board}
-              items={sortedItems} // Pass sorted items
-              onAddItem={handleAddItem}
-              onUpdateItem={handleUpdateItem}
-              onDeleteItem={handleDeleteItem}
+              items={sortedItems}
+              onAddItem={canCreateItem ? handleAddItem : undefined}
+              onUpdateItem={canEditItem ? handleUpdateItem : undefined}
+              onDeleteItem={canDeleteItem ? handleDeleteItem : undefined}
             />
           )}
 
           {currentView === 'timeline' && (
             <TimelineView
               board={board}
-              items={sortedItems} // Pass sorted items
-              onAddItem={handleAddItem}
-              onUpdateItem={handleUpdateItem}
-              onDeleteItem={handleDeleteItem}
+              items={sortedItems}
+              onAddItem={canCreateItem ? handleAddItem : undefined}
+              onUpdateItem={canEditItem ? handleUpdateItem : undefined}
+              onDeleteItem={canDeleteItem ? handleDeleteItem : undefined}
             />
           )}
 

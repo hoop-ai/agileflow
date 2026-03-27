@@ -354,8 +354,9 @@ function LayoutContent({ children }) {
     }
   };
 
+  const isSuperAdmin = currentUser?.email === 'test@test.com';
   const isAdmin = currentUser?.role === 'admin';
-  const navItems = isAdmin
+  const navItems = isSuperAdmin
     ? [...navigationItems, { title: "Team", url: createPageUrl("Admin"), icon: Users }]
     : navigationItems;
 
@@ -461,7 +462,7 @@ function LayoutContent({ children }) {
             <DropdownMenuItem asChild className="cursor-pointer">
               <Link to={createPageUrl("Settings")}>Settings</Link>
             </DropdownMenuItem>
-            {isAdmin && (
+            {isSuperAdmin && (
               <DropdownMenuItem asChild className="cursor-pointer">
                 <Link to={createPageUrl("Admin")}>Team Management</Link>
               </DropdownMenuItem>

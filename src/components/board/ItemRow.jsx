@@ -45,12 +45,14 @@ export default function ItemRow({
     }
   };
 
+  const readOnly = !onUpdate;
+
   const renderCell = (column) => {
     const value = column.id === 'task' ? item.title : item.data?.[column.id];
     const commonProps = {
       value,
       options: column.options,
-      onUpdate: (newValue) => {
+      onUpdate: readOnly ? undefined : (newValue) => {
         if (column.id === 'task') {
           onUpdate(item.id, { title: newValue });
         } else {
@@ -99,16 +101,16 @@ export default function ItemRow({
     >
       {/* Drag Handle */}
       <div
-        {...draggableProvided.dragHandleProps}
-        className="flex-shrink-0 flex items-center justify-center cursor-grab hover:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-card group-hover:bg-muted"
-        style={{ 
-            width: dragHandleWidth, 
-            position: 'sticky', 
-            left: 0, 
-            zIndex: 1 
+        {...(readOnly ? {} : draggableProvided.dragHandleProps)}
+        className={`flex-shrink-0 flex items-center justify-center p-1 bg-card group-hover:bg-muted ${readOnly ? '' : 'cursor-grab hover:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity'}`}
+        style={{
+            width: dragHandleWidth,
+            position: 'sticky',
+            left: 0,
+            zIndex: 1
         }}
       >
-        <GripVertical className="w-3 h-3 text-muted-foreground" />
+        {!readOnly && <GripVertical className="w-3 h-3 text-muted-foreground" />}
       </div>
 
       {/* Checkbox */}
@@ -173,32 +175,34 @@ export default function ItemRow({
       <div className="flex-1 min-w-0 bg-card group-hover:bg-muted" />
 
       {/* Actions Menu - Sticky Right */}
-      <div 
+      <div
         className="flex-shrink-0 flex items-center justify-center border-l border-border bg-card group-hover:bg-muted"
-        style={{ 
-          width: actionColumnWidth, 
-          position: 'sticky', 
-          right: 0, 
-          zIndex: 1 
+        style={{
+          width: actionColumnWidth,
+          position: 'sticky',
+          right: 0,
+          zIndex: 1
         }}
       >
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
-            >
-              <Trash2 className="w-3 h-3 text-muted-foreground" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleDelete} className="text-red-600 focus:text-red-600 focus:bg-red-50">
-              <Trash2 className="w-3 h-3 mr-2" />
-              Delete Task
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {onDelete && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
+              >
+                <Trash2 className="w-3 h-3 text-muted-foreground" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleDelete} className="text-red-600 focus:text-red-600 focus:bg-red-50">
+                <Trash2 className="w-3 h-3 mr-2" />
+                Delete Task
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </div>
   );
