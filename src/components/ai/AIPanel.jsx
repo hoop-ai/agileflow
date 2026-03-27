@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ExternalLink, PanelRightClose, Plus, Send, Square, Sparkles } from "lucide-react";
+import { ExternalLink, PanelRightClose, Plus, Send, Square, Sparkles, Zap, Brain } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAI } from "@/components/ai/AIProvider";
@@ -20,6 +20,8 @@ export function AIPanel() {
     stopStreaming,
     sessionId,
     loadSessions,
+    mode,
+    setMode,
   } = useAI();
 
   const messagesEndRef = useRef(null);
@@ -69,9 +71,9 @@ export function AIPanel() {
   const contextBadge = pageContext.pageTitle !== "Dashboard" ? pageContext.pageTitle : null;
 
   const suggestions = [
-    "How do I plan a sprint effectively?",
-    "What makes a good user story?",
-    "How should I prioritize my backlog?",
+    "Create a new board for our frontend sprint",
+    "Who should I assign the API integration task to?",
+    "Show me all tasks on the main board",
   ];
 
   return (
@@ -89,6 +91,36 @@ export function AIPanel() {
             <h3 className="text-sm font-semibold truncate">AI Assistant</h3>
           </div>
           <div className="flex items-center gap-1">
+            <div className="flex items-center rounded-lg border border-border/50 p-0.5 mr-1">
+              <button
+                type="button"
+                onClick={() => setMode("fast")}
+                className={cn(
+                  "flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors cursor-pointer",
+                  mode === "fast"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                title="Fast mode — quick responses"
+              >
+                <Zap className="h-3 w-3" />
+                Fast
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("thinking")}
+                className={cn(
+                  "flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors cursor-pointer",
+                  mode === "thinking"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                title="Thinking mode — extended analysis"
+              >
+                <Brain className="h-3 w-3" />
+                Think
+              </button>
+            </div>
             <button
               type="button"
               onClick={startNewChat}
@@ -138,7 +170,7 @@ export function AIPanel() {
                 How can I help?
               </p>
               <p className="text-xs text-muted-foreground mb-6">
-                Ask about project management, sprints, or how to use AgileFlow
+                I can create boards, manage tasks, assign work, plan sprints, and analyze your project
               </p>
               <div className="space-y-2 w-full max-w-xs">
                 {suggestions.map((q) => (

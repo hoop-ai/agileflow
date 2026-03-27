@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Menu, Sparkles, Send, Square } from "lucide-react";
+import { Menu, Sparkles, Send, Square, Zap, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAI } from "@/components/ai/AIProvider";
 import { ChatMessage } from "@/components/ai/ChatMessage";
@@ -12,6 +12,7 @@ export default function ChatPage() {
     sessions, sessionsLoading,
     sendMessage, startNewChat, loadSessions, loadSession,
     renameSession, deleteSession, stopStreaming,
+    mode, setMode,
   } = useAI();
 
   const [searchParams] = useSearchParams();
@@ -113,6 +114,36 @@ export default function ChatPage() {
           </button>
           <Sparkles className="h-4 w-4 text-primary" />
           <h1 className="text-sm font-semibold">AI Assistant</h1>
+          <div className="ml-auto flex items-center rounded-lg border border-border/50 p-0.5">
+            <button
+              type="button"
+              onClick={() => setMode("fast")}
+              className={cn(
+                "flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer",
+                mode === "fast"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+              title="Fast mode — quick responses"
+            >
+              <Zap className="h-3 w-3" />
+              Fast
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("thinking")}
+              className={cn(
+                "flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer",
+                mode === "thinking"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+              title="Thinking mode — extended analysis"
+            >
+              <Brain className="h-3 w-3" />
+              Think
+            </button>
+          </div>
         </div>
 
         {/* Messages */}
