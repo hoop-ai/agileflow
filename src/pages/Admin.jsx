@@ -407,6 +407,45 @@ export default function AdminPage() {
         </Card>
       </div>
 
+      {/* Project Advisors */}
+      <div className="max-w-6xl mx-auto mt-6 px-6">
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-foreground text-base">Project Advisors</CardTitle>
+                <CardDescription>Capstone project supervisors</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { name: 'Prof. Dr. Gül Temur', email: 'gul.temur@bau.edu.tr', role: 'Management Engineering', title: 'Professor & Advisor' },
+                { name: 'Dr. Derya Bodur', email: 'derya.bodur@bau.edu.tr', role: 'Software Engineering', title: 'Advisor' },
+              ].map((advisor) => (
+                <div key={advisor.email} className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card hover:bg-accent/30 transition-colors">
+                  <div className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0",
+                    "bg-violet-600 text-white"
+                  )}>
+                    {advisor.name.split(' ').filter(w => w.length > 2).slice(0, 2).map(w => w[0]).join('')}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground text-sm">{advisor.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{advisor.email}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline" className="text-xs">{advisor.title}</Badge>
+                      <span className="text-xs text-muted-foreground">{advisor.role}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Edit User Dialog */}
       {editingUser && (
         <EditUserDialog

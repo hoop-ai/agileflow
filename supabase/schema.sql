@@ -278,3 +278,11 @@ CREATE INDEX idx_notifications_is_read ON public.notifications(user_id, is_read)
 ALTER TABLE public.team_members
   ADD CONSTRAINT fk_team_members_profile
   FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+
+-- Update team profiles with correct emails and details
+-- Run this after users have signed up to set their profile data
+-- Maria Alftaih: maria.alftaih@gmail.com
+-- Abdul Rahman Malak: abdmalak@gmail.com
+-- Khalid Hajjo Rifai: k.rifai2024@gmail.com
+-- Mohammad Houjeirat: m.houjeirat@gmail.com
+-- Advisors: Prof. Dr. Gül Temur (gul.temur@bau.edu.tr), Dr. Derya Bodur (derya.bodur@bau.edu.tr)
