@@ -58,6 +58,7 @@ CREATE TABLE public.calendar_events (
   location TEXT,
   attendees JSONB DEFAULT '[]'::jsonb,
   all_day BOOLEAN DEFAULT false,
+  reminder_minutes INTEGER DEFAULT 15,
   created_date TIMESTAMPTZ DEFAULT NOW(),
   updated_date TIMESTAMPTZ DEFAULT NOW()
 );

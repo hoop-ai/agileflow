@@ -78,8 +78,9 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit, preselecte
       endDateTime.setHours(parseInt(endHour), parseInt(endMin));
     }
 
+    const { reminder_minutes, ...payload } = eventData;
     await onSubmit({
-      ...eventData,
+      ...payload,
       start_date: startDateTime.toISOString(),
       end_date: endDateTime.toISOString()
     });

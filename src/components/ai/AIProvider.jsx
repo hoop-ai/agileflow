@@ -170,13 +170,18 @@ export function AIProvider({ children }) {
         const decoder = new TextDecoder();
         let text = "";
         let toolCalls = [];
+        let buffer = "";
 
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
-          const chunk = decoder.decode(value, { stream: true });
-          for (const line of chunk.split("\n")) {
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          // Keep the last partial line in the buffer
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
             const trimmed = line.trim();
             if (!trimmed || !trimmed.startsWith("data:")) continue;
             const jsonStr = trimmed.slice(5).trim();
@@ -199,7 +204,7 @@ export function AIProvider({ children }) {
                 for (const tc of choice.delta.tool_calls) {
                   if (tc.index !== undefined) {
                     if (!toolCalls[tc.index]) {
-                      toolCalls[tc.index] = { id: tc.id || "", function: { name: "", arguments: "" } };
+                      toolCalls[tc.index] = { id: tc.id || "", type: "function", function: { name: "", arguments: "" } };
                     }
                     if (tc.id) toolCalls[tc.index].id = tc.id;
                     if (tc.function?.name) toolCalls[tc.index].function.name += tc.function.name;
@@ -252,7 +257,7 @@ export function AIProvider({ children }) {
           accumulated = text;
 
           // Handle tool calls — execute tools and send results back for a final answer
-          if (toolCalls.length > 0 && !accumulated) {
+          if (toolCalls.length > 0) {
             setMessages(prev =>
               prev.map(m => m.id === assistantId ? { ...m, content: "*Checking your data...*" } : m)
             );
@@ -276,16 +281,38 @@ export function AIProvider({ children }) {
               }
             }
 
+            // Format tool_calls for the assistant message per OpenRouter spec
+            const formattedToolCalls = toolCalls.map(tc => ({
+              id: tc.id,
+              type: "function",
+              function: { name: tc.function.name, arguments: tc.function.arguments },
+            }));
+
             const followUpMsgs = [
               ...apiMessages,
-              { role: "assistant", tool_calls: toolCalls },
+              { role: "assistant", content: accumulated || null, tool_calls: formattedToolCalls },
               ...toolResults,
             ];
 
             const followUpResponse = await callModel(model, followUpMsgs, controller.signal);
             if (followUpResponse.ok) {
               const result = await processStream(followUpResponse, assistantId);
-              accumulated = result.text;
+              accumulated = result.text || accumulated;
+            } else {
+              // Follow-up call failed; show tool results as a fallback summary
+              const errText = await followUpResponse.text().catch(() => "");
+              console.error("Tool follow-up failed:", followUpResponse.status, errText);
+              if (!accumulated) {
+                const summaries = toolResults.map(tr => {
+                  try {
+                    const parsed = JSON.parse(tr.content);
+                    if (parsed.error) return `**Error:** ${parsed.error}`;
+                    if (parsed.success) return `**Done.** ${JSON.stringify(parsed)}`;
+                    return `Results: ${tr.content.slice(0, 500)}`;
+                  } catch { return tr.content.slice(0, 500); }
+                });
+                accumulated = summaries.join("\n\n");
+              }
             }
           }
 
