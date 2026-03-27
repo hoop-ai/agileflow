@@ -160,14 +160,14 @@ export const helpCategories = [
             items: [
               'Open your new board by clicking on it.',
               'Click the "+" button in the column header area to add a new column.',
-              'Choose a column type: Status, Priority, Date, People, Number, Budget, Text, Checkbox, or Dropdown.',
+              'Choose a column type: Status, Priority, Date, People, Number, Budget, Text, Checkbox, Dropdown, Tags, or Timeline.',
               'Give the column a name and click "Add Column".',
               'Repeat to add all the columns your workflow requires.',
             ],
           },
           {
             type: 'tip',
-            text: 'A typical project board uses at least Status, Priority, People (assignee), and Date columns. You can always add or remove columns later.',
+            text: 'New boards come pre-configured with six columns (Task, Status, Owner, Priority, Due Date, Notes) and three groups (To Do, In Progress, Done). You can always add or remove columns later.',
           },
           {
             type: 'heading',
@@ -241,6 +241,7 @@ export const helpCategories = [
               'Backlog — product backlog with user stories and sprint planning',
               'Calendar — month view calendar for events, milestones, and deadlines',
               'Analytics — charts and metrics across all your projects',
+              'AI Chat — full-page AI assistant with conversation history and session management',
             ],
           },
           {
@@ -286,7 +287,7 @@ export const helpCategories = [
           },
           {
             type: 'paragraph',
-            text: 'The floating chat bubble in the bottom-right corner opens the AI assistant. It can answer questions about project management, suggest task assignments, recommend sprint plans, and provide performance summaries.',
+            text: 'The AI assistant is available in two ways: as a floating chat panel (click the chat bubble in the bottom-right corner) and as a dedicated full-page AI Chat accessible from the sidebar. Both support Fast and Thinking response modes, slash commands, and context-aware suggestions.',
           },
           {
             type: 'tip',
@@ -482,7 +483,7 @@ export const helpCategories = [
           },
           {
             type: 'paragraph',
-            text: 'Your new board opens automatically after creation. It starts with a default group and a title column. You can immediately begin adding columns and tasks.',
+            text: 'Your new board opens automatically after creation. It comes pre-configured with six columns (Task, Status, Owner, Priority, Due Date, Notes) and three workflow groups (To Do, In Progress, Done). You can immediately start adding tasks or customize the structure.',
           },
           {
             type: 'heading',
@@ -575,9 +576,11 @@ export const helpCategories = [
             type: 'list',
             items: [
               'Horizontal bars represent task duration from start to end date',
-              'Color-coded by status or priority',
-              'Scroll horizontally to navigate across the project timeline',
-              'Best for project planning and identifying scheduling conflicts',
+              'Color-coded by priority — Critical (red), High (orange), Medium (blue), Low (light blue)',
+              'Three zoom levels: Week (shows individual days), Month (default, shows days with weekday), and Quarter (shows weeks across 3 months)',
+              'Navigate with Previous/Next/Today buttons; today\'s date is highlighted',
+              'Weekend days have a muted background for visual distinction',
+              'Requires a Timeline column or two or more Date columns to display tasks',
             ],
           },
           {
@@ -589,11 +592,11 @@ export const helpCategories = [
       {
         id: 'managing-columns',
         title: 'Managing Columns',
-        description: 'Add and configure the 9 column data types',
+        description: 'Add and configure the 11 column data types',
         content: [
           {
             type: 'paragraph',
-            text: 'Columns define what data you track for each task. AgileFlow supports 9 different column types, each designed for a specific kind of information.',
+            text: 'Columns define what data you track for each task. AgileFlow supports 11 different column types, each designed for a specific kind of information.',
           },
           {
             type: 'heading',
@@ -623,11 +626,13 @@ export const helpCategories = [
               'Status — predefined status labels with colors (Not Started, Working on it, Done, Stuck)',
               'Priority — priority levels with color coding (Low, Medium, High, Critical)',
               'Date — date picker with calendar popup for due dates and deadlines',
-              'People — assignee selector for team member assignment',
+              'People — assignee selector with team member dropdown showing avatars and names',
               'Number — numeric field for estimates, hours, or counts',
               'Budget — currency-formatted field with dollar amounts',
               'Checkbox — boolean toggle for yes/no tracking (e.g., "Approved", "Reviewed")',
               'Dropdown — custom dropdown with user-defined options and colors',
+              'Tags — multi-select labels with colored badges (includes predefined suggestions like Urgent, Bug, Feature, and custom tags)',
+              'Timeline — date range picker with start and end dates, used for the Timeline view',
             ],
           },
           {
@@ -877,6 +882,44 @@ export const helpCategories = [
           {
             type: 'tip',
             text: 'The Kanban view is especially useful during daily standup meetings. Drag tasks from "Working on it" to "Done" as the team reports their progress.',
+          },
+        ],
+      },
+      {
+        id: 'unassigned-tasks',
+        title: 'Unassigned Tasks View',
+        description: 'Find and assign tasks that have no owner yet',
+        content: [
+          {
+            type: 'paragraph',
+            text: 'The Unassigned Tasks view is a dedicated section on the Board page that surfaces all tasks without an assignee. It helps you quickly identify work that needs an owner and assign it to team members.',
+          },
+          {
+            type: 'heading',
+            text: 'How It Works',
+            level: 2,
+          },
+          {
+            type: 'list',
+            items: [
+              'Tasks without a People column value are automatically collected into the Unassigned section',
+              'Each task card shows the task title, group name, status, priority, and due date',
+              'A quick "Assign" button on each card opens a team member dropdown',
+              'Select a team member from the dropdown to assign the task instantly',
+            ],
+          },
+          {
+            type: 'heading',
+            text: 'When to Use It',
+            level: 2,
+          },
+          {
+            type: 'paragraph',
+            text: 'Check the Unassigned Tasks view during sprint planning or daily standups to ensure no tasks fall through the cracks. It is especially useful after importing or bulk-creating tasks.',
+          },
+          {
+            type: 'tip',
+            text: 'Use the AI assistant\'s /assign command to get intelligent suggestions for who should handle unassigned tasks based on workload and expertise.',
           },
         ],
       },
@@ -1497,6 +1540,22 @@ export const helpCategories = [
           },
           {
             type: 'heading',
+            text: 'Response Modes',
+            level: 2,
+          },
+          {
+            type: 'paragraph',
+            text: 'The AI assistant supports two response modes, selectable via the toggle in the panel header:',
+          },
+          {
+            type: 'list',
+            items: [
+              'Fast Mode (lightning icon) — quick responses using lightweight models like Claude Haiku 4.5, Gemini 2.0 Flash, and GPT-4o Mini. Best for simple questions and quick actions.',
+              'Thinking Mode (brain icon) — extended analysis using more powerful thinking-optimized models. Best for complex planning, detailed recommendations, and in-depth analysis.',
+            ],
+          },
+          {
+            type: 'heading',
             text: 'Quick Action Buttons',
             level: 2,
           },
@@ -1595,15 +1654,14 @@ export const helpCategories = [
           },
           {
             type: 'paragraph',
-            text: 'When you send a message, AgileFlow tries multiple AI models in sequence. If the first model is unavailable or returns an error, it automatically falls back to the next one. This ensures the assistant is always responsive.',
+            text: 'When you send a message, AgileFlow selects AI models based on your chosen response mode (Fast or Thinking). If the first model is unavailable or returns an error, it automatically falls back to the next one. This ensures the assistant is always responsive.',
           },
           {
             type: 'list',
             items: [
-              'Primary: GPT-4o-mini — fast, cost-effective, and capable for most queries',
-              'Fallback 1: Llama — open-source model for general questions',
-              'Fallback 2: Gemini — Google\'s model as an additional backup',
-              'Fallback 3: Haiku — lightweight model for basic responses',
+              'Fast Mode models: Claude Haiku 4.5, Gemini 2.0 Flash, GPT-4o Mini — optimized for quick responses',
+              'Thinking Mode models: thinking-optimized variants for deeper analysis and planning',
+              'Automatic fallback — if one model is unavailable, the next in the chain is tried seamlessly',
             ],
           },
           {
@@ -1627,6 +1685,52 @@ export const helpCategories = [
           {
             type: 'warning',
             text: 'Avoid sharing sensitive personal information (passwords, API keys, financial data) with the AI assistant. While the communication is encrypted, the assistant is designed for project management queries only.',
+          },
+        ],
+      },
+      {
+        id: 'ai-chat-page',
+        title: 'AI Chat Page',
+        description: 'Use the full-page AI experience with conversation history and sessions',
+        content: [
+          {
+            type: 'paragraph',
+            text: 'In addition to the floating AI panel, AgileFlow provides a dedicated AI Chat page accessible from the sidebar. This full-page experience offers a richer interface for extended AI conversations.',
+          },
+          {
+            type: 'heading',
+            text: 'Features',
+            level: 2,
+          },
+          {
+            type: 'list',
+            items: [
+              'Full-page chat interface with a centered message area for comfortable reading',
+              'Fast/Thinking mode toggle in the header to switch between quick and deep analysis responses',
+              'Chat session history — previous conversations are saved in the sidebar for easy reference',
+              'Session management — load, rename, or delete previous chat sessions',
+              'Suggestion chips displayed when starting a new conversation to help you get started',
+              'Streaming responses with a stop button to cancel long-running AI responses',
+              'Auto-expanding text input with keyboard support (Enter to send, Shift+Enter for new line)',
+            ],
+          },
+          {
+            type: 'heading',
+            text: 'How to Access',
+            level: 2,
+          },
+          {
+            type: 'steps',
+            items: [
+              'Click "AI Chat" in the left sidebar navigation.',
+              'Start typing your message or click a suggestion chip.',
+              'Use the mode toggle at the top to switch between Fast and Thinking modes.',
+              'Your conversation is saved automatically and appears in the session sidebar on the left.',
+            ],
+          },
+          {
+            type: 'tip',
+            text: 'Use the AI Chat page for longer conversations and planning sessions. The floating panel is better for quick questions while you are working on a board.',
           },
         ],
       },
@@ -1685,11 +1789,28 @@ export const helpCategories = [
       {
         id: 'roles-permissions',
         title: 'Roles & Permissions',
-        description: 'Understand the difference between Member and Admin roles',
+        description: 'Understand the three roles: Admin, Member, and Viewer',
         content: [
           {
             type: 'paragraph',
-            text: 'AgileFlow uses a simple two-role system to control access and permissions within your workspace.',
+            text: 'AgileFlow uses a three-role system to control access and permissions within your workspace. Each role has a different level of access, from full control to read-only.',
+          },
+          {
+            type: 'heading',
+            text: 'Admin Role',
+            level: 2,
+          },
+          {
+            type: 'list',
+            items: [
+              'Full system access — manage users, change roles, and access all data',
+              'Can access the Admin panel from the sidebar',
+              'Can view and manage all users in the workspace',
+              'Can change user roles (promote or demote)',
+              'Can reset passwords for other users',
+              'Can view system performance metrics and health data',
+              'Can manage all boards across the workspace',
+            ],
           },
           {
             type: 'heading',
@@ -1704,27 +1825,83 @@ export const helpCategories = [
               'Can manage user stories and participate in sprint planning',
               'Can use the calendar, analytics, and AI assistant',
               'Can update their own profile and settings',
+              'Cannot access the Admin panel or manage other users',
             ],
           },
           {
             type: 'heading',
-            text: 'Admin Role',
+            text: 'Viewer Role',
             level: 2,
           },
           {
             type: 'list',
             items: [
-              'Has all Member permissions',
-              'Can access the Admin panel from the sidebar',
-              'Can view and manage all users in the workspace',
-              'Can change user roles (promote or demote)',
-              'Can view system performance metrics and health data',
-              'Can manage all boards across the workspace',
+              'Read-only access to boards and tasks — can view but not create or edit',
+              'Cannot drag and drop tasks or change statuses',
+              'Cannot add items, columns, or groups to boards',
+              'Can view analytics, calendar, and backlog in read-only mode',
+              'Can use the AI assistant for questions and insights',
+              'Can update their own profile and settings',
             ],
           },
           {
+            type: 'paragraph',
+            text: 'New users are assigned the Member role by default when they join the workspace. Admins can change roles at any time from the Admin panel.',
+          },
+          {
             type: 'warning',
-            text: 'Be selective about who you grant Admin access. Admin users can see and modify all data in the workspace, including other users\' boards and settings.',
+            text: 'Be selective about who you grant Admin access. Admin users can see and modify all data in the workspace, including other users\' boards and settings. Downgrading someone from Admin to Member removes their ability to manage other users.',
+          },
+        ],
+      },
+      {
+        id: 'permission-enforcement',
+        title: 'Permission Enforcement',
+        description: 'How roles affect what actions you can take across the platform',
+        content: [
+          {
+            type: 'paragraph',
+            text: 'AgileFlow enforces permissions throughout the platform based on your assigned role. This ensures that Viewers cannot accidentally modify data, and only Admins can perform sensitive operations.',
+          },
+          {
+            type: 'heading',
+            text: 'Board Permissions',
+            level: 2,
+          },
+          {
+            type: 'list',
+            items: [
+              'Admins and Members can create, edit, and delete boards, groups, columns, and tasks',
+              'Viewers see boards in read-only mode — add/edit buttons and drag-and-drop are disabled',
+              'The "Add Item", "New Group", and "Add Column" buttons are hidden for Viewers',
+              'Task edit modals open in view-only mode for Viewers',
+            ],
+          },
+          {
+            type: 'heading',
+            text: 'Kanban & Calendar Permissions',
+            level: 2,
+          },
+          {
+            type: 'list',
+            items: [
+              'Viewers cannot drag Kanban cards between columns',
+              'Calendar event creation is restricted to Admins and Members',
+              'Timeline view is read-only for Viewers',
+            ],
+          },
+          {
+            type: 'heading',
+            text: 'Settings Permissions',
+            level: 2,
+          },
+          {
+            type: 'paragraph',
+            text: 'All users can view and update their own profile and preferences. Only Admins can access the Admin panel to manage other users and workspace settings.',
+          },
+          {
+            type: 'tip',
+            text: 'If you see disabled buttons or missing actions on a board, check your role in the Admin panel or ask a workspace Admin. You may have Viewer access.',
           },
         ],
       },

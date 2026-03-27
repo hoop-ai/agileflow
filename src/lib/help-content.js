@@ -48,7 +48,7 @@ export const MODULE_HELP = {
       },
       {
         heading: "Columns",
-        body: "Each column represents a property of your tasks. Available column types:\n• **Status** — workflow states like Not Started, Working, Done, Stuck\n• **Priority** — urgency levels: Critical, High, Medium, Low\n• **People** — who's assigned to the task\n• **Date** — deadlines and due dates\n• **Number** — numeric values like effort estimates\n• **Text** — freeform text notes\n• **Tags** — labels for categorization\n• **Checkbox** — simple yes/no toggle\n• **Dropdown** — pick from a predefined list\n• **Timeline** — start and end date range",
+        body: "Each column represents a property of your tasks. Available column types (11 total):\n• **Status** — workflow states like Not Started, Working, Done, Stuck\n• **Priority** — urgency levels: Critical, High, Medium, Low\n• **People** — assignee selector with team member dropdown showing avatars and names\n• **Date** — deadlines and due dates\n• **Number** — numeric values like effort estimates\n• **Budget** — currency-formatted dollar amounts\n• **Text** — freeform text notes\n• **Tags** — colored badge labels with predefined suggestions (Urgent, Bug, Feature, etc.) and custom tags\n• **Checkbox** — simple yes/no toggle\n• **Dropdown** — pick from a predefined list with custom colors\n• **Timeline** — start and end date range for the Timeline view",
       },
       {
         heading: "Toolbar",
@@ -114,11 +114,11 @@ export const MODULE_HELP = {
       },
       {
         heading: "Zoom Levels",
-        body: "Change the zoom level to see different time scales:\n• **Day** — shows individual days, best for short-term planning\n• **Week** — shows weeks, good for sprint-level planning\n• **Month** — shows months, ideal for roadmap and long-term view",
+        body: "Change the zoom level to see different time scales (defaults to Month):\n• **Week** — shows individual days with day names and dates, best for sprint-level planning\n• **Month** — shows days with weekday letters, the default view for balanced detail\n• **Quarter** — shows weeks across 3 months, ideal for roadmap and long-term view",
       },
       {
         heading: "Reading the Bars",
-        body: "Each horizontal bar represents a task. The bar's color indicates its priority. Hover over any bar to see the task title and date range. The wider the bar, the longer the task duration.",
+        body: "Each horizontal bar represents a task. The bar's color indicates its priority: Critical (red), High (orange), Medium (blue), Low (light blue). Hover over any bar to see the task title and date range. The wider the bar, the longer the task duration. Weekend days have a muted background.",
       },
     ],
   },
@@ -222,7 +222,7 @@ export const MODULE_HELP = {
       },
       {
         heading: "User Roles",
-        body: "There are three roles with different access levels:\n• **Admin** — full system access: manage users, change roles, delete boards, access all data\n• **Member** — can create boards, add tasks, edit their own data, and collaborate with the team\n• **Viewer** — read-only access: can view boards and tasks but cannot create or edit anything",
+        body: "There are three roles with different access levels:\n• **Admin** — full system access: manage users, change roles, reset passwords, delete boards, access all data\n• **Member** — can create boards, add tasks, edit their own data, and collaborate with the team (default role for new users)\n• **Viewer** — read-only access: can view boards and tasks but cannot create, edit, or drag items",
       },
       {
         heading: "Stats Cards",
@@ -230,7 +230,7 @@ export const MODULE_HELP = {
       },
       {
         heading: "Managing Users",
-        body: "Use the search bar to find users by name or email. Filter by role to see specific groups. Click the three-dot menu (⋮) on any user row to:\n• **Edit** — change their name, role, or department\n• **Reset Password** — send a password reset email\n\nBe careful changing roles — downgrading someone from Admin to Member removes their ability to manage other users.",
+        body: "Use the search bar to find users by name or email. Filter by role to see specific groups. Click the three-dot menu (⋮) on any user row to:\n• **Edit** — change their name, role, or department\n• **Reset Password** — send a password reset email\n\nBe careful changing roles — downgrading someone from Admin to Member removes their ability to manage other users. Changing someone to Viewer makes the entire platform read-only for them.",
       },
       {
         heading: "Inviting Members",
@@ -264,11 +264,11 @@ export const MODULE_HELP = {
     sections: [
       {
         heading: "What are Analytics?",
-        body: "The Analytics panel gives you insight into how your board is performing. It calculates metrics from your actual task data — completion rates, workload distribution, overdue items, and more.",
+        body: "The Analytics panel gives you insight into how your board is performing. It calculates metrics from your actual task data — completion rates, workload distribution, overdue items, and more. Each section includes info tooltips explaining the metric and an AI Explain button for deeper analysis.",
       },
       {
         heading: "Overview Cards",
-        body: "Three summary cards at the top:\n• **Total Tasks** — all items on this board\n• **Completion Rate** — percentage of tasks marked \"Done\" (progress bar shows visually)\n• **Overdue Tasks** — tasks past their due date that aren't done yet (these need attention!)",
+        body: "Three summary cards at the top, each with an info tooltip:\n• **Total Tasks** — all items on this board\n• **Completion Rate** — percentage of tasks marked \"Done\" (progress bar shows visually)\n• **Overdue Tasks** — tasks past their due date that aren't done yet (these need attention!)\n\nClick the AI Explain button in the header for an AI-powered narrative of your board's health.",
       },
       {
         heading: "Status Distribution",
