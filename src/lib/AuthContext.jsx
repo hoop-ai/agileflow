@@ -117,7 +117,7 @@ export const AuthProvider = ({ children }) => {
         } else {
           settle(false);
         }
-      } else if (event === 'SIGNED_IN' && session?.user) {
+      } else if ((event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') && session?.user) {
         setUser(session.user);
         setIsAuthenticated(true);
         isAuthenticatedRef.current = true;
