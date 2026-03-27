@@ -345,7 +345,20 @@ export default function CalendarPage() {
         {/* Upcoming Events */}
         <Card className="mt-6 border border-border bg-card">
           <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Upcoming Events</h3>
+            <div className="flex items-center gap-2 mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Upcoming Events</h3>
+              <InfoTooltip text="Events scheduled in the future, sorted by date. Click any event to see details." />
+              <AIExplainButton
+                widgetTitle="Upcoming Events"
+                widgetData={{
+                  upcomingCount: events.filter(e => new Date(e.start_date) >= new Date()).length,
+                  nextEvents: events
+                    .filter(e => new Date(e.start_date) >= new Date())
+                    .slice(0, 5)
+                    .map(e => ({ title: e.title, date: e.start_date, type: e.event_type }))
+                }}
+              />
+            </div>
             <div className="space-y-3">
               {events
                 .filter(e => new Date(e.start_date) >= new Date())

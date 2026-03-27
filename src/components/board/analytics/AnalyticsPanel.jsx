@@ -140,6 +140,7 @@ export default function AnalyticsPanel({ board, items, onClose }) {
               <CardTitle className="text-lg flex items-center gap-2">
                 <Clock className="w-5 h-5" />
                 Overdue Tasks
+                <InfoTooltip text="Tasks with a due date in the past that haven't been completed yet" iconClassName="text-red-100" />
               </CardTitle>
             </CardHeader>
             <CardContent>

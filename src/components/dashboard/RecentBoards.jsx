@@ -29,8 +29,9 @@ export default function RecentBoards({ boards, isLoading, onCreateBoard }) {
             <div className="flex items-center gap-2">
               <Folder className="h-4 w-4 text-muted-foreground" />
               <div>
-                <CardTitle className="text-base font-semibold text-foreground">
+                <CardTitle className="text-base font-semibold text-foreground flex items-center gap-1">
                   Recent Boards
+                  <InfoTooltip text="Your most recently updated project boards. Click any board to open it." />
                 </CardTitle>
                 <p className="text-sm text-muted-foreground mt-0.5">Your latest project boards</p>
               </div>
