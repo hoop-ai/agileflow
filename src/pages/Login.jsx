@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { isResetPasswordRecovery } from '@/lib/auth-redirects';
 
 export default function LoginPage() {
   const { login, signup, resetPassword, updatePassword, isRegistrationEnabled, isAuthenticated } = useAuth();
@@ -20,22 +21,26 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const recoveryFlowDetected = isResetPasswordRecovery(
+    searchParams.toString(),
+    typeof window !== 'undefined' ? window.location.hash : ''
+  );
 
   // Redirect when auth state changes (driven by AuthContext listener)
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && mode !== 'reset' && !recoveryFlowDetected) {
       navigate('/');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, mode, navigate, recoveryFlowDetected]);
 
   useEffect(() => {
-    if (searchParams.get('reset') === 'true') {
+    if (recoveryFlowDetected) {
       setMode('reset');
     }
     if (searchParams.get('verified') === 'true') {
       setSuccess('Email verified successfully! You can now log in.');
     }
-  }, [searchParams]);
+  }, [recoveryFlowDetected, searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -78,6 +83,10 @@ export default function LoginPage() {
     setMode(newMode);
     setError('');
     setSuccess('');
+
+    if (newMode === 'login' && recoveryFlowDetected) {
+      navigate('/login', { replace: true });
+    }
   };
 
   return (

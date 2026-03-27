@@ -19,9 +19,12 @@ A Monday.com-style project management app built with React + Vite, Supabase, and
 VITE_SUPABASE_URL=your-supabase-url
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 VITE_OPENROUTER_API_KEY=your-openrouter-key
+VITE_APP_URL=https://your-public-app-url
 ```
 4. Run `supabase/schema.sql` in your Supabase SQL Editor
 5. `npm run dev`
+
+`VITE_APP_URL` should point to the public URL users should receive in auth emails. On Vercel, this prevents preview or protected deployment URLs from being used in password reset links.
 
 ## Deployment
 Deployed on Vercel. See `DEPLOYMENT_CHECKLIST.md` for full setup instructions.

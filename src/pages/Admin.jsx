@@ -47,6 +47,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import InfoTooltip from "@/components/common/InfoTooltip";
 import ModuleHelp from "@/components/common/ModuleHelp";
 import { usePermissions } from "@/hooks/usePermissions";
+import { getLoginUrl, getPasswordResetRedirectUrl } from '@/lib/auth-redirects';
 
 const AVATAR_COLORS = [
   'bg-blue-600 text-white',
@@ -137,9 +138,13 @@ export default function AdminPage() {
   });
 
   const resetPasswordMutation = useMutation({
-    mutationFn: (email) => supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/Settings`,
-    }),
+    mutationFn: async (email) => {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: getPasswordResetRedirectUrl(),
+      });
+
+      if (error) throw error;
+    },
     onSuccess: () => {
       toast({ title: 'Password reset email sent', description: 'The user will receive an email with reset instructions.' });
       setResetPasswordUser(null);
@@ -703,7 +708,7 @@ function InviteDialog({ open, onClose }) {
   const [inviteName, setInviteName] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
-  const signupUrl = `${window.location.origin}/login`;
+  const signupUrl = getLoginUrl();
 
   const handleCopy = async () => {
     try {
@@ -730,7 +735,7 @@ function InviteDialog({ open, onClose }) {
         email: inviteEmail.trim(),
         options: {
           data: { full_name: inviteName.trim() || undefined },
-          emailRedirectTo: `${window.location.origin}/login`,
+          emailRedirectTo: getLoginUrl(),
         },
       });
       if (error) throw error;

@@ -102,12 +102,14 @@ Create `.env.local` in the project root:
 VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co
 VITE_SUPABASE_ANON_KEY=<your-anon-key>
 VITE_OPENROUTER_API_KEY=<your-openrouter-api-key>
+VITE_APP_URL=https://agileflow-one.vercel.app
 ```
 
 ### 6.2 Vercel Production
 - [ ] Go to your Vercel project > Settings > Environment Variables
-- [ ] Add the same three variables for the **Production** environment
+- [ ] Add the same four variables for the **Production** environment
 - [ ] Redeploy after adding variables
+- [ ] Set `VITE_APP_URL` to your public production domain so auth emails never use a preview/protected Vercel URL
 
 ---
 
