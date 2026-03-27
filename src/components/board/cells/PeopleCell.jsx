@@ -57,7 +57,7 @@ export default function PeopleCell({ value, onUpdate }) {
             {value.charAt(0).toUpperCase()}
           </span>
         </div>
-        <span className="text-foreground text-sm">{value}</span>
+        <span className="text-foreground text-xs truncate">{value}</span>
       </div>
     </div>
   );

@@ -161,7 +161,7 @@ export default function ItemRow({
         return (
           <div
             key={column.id}
-            className="px-3 py-2 border-l border-border flex items-center group-hover:bg-muted"
+            className="px-3 py-1.5 border-l border-border flex items-center group-hover:bg-muted overflow-hidden"
             style={cellStyle}
           >
             {renderCell(column)}
