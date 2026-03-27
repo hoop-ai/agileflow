@@ -203,7 +203,7 @@ export const MODULE_HELP = {
       },
       {
         heading: "Preferences",
-        body: "Customize the interface:\n• **Theme** — Light, Dark, or Auto (matches your system setting)\n• **Language** — display language\n• **Timezone** — affects calendar events and due date calculations\n• **Date Format** — how dates are displayed (e.g., MM/DD/YYYY)\n• **Week Starts On** — whether your calendar week starts on Sunday or Monday",
+        body: "Customize the interface:\n• **Theme** — Light, Dark, or Auto (matches your system setting)\n• **Timezone** — affects calendar events and due date calculations\n• **Date Format** — how dates are displayed (e.g., MM/DD/YYYY)\n• **Week Starts On** — whether your calendar week starts on Sunday or Monday",
       },
       {
         heading: "Privacy",

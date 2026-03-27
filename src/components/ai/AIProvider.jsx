@@ -197,7 +197,7 @@ export function AIProvider({ children }) {
         { role: "user", content: question },
       ];
 
-      const models = MODELS.fast;
+      const models = MODELS[mode];
       let lastError = null;
       let accumulated = "";
 
@@ -475,7 +475,7 @@ export function AIProvider({ children }) {
       setStreaming(false);
       setThinking(false);
     }
-  }, [streaming, messages, location]);
+  }, [streaming, messages, location, mode]);
 
   const openPanel = useCallback(() => setPanelOpen(true), []);
   const closePanel = useCallback(() => setPanelOpen(false), []);
@@ -536,6 +536,8 @@ export function AIProvider({ children }) {
     loadSession,
     renameSession,
     deleteSession,
+    mode,
+    setMode,
   };
 
   return <AIContext.Provider value={value}>{children}</AIContext.Provider>;

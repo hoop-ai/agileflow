@@ -255,7 +255,7 @@ export default function SettingsPage() {
                   </TabsTrigger>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-xs max-w-xs z-[300]">
-                  Theme, language, timezone, date format, and calendar options
+                  Theme, timezone, date format, and calendar options
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -460,27 +460,6 @@ export default function SettingsPage() {
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">Theme changes apply immediately</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-1.5">
-                      <Label htmlFor="language">Language</Label>
-                      <InfoTooltip text="Display language for the interface" />
-                    </div>
-                    <Select
-                      value={settings.language}
-                      onValueChange={(value) => setSettings(prev => ({ ...prev, language: value }))}
-                    >
-                      <SelectTrigger id="language">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="es">Spanish</SelectItem>
-                        <SelectItem value="fr">French</SelectItem>
-                        <SelectItem value="de">German</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
 
                   <div className="space-y-2">
