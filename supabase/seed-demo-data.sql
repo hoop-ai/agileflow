@@ -1,6 +1,6 @@
 DO $$
 DECLARE
-  owner_id UUID := 'b30b6ddf-2e89-4012-8d31-1c17971356d5';
+  owner_id UUID := '75eddd1f-68e8-4aef-a25f-cbdfb4f4fcaf'; -- test@test.com (Maria Alftaih)
   board1_id UUID;
   board2_id UUID;
   board3_id UUID;
