@@ -21,8 +21,9 @@ export default function ActivityFeed({ items, isLoading }) {
       <CardHeader className="pb-4">
         <div className="flex items-center gap-2">
           <Activity className="h-4 w-4 text-muted-foreground" />
-          <CardTitle className="text-base font-semibold text-foreground">
+          <CardTitle className="text-base font-semibold text-foreground flex items-center gap-1">
             Recent Activity
+            <InfoTooltip text="Your most recently updated tasks across all boards. Colors indicate status: green = done, amber = in progress, red = stuck." />
           </CardTitle>
         </div>
         <p className="text-sm text-muted-foreground">Latest updates</p>

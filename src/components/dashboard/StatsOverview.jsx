@@ -13,6 +13,13 @@ export default function StatsOverview({ boards, items, isLoading }) {
   // When not loading and no boards exist, show a hint instead of zeros
   const isEmpty = !isLoading && boards.length === 0;
 
+  const tooltips = {
+    "Total Boards": "The number of project boards you own or have access to",
+    "Completed Tasks": "Tasks marked as 'Done' across all your boards",
+    "Pending Tasks": "Tasks not yet marked as 'Done' — includes working, stuck, and not started",
+    "Total Tasks": "All tasks across all your boards, regardless of status",
+  };
+
   const stats = [
     {
       title: "Total Boards",
@@ -45,7 +52,19 @@ export default function StatsOverview({ boards, items, isLoading }) {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <AIExplainButton
+          widgetTitle="Dashboard Stats Overview"
+          widgetData={{
+            totalBoards: boards.length,
+            completedTasks: completedItems,
+            pendingTasks: pendingItems,
+            totalTasks: items.length,
+          }}
+        />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
       {stats.map((stat, index) => (
         <motion.div
           key={stat.title}
@@ -55,7 +74,10 @@ export default function StatsOverview({ boards, items, isLoading }) {
         >
           <div className="rounded-lg border border-border bg-card p-5">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+              <p className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                {stat.title}
+                <InfoTooltip text={tooltips[stat.title]} />
+              </p>
               <div className={cn("h-8 w-8 rounded-md flex items-center justify-center", stat.iconBg)}>
                 <stat.icon className={cn("h-4 w-4", stat.iconColor)} />
               </div>
@@ -70,6 +92,7 @@ export default function StatsOverview({ boards, items, isLoading }) {
           </div>
         </motion.div>
       ))}
+      </div>
     </div>
   );
 }

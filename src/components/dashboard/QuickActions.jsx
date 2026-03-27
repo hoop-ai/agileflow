@@ -56,8 +56,9 @@ export default function QuickActions({ onCreateBoard }) {
           <div className="flex items-center gap-2">
             <Zap className="h-4 w-4 text-muted-foreground" />
             <div>
-              <CardTitle className="text-base font-semibold text-foreground">
+              <CardTitle className="text-base font-semibold text-foreground flex items-center gap-1">
                 Quick Actions
+                <InfoTooltip text="Shortcuts for common tasks. Create boards, invite team members, check the calendar, or view analytics." />
               </CardTitle>
               <p className="text-sm text-muted-foreground">Get things done faster</p>
             </div>

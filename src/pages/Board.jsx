@@ -38,6 +38,8 @@ import CalendarView from "../components/board/views/CalendarView";
 import TimelineView from "../components/board/views/TimelineView";
 
 import AnalyticsPanel from "../components/board/analytics/AnalyticsPanel";
+import InfoTooltip from "../components/common/InfoTooltip";
+import { AIExplainButton } from "../components/ai/AIExplainButton";
 
 
 const generateId = () => {
@@ -604,6 +606,7 @@ export default function BoardPage() {
                     <GroupIcon className="w-4 h-4 mr-2" />
                     Group by
                   </Button>
+                  <InfoTooltip text="Group tasks by status, priority, person, or other fields" side="bottom" />
                   {showGroupByMenu && (
                     <GroupByMenu
                       groupBy={groupBy}
@@ -615,7 +618,14 @@ export default function BoardPage() {
                 </div>
               </div>
               
-              {/* Removed MoreHorizontal button from here */}
+              <AIExplainButton
+                widgetTitle="Board Overview"
+                widgetData={{
+                  boardTitle: board.title,
+                  totalItems: filteredItems.length,
+                  groupCount: (board.groups || []).length,
+                }}
+              />
             </div>
           )}
 

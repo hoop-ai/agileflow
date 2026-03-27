@@ -131,6 +131,7 @@ export default function CalendarPage() {
           >
             Today
           </Button>
+          <InfoTooltip text="Jump back to the current month" />
         </div>
 
         <div className="flex gap-2">
@@ -292,18 +293,42 @@ export default function CalendarPage() {
             Team Calendar
           </h1>
           <p className="text-muted-foreground mt-2">Manage meetings, milestones, and important dates</p>
+          <AIExplainButton
+            widgetTitle="Calendar Overview"
+            widgetData={{
+              totalEvents: events.length,
+              upcomingCount: events.filter(e => new Date(e.start_date) >= new Date()).length,
+              eventTypes: Object.fromEntries(
+                Object.keys(eventTypeConfig).map(t => [t, events.filter(e => e.event_type === t).length])
+              )
+            }}
+            className="mt-2"
+          />
         </div>
 
         {/* Event Type Legend */}
         <Card className="mb-6 border border-border bg-card">
           <CardContent className="p-4">
             <div className="flex flex-wrap gap-4">
-              {Object.entries(eventTypeConfig).map(([type, cfg]) => (
-                <div key={type} className="flex items-center gap-2">
-                  <div className={cn("w-2.5 h-2.5 rounded-full", cfg.dot)} />
-                  <span className="text-sm capitalize text-muted-foreground">{type}</span>
-                </div>
-              ))}
+              {Object.entries(eventTypeConfig).map(([type, cfg]) => {
+                const tooltipMap = {
+                  meeting: "Team meetings, standups, and 1-on-1s",
+                  milestone: "Key project milestones and deliverables",
+                  deadline: "Hard deadlines for tasks or deliverables",
+                  review: "Code reviews, design reviews, and sprint reviews",
+                  retrospective: "Sprint retrospectives to reflect on what went well and what to improve",
+                  planning: "Sprint planning and roadmap sessions",
+                  holiday: "Team holidays and days off",
+                  other: "Any other event that doesn't fit the above categories",
+                };
+                return (
+                  <div key={type} className="flex items-center gap-2">
+                    <div className={cn("w-2.5 h-2.5 rounded-full", cfg.dot)} />
+                    <span className="text-sm capitalize text-muted-foreground">{type}</span>
+                    <InfoTooltip text={tooltipMap[type] || tooltipMap.other} />
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>

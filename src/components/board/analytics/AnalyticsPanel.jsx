@@ -67,13 +67,27 @@ export default function AnalyticsPanel({ board, items, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6 border-b border-border flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground">Board Analytics</h2>
-            <p className="text-muted-foreground">Insights and statistics for {board?.title}</p>
+          <div className="flex items-center gap-3">
+            <div>
+              <h2 className="text-2xl font-bold text-foreground">Board Analytics</h2>
+              <p className="text-muted-foreground">Insights and statistics for {board?.title}</p>
+            </div>
+            {items.length > 0 && (
+              <AIExplainButton
+                widgetTitle="Board Analytics"
+                widgetData={{
+                  totalTasks: items.length,
+                  completionRate,
+                  overdueCount: overdueTasks.length,
+                  statusDistribution: statusStats,
+                  priorityDistribution: priorityStats,
+                }}
+              />
+            )}
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-xl font-bold w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full"
+            className="text-muted-foreground hover:text-foreground text-xl font-bold w-8 h-8 flex items-center justify-center hover:bg-muted rounded-full"
           >
             ×
           </button>
@@ -98,6 +112,7 @@ export default function AnalyticsPanel({ board, items, onClose }) {
               <CardTitle className="text-lg flex items-center gap-2">
                 <Target className="w-5 h-5" />
                 Total Tasks
+                <InfoTooltip text="Total number of items currently on this board" iconClassName="text-blue-100" />
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -111,6 +126,7 @@ export default function AnalyticsPanel({ board, items, onClose }) {
               <CardTitle className="text-lg flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
                 Completion Rate
+                <InfoTooltip text="Percentage of tasks marked as 'Done' out of all tasks on this board" iconClassName="text-green-100" />
               </CardTitle>
             </CardHeader>
             <CardContent>

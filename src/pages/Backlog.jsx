@@ -179,7 +179,10 @@ export default function BacklogPage() {
           <div className="rounded-lg border border-border bg-card p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Stories</p>
+                <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
+                  Total Stories
+                  <InfoTooltip text="Number of user stories in the backlog that haven't been assigned to a sprint yet" />
+                </p>
                 <p className="text-2xl font-semibold text-foreground">{backlogStats.total}</p>
               </div>
               <Target className="w-8 h-8 text-muted-foreground" />
@@ -189,7 +192,10 @@ export default function BacklogPage() {
           <div className="rounded-lg border border-border bg-card p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Story Points</p>
+                <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
+                  Story Points
+                  <InfoTooltip text="Total estimated effort across all backlog stories. Higher points mean more work. Common scale: 1, 2, 3, 5, 8, 13" />
+                </p>
                 <p className="text-2xl font-semibold text-foreground">{backlogStats.totalPoints}</p>
               </div>
               <TrendingUp className="w-8 h-8 text-muted-foreground" />
@@ -199,7 +205,10 @@ export default function BacklogPage() {
           <div className="rounded-lg border border-border bg-card p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Critical Priority</p>
+                <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
+                  Critical Priority
+                  <InfoTooltip text="Stories marked as critical urgency — these should be addressed in the next sprint" />
+                </p>
                 <p className="text-2xl font-semibold text-foreground">{backlogStats.critical}</p>
               </div>
               <Target className="w-8 h-8 text-muted-foreground" />
