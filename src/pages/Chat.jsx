@@ -60,10 +60,10 @@ export default function ChatPage() {
   }
 
   const suggestions = [
-    "How do I plan a sprint effectively?",
-    "What are the best practices for writing user stories?",
-    "How should I prioritize my product backlog?",
-    "Explain the difference between Kanban and Scrum",
+    "Create a new board for our frontend sprint",
+    "Who should I assign the API integration task to?",
+    "Show me all tasks on the main board",
+    "Plan the next sprint based on our backlog",
   ];
 
   return (
@@ -153,7 +153,7 @@ export default function ChatPage() {
               <Sparkles className="h-12 w-12 text-muted-foreground/20 mb-4" />
               <h2 className="text-lg font-semibold text-foreground mb-1">How can I help?</h2>
               <p className="text-sm text-muted-foreground mb-8 max-w-md">
-                Ask about project management, agile methodology, sprint planning, or how to use AgileFlow.
+                I can create boards, manage tasks, assign work, plan sprints, and analyze your project.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg w-full">
                 {suggestions.map((q) => (
