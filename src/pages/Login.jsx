@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
+import { supabase } from '@/api/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -8,6 +9,10 @@ import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { isResetPasswordRecovery } from '@/lib/auth-redirects';
+import {
+  RECOVERY_SESSION_MISSING_MESSAGE,
+  waitForActiveSession,
+} from '@/lib/auth-session';
 
 export default function LoginPage() {
   const { login, signup, resetPassword, updatePassword, isRegistrationEnabled, isAuthenticated } = useAuth();
@@ -21,6 +26,8 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isPreparingRecoverySession, setIsPreparingRecoverySession] = useState(false);
+  const [isRecoverySessionReady, setIsRecoverySessionReady] = useState(false);
   const recoveryFlowDetected = isResetPasswordRecovery(
     searchParams.toString(),
     typeof window !== 'undefined' ? window.location.hash : ''
@@ -41,6 +48,58 @@ export default function LoginPage() {
       setSuccess('Email verified successfully! You can now log in.');
     }
   }, [recoveryFlowDetected, searchParams]);
+
+  useEffect(() => {
+    if (mode === 'reset' && isAuthenticated) {
+      setIsRecoverySessionReady(true);
+      setIsPreparingRecoverySession(false);
+      setError((currentError) =>
+        currentError === RECOVERY_SESSION_MISSING_MESSAGE ? '' : currentError
+      );
+    }
+  }, [isAuthenticated, mode]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (!recoveryFlowDetected || !supabase) {
+      setIsPreparingRecoverySession(false);
+      setIsRecoverySessionReady(false);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    setIsPreparingRecoverySession(true);
+    setIsRecoverySessionReady(false);
+    setError('');
+
+    waitForActiveSession(() => supabase.auth.getSession())
+      .then((session) => {
+        if (!isActive) return;
+
+        if (session?.user) {
+          setIsRecoverySessionReady(true);
+          setError('');
+          return;
+        }
+
+        setError(RECOVERY_SESSION_MISSING_MESSAGE);
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setError(RECOVERY_SESSION_MISSING_MESSAGE);
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsPreparingRecoverySession(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [recoveryFlowDetected]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,6 +122,9 @@ export default function LoginPage() {
         await resetPassword(email);
         setSuccess('Password reset link sent! Check your email.');
       } else if (mode === 'reset') {
+        if (!isRecoverySessionReady) {
+          throw new Error(RECOVERY_SESSION_MISSING_MESSAGE);
+        }
         if (password !== confirmPassword) {
           throw new Error('Passwords do not match');
         }
@@ -200,13 +262,21 @@ export default function LoginPage() {
                 </p>
               )}
 
+              {mode === 'reset' && !error && isPreparingRecoverySession && (
+                <p className="text-sm text-muted-foreground bg-muted/60 p-3 rounded-md">
+                  Verifying your reset link and preparing a secure recovery session...
+                </p>
+              )}
+
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isLoading}
+                disabled={isLoading || (mode === 'reset' && (!isRecoverySessionReady || isPreparingRecoverySession))}
               >
                 {isLoading ? (
                   'Please wait...'
+                ) : mode === 'reset' && isPreparingRecoverySession ? (
+                  'Preparing Reset...'
                 ) : mode === 'login' ? (
                   'Log In'
                 ) : mode === 'signup' ? (

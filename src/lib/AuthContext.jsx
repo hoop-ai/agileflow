@@ -11,6 +11,11 @@ import {
   isDuplicateSignupError,
   normalizeEmailAddress,
 } from '@/lib/auth-signup';
+import {
+  RECOVERY_SESSION_MISSING_MESSAGE,
+  isMissingAuthSessionError,
+  waitForActiveSession,
+} from '@/lib/auth-session';
 
 const AuthContext = createContext();
 
@@ -215,8 +220,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updatePassword = async (newPassword) => {
+    const session = await waitForActiveSession(() => supabase.auth.getSession());
+    if (!session?.user) {
+      throw new Error(RECOVERY_SESSION_MISSING_MESSAGE);
+    }
+
     const { data, error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) throw error;
+    if (error) {
+      if (isMissingAuthSessionError(error)) {
+        throw new Error(RECOVERY_SESSION_MISSING_MESSAGE);
+      }
+
+      throw error;
+    }
     return data;
   };
 

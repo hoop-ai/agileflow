@@ -33,14 +33,13 @@ export const supabase = supabaseUrl && supabaseAnonKey
         autoRefreshToken: true,
         detectSessionInUrl: true,
         storageKey: 'agileflow-auth',
-        flowType: 'pkce',
       }
     })
   : null;
 
 // Force-clear stale sessions from any previous auth configuration.
 // Bumping AUTH_VERSION forces every browser to start fresh.
-const AUTH_VERSION = 'v3';
+const AUTH_VERSION = 'v4';
 if (typeof window !== 'undefined' && localStorage.getItem('agileflow-auth-version') !== AUTH_VERSION) {
   clearStoredAuthData();
   try {
