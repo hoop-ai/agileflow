@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,10 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Edit2, 
-  Trash2, 
-  Check, 
+import {
+  Edit2,
+  Trash2,
+  Check,
   X,
   Clock,
   Target,
@@ -26,6 +26,11 @@ import { format } from 'date-fns';
 export default function StoryDetailModal({ isOpen, onClose, story, onUpdate, onDelete }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedStory, setEditedStory] = useState(story);
+
+  // Resync local state when story prop changes (opening a different story)
+  useEffect(() => {
+    setEditedStory(story);
+  }, [story]);
 
   const handleSave = () => {
     onUpdate(editedStory);
@@ -42,18 +47,17 @@ export default function StoryDetailModal({ isOpen, onClose, story, onUpdate, onD
   };
 
   const toggleCriteria = (criteriaId) => {
-    const safeCriteria = parseCriteria(editedStory.acceptance_criteria);
-    const updated = {
-      ...editedStory,
-      acceptance_criteria: safeCriteria.map(c =>
-        c.id === criteriaId ? { ...c, completed: !c.completed } : c
-      )
-    };
+    const currentCriteria = parseCriteria(editedStory.acceptance_criteria);
+    const updatedCriteria = currentCriteria.map(c =>
+      c.id === criteriaId ? { ...c, completed: !c.completed } : c
+    );
+    const updated = { ...editedStory, acceptance_criteria: updatedCriteria };
     setEditedStory(updated);
-    onUpdate(updated);
+    onUpdate({ acceptance_criteria: updatedCriteria });
   };
 
-  const safeCriteria = parseCriteria(story.acceptance_criteria);
+  // Read from editedStory so toggling is immediately reflected
+  const safeCriteria = parseCriteria(editedStory.acceptance_criteria);
   const completedCriteria = safeCriteria.filter(c => c && c.completed).length;
   const totalCriteria = safeCriteria.length;
   const completionPercentage = totalCriteria > 0 ? (completedCriteria / totalCriteria) * 100 : 0;
