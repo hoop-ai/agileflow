@@ -3,6 +3,23 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+export function clearStoredAuthData() {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('sb-') || key.includes('supabase') || key === 'agileflow-auth')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+  } catch (e) {
+    // localStorage might be unavailable in some contexts
+  }
+}
+
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error(
     'Missing Supabase configuration. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment variables.'
@@ -25,16 +42,8 @@ export const supabase = supabaseUrl && supabaseAnonKey
 // Bumping AUTH_VERSION forces every browser to start fresh.
 const AUTH_VERSION = 'v3';
 if (typeof window !== 'undefined' && localStorage.getItem('agileflow-auth-version') !== AUTH_VERSION) {
+  clearStoredAuthData();
   try {
-    // Clear ALL possible auth keys — old and new
-    const keysToRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && (key.startsWith('sb-') || key.includes('supabase') || key === 'agileflow-auth')) {
-        keysToRemove.push(key);
-      }
-    }
-    keysToRemove.forEach(key => localStorage.removeItem(key));
     localStorage.setItem('agileflow-auth-version', AUTH_VERSION);
   } catch (e) {
     // localStorage might be unavailable in some contexts
@@ -56,7 +65,7 @@ export function handleAuthError(error) {
 
   if (isAuthError) {
     // Clear storage and redirect
-    try { localStorage.removeItem('agileflow-auth'); } catch (e) {}
+    clearStoredAuthData();
     supabase.auth.signOut().catch(() => {});
     window.location.href = '/login';
     return true;

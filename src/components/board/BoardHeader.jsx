@@ -5,6 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { TeamMember } from "@/api/entities/TeamMember";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/lib/AuthContext";
+import { showErrorToast } from "@/lib/error-utils";
+import InviteTeamModal from "@/components/dashboard/InviteTeamModal";
 import {
   ArrowLeft,
   Star,
@@ -14,7 +18,9 @@ import {
   Edit3,
   Save,
   UserPlus,
-  UserMinus
+  UserMinus,
+  Loader2,
+  Users
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -33,6 +39,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const AVATAR_COLORS = [
   'bg-blue-600 text-white',
@@ -58,9 +73,9 @@ function getAvatarColor(name) {
 
 export default function BoardHeader({
   board,
-  items,
+  _items,
   itemsCount,
-  selectedCount,
+  _selectedCount,
   currentView,
   onViewChange,
   onShowAnalytics,
@@ -72,29 +87,42 @@ export default function BoardHeader({
   const [editedTitle, setEditedTitle] = useState(board?.title || '');
   const [lastSaved, setLastSaved] = useState(new Date());
   const [collaborators, setCollaborators] = useState([]);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState(null);
+  const [isRemovingMember, setIsRemovingMember] = useState(false);
+  const { user: currentUser } = useAuth();
+  const { toast } = useToast();
+  const isBoardOwner = board?.user_id === currentUser?.id;
+
+  const loadCollaborators = async () => {
+    if (!board?.id) {
+      setCollaborators([]);
+      return;
+    }
+
+    try {
+      const members = await TeamMember.listByBoard(board.id);
+      setCollaborators(
+        members.map((m) => ({
+          id: m.id,
+          name: m.profile?.full_name || m.profile?.email || 'Unknown',
+          email: m.profile?.email || '',
+          avatar: (m.profile?.full_name || m.profile?.email || '??')
+            .split(' ')
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2),
+          role: m.role || 'editor',
+        }))
+      );
+    } catch {
+      setCollaborators([]);
+    }
+  };
 
   useEffect(() => {
-    if (board?.id) {
-      TeamMember.listByBoard(board.id)
-        .then((members) => {
-          setCollaborators(
-            members.map((m) => ({
-              id: m.id,
-              name: m.profile?.full_name || m.profile?.email || 'Unknown',
-              avatar: (m.profile?.full_name || '??')
-                .split(' ')
-                .map((n) => n[0])
-                .join('')
-                .toUpperCase()
-                .slice(0, 2),
-              role: m.role || 'editor',
-            }))
-          );
-        })
-        .catch(() => {
-          setCollaborators([]);
-        });
-    }
+    loadCollaborators();
   }, [board?.id]);
 
   useEffect(() => {
@@ -137,8 +165,30 @@ export default function BoardHeader({
     setIsFavorited(!isFavorited);
   };
 
+  const handleRemoveCollaborator = async () => {
+    if (!memberToRemove) return;
+
+    setIsRemovingMember(true);
+    try {
+      await TeamMember.remove(memberToRemove.id);
+      toast({
+        title: 'Team member removed',
+        description: `${memberToRemove.name} no longer has access to this board.`,
+      });
+      setMemberToRemove(null);
+      await loadCollaborators();
+    } catch (error) {
+      showErrorToast(toast, 'Failed to remove team member', error);
+    } finally {
+      setIsRemovingMember(false);
+    }
+  };
+
+  const showTeamControls = isBoardOwner || collaborators.length > 0;
+
   return (
     <TooltipProvider>
+      <>
       <div className="bg-card sticky top-16 z-40 shadow-sm border-b border-border">
         {/* Data-driven color strip — keep as inline style since it comes from user data */}
         {boardColor && isScrolled && (
@@ -319,52 +369,103 @@ export default function BoardHeader({
                 <TooltipContent side="bottom">View completion rates, status breakdown, team workload, and priority distribution for this board</TooltipContent>
               </Tooltip>
 
-              {collaborators.length > 0 && (
+              {showTeamControls && (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <div className="flex items-center -space-x-2 cursor-pointer">
-                      {collaborators.slice(0, 3).map((user) => (
-                        <Tooltip key={user.id}>
-                          <TooltipTrigger asChild>
-                            <div
-                              className={cn("w-8 h-8 rounded-full border-2 border-background flex items-center justify-center text-xs font-medium", getAvatarColor(user.name))}
-                            >
-                              {user.avatar}
+                    <Button variant="outline" size="sm" className="h-8 px-2.5 rounded-full">
+                      {collaborators.length > 0 ? (
+                        <div className="flex items-center -space-x-2">
+                          {collaborators.slice(0, 3).map((user) => (
+                            <Tooltip key={user.id}>
+                              <TooltipTrigger asChild>
+                                <div
+                                  className={cn("w-7 h-7 rounded-full border-2 border-background flex items-center justify-center text-[11px] font-medium", getAvatarColor(user.name))}
+                                >
+                                  {user.avatar}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>{user.name} ({user.role})</TooltipContent>
+                            </Tooltip>
+                          ))}
+                          {collaborators.length > 3 && (
+                            <div className="w-7 h-7 rounded-full bg-muted border-2 border-background flex items-center justify-center text-muted-foreground text-[11px]">
+                              +{collaborators.length - 3}
                             </div>
-                          </TooltipTrigger>
-                          <TooltipContent>{user.name} ({user.role})</TooltipContent>
-                        </Tooltip>
-                      ))}
-                      {collaborators.length > 3 && (
-                        <div className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-muted-foreground text-xs">
-                          +{collaborators.length - 3}
+                          )}
                         </div>
+                      ) : (
+                        <>
+                          <Users className="w-3.5 h-3.5" />
+                          Team
+                        </>
                       )}
-                    </div>
+                    </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-80">
+                  <PopoverContent className="w-80" align="end">
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-foreground">Team ({collaborators.length})</h4>
-                        <Button size="sm" variant="outline">
-                          <UserPlus className="w-3 h-3 mr-1" />
-                          Invite
-                        </Button>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h4 className="font-medium text-foreground">Team ({collaborators.length})</h4>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {isBoardOwner
+                              ? 'Invite collaborators or remove people who no longer need access.'
+                              : 'People who currently have access to this board.'}
+                          </p>
+                        </div>
+                        {isBoardOwner && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowInviteModal(true)}
+                          >
+                            <UserPlus className="w-3 h-3 mr-1" />
+                            Invite
+                          </Button>
+                        )}
                       </div>
                       <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {collaborators.map((user) => (
-                          <div key={user.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent transition-colors duration-150">
-                            <div className="flex items-center gap-3">
-                              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium", getAvatarColor(user.name))}>
-                                {user.avatar}
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-foreground">{user.name}</p>
-                                <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
-                              </div>
-                            </div>
+                        {collaborators.length === 0 ? (
+                          <div className="rounded-lg border border-dashed border-border px-3 py-5 text-center text-sm text-muted-foreground">
+                            No team members yet. Invite people to collaborate on this board.
                           </div>
-                        ))}
+                        ) : (
+                          collaborators.map((user) => (
+                            <div key={user.id} className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-accent transition-colors duration-150">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0", getAvatarColor(user.name))}>
+                                  {user.avatar}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
+                                  <p className="text-xs text-muted-foreground capitalize truncate">
+                                    {user.role}
+                                    {user.email ? ` - ${user.email}` : ''}
+                                  </p>
+                                </div>
+                              </div>
+                              {isBoardOwner && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                      onClick={(event) => {
+                                        event.preventDefault();
+                                        event.stopPropagation();
+                                        setMemberToRemove(user);
+                                      }}
+                                      aria-label={`Remove ${user.name} from board`}
+                                    >
+                                      <UserMinus className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="left">Remove from board</TooltipContent>
+                                </Tooltip>
+                              )}
+                            </div>
+                          ))
+                        )}
                       </div>
                     </div>
                   </PopoverContent>
@@ -374,6 +475,50 @@ export default function BoardHeader({
           </div>
         </div>
       </div>
+      <InviteTeamModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        boardId={board?.id}
+        lockBoardSelection
+        onInvitesSent={() => loadCollaborators()}
+      />
+      <AlertDialog
+        open={!!memberToRemove}
+        onOpenChange={(open) => {
+          if (!open && !isRemovingMember) {
+            setMemberToRemove(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove team member?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {memberToRemove
+                ? `${memberToRemove.name} will lose access to this board immediately.`
+                : 'This person will lose access to this board immediately.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isRemovingMember}>Cancel</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              onClick={handleRemoveCollaborator}
+              disabled={isRemovingMember}
+            >
+              {isRemovingMember ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Removing...
+                </>
+              ) : (
+                'Remove from board'
+              )}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      </>
     </TooltipProvider>
   );
 }

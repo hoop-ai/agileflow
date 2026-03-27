@@ -559,7 +559,6 @@ function EditUserDialog({ user, isCurrentUser, onClose, onSave, isSaving }) {
   const handleSave = () => {
     const updates = {
       full_name: form.full_name.trim(),
-      email: form.email.trim(),
       job_title: form.job_title.trim(),
       department: form.department.trim(),
       description: form.description.trim(),
@@ -607,9 +606,11 @@ function EditUserDialog({ user, isCurrentUser, onClose, onSave, isSaving }) {
                 id="edit-email"
                 type="email"
                 value={form.email}
-                onChange={(e) => handleChange('email', e.target.value)}
                 placeholder="user@example.com"
+                disabled
+                className="bg-muted"
               />
+              <p className="text-xs text-muted-foreground">Email changes must be done through Supabase Auth, not the profile editor.</p>
             </div>
           </div>
 

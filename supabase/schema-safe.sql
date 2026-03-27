@@ -484,10 +484,45 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION public.email_exists(check_email TEXT)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM auth.users
+    WHERE email IS NOT NULL
+      AND lower(email) = lower(trim(check_email))
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE
+SET search_path = public, auth;
+
+REVOKE ALL ON FUNCTION public.email_exists(TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.email_exists(TEXT) TO anon, authenticated, service_role;
+
+CREATE OR REPLACE FUNCTION public.sync_profile_email_from_auth()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE public.profiles
+  SET email = NEW.email,
+      updated_at = NOW()
+  WHERE id = NEW.id
+    AND email IS DISTINCT FROM NEW.email;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, auth;
+
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+DROP TRIGGER IF EXISTS on_auth_user_email_updated ON auth.users;
+CREATE TRIGGER on_auth_user_email_updated
+  AFTER UPDATE OF email ON auth.users
+  FOR EACH ROW
+  WHEN (OLD.email IS DISTINCT FROM NEW.email)
+  EXECUTE FUNCTION public.sync_profile_email_from_auth();
 
 -- Auto-update timestamps
 CREATE OR REPLACE FUNCTION public.update_updated_date()

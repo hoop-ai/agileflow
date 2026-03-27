@@ -5,6 +5,12 @@ async function getAuthUser() {
   return session?.user || null;
 }
 
+function sanitizeProfileUpdates(updates = {}) {
+  const sanitized = { ...updates };
+  delete sanitized.email;
+  return sanitized;
+}
+
 export const User = {
   async me() {
     const user = await getAuthUser();
@@ -16,7 +22,12 @@ export const User = {
 
   async updateMe(updates) {
     const user = await getAuthUser();
-    const { data, error } = await supabase.from('profiles').update(updates).eq('id', user.id).select().single();
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(sanitizeProfileUpdates(updates))
+      .eq('id', user.id)
+      .select()
+      .single();
     if (error) throw error;
     return data;
   },
@@ -34,7 +45,12 @@ export const User = {
   },
 
   async updateUser(id, updates) {
-    const { data, error } = await supabase.from('profiles').update(updates).eq('id', id).select().single();
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(sanitizeProfileUpdates(updates))
+      .eq('id', id)
+      .select()
+      .single();
     if (error) throw error;
     return data;
   },

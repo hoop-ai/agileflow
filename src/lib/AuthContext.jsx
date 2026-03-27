@@ -5,6 +5,12 @@ import {
   getPasswordResetRedirectUrl,
   getPostLoginRedirectUrl,
 } from '@/lib/auth-redirects';
+import {
+  checkEmailExists,
+  DUPLICATE_ACCOUNT_MESSAGE,
+  isDuplicateSignupError,
+  normalizeEmailAddress,
+} from '@/lib/auth-signup';
 
 const AuthContext = createContext();
 
@@ -159,15 +165,28 @@ export const AuthProvider = ({ children }) => {
     if (!isRegistrationEnabled) {
       throw new Error('Registration is currently closed. Contact your administrator for access.');
     }
+    const normalizedEmail = normalizeEmailAddress(email);
+    const emailExists = await checkEmailExists(normalizedEmail);
+
+    if (emailExists) {
+      throw new Error(DUPLICATE_ACCOUNT_MESSAGE);
+    }
+
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: normalizedEmail,
       password,
       options: {
         data: { full_name: fullName },
         emailRedirectTo: getEmailVerificationRedirectUrl(),
       }
     });
-    if (error) throw error;
+    if (error) {
+      if (isDuplicateSignupError(error)) {
+        throw new Error(DUPLICATE_ACCOUNT_MESSAGE);
+      }
+
+      throw error;
+    }
     return data;
   };
 

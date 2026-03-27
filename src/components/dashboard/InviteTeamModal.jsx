@@ -17,7 +17,13 @@ import { User } from "@/api/entities/User";
 import { Board } from "@/api/entities/Board";
 import { TeamMember } from "@/api/entities/TeamMember";
 
-export default function InviteTeamModal({ isOpen, onClose }) {
+export default function InviteTeamModal({
+  isOpen,
+  onClose,
+  boardId = '',
+  lockBoardSelection = false,
+  onInvitesSent,
+}) {
   const [emails, setEmails] = useState([]);
   const [currentEmail, setCurrentEmail] = useState('');
   const [role, setRole] = useState('editor');
@@ -29,16 +35,21 @@ export default function InviteTeamModal({ isOpen, onClose }) {
 
   useEffect(() => {
     if (isOpen) {
+      setSelectedBoardId(boardId || '');
       loadBoards();
       setResults([]);
     }
-  }, [isOpen]);
+  }, [isOpen, boardId]);
 
   const loadBoards = async () => {
     try {
       const data = await Board.list();
       setBoards(data || []);
-      if (data?.length > 0) setSelectedBoardId(data[0].id);
+      if (boardId) {
+        setSelectedBoardId(boardId);
+      } else if (data?.length > 0) {
+        setSelectedBoardId(data[0].id);
+      }
     } catch (error) {
       console.error('Failed to load boards:', error);
     }
@@ -68,6 +79,14 @@ export default function InviteTeamModal({ isOpen, onClose }) {
 
     setIsLoading(true);
     const inviteResults = [];
+    let existingMemberIds = new Set();
+
+    try {
+      const existingMembers = await TeamMember.listByBoard(selectedBoardId);
+      existingMemberIds = new Set((existingMembers || []).map(member => member.user_id));
+    } catch (error) {
+      console.error('Failed to load existing team members:', error);
+    }
 
     for (const email of emails) {
       try {
@@ -81,16 +100,14 @@ export default function InviteTeamModal({ isOpen, onClose }) {
         }
 
         // Check if already a team member on this board
-        const existingMembers = await TeamMember.listByBoard(selectedBoardId);
-        const alreadyMember = existingMembers?.some(m => m.user_id === matchedUser.id);
-
-        if (alreadyMember) {
+        if (existingMemberIds.has(matchedUser.id)) {
           inviteResults.push({ email, status: 'already_member' });
           continue;
         }
 
         // Add as team member
         await TeamMember.add(selectedBoardId, matchedUser.id, role);
+        existingMemberIds.add(matchedUser.id);
         inviteResults.push({ email, status: 'success' });
       } catch (error) {
         console.error(`Failed to invite ${email}:`, error);
@@ -107,6 +124,10 @@ export default function InviteTeamModal({ isOpen, onClose }) {
       toast({
         title: `${successCount} member${successCount > 1 ? 's' : ''} added`,
         description: 'They now have access to the board.',
+      });
+      onInvitesSent?.({
+        boardId: selectedBoardId,
+        addedCount: successCount,
       });
     }
     if (notFoundCount > 0) {
@@ -126,6 +147,7 @@ export default function InviteTeamModal({ isOpen, onClose }) {
     setEmails([]);
     setCurrentEmail('');
     setRole('editor');
+    setSelectedBoardId(boardId || '');
     setResults([]);
     onClose();
   };
@@ -154,6 +176,8 @@ export default function InviteTeamModal({ isOpen, onClose }) {
     }
   };
 
+  const selectedBoard = boards.find(board => board.id === selectedBoardId);
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg">
@@ -166,24 +190,33 @@ export default function InviteTeamModal({ isOpen, onClose }) {
 
         <div className="space-y-5 py-4">
           {/* Board Selection */}
-          <div className="space-y-2">
-            <Label className="text-foreground font-medium">Select Board</Label>
-            <Select value={selectedBoardId} onValueChange={setSelectedBoardId}>
-              <SelectTrigger className="rounded-xl border-border h-12">
-                <SelectValue placeholder="Choose a board..." />
-              </SelectTrigger>
-              <SelectContent>
-                {boards.map((board) => (
-                  <SelectItem key={board.id} value={board.id}>
-                    <span>{board.icon} {board.title}</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {boards.length === 0 && (
-              <p className="text-sm text-amber-600 dark:text-amber-400">Create a board first to invite members.</p>
-            )}
-          </div>
+          {lockBoardSelection ? (
+            <div className="space-y-2">
+              <Label className="text-foreground font-medium">Board</Label>
+              <div className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-foreground">
+                {selectedBoard ? `${selectedBoard.icon} ${selectedBoard.title}` : 'Loading board...'}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label className="text-foreground font-medium">Select Board</Label>
+              <Select value={selectedBoardId} onValueChange={setSelectedBoardId}>
+                <SelectTrigger className="rounded-xl border-border h-12">
+                  <SelectValue placeholder="Choose a board..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {boards.map((board) => (
+                    <SelectItem key={board.id} value={board.id}>
+                      <span>{board.icon} {board.title}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {boards.length === 0 && (
+                <p className="text-sm text-amber-600 dark:text-amber-400">Create a board first to invite members.</p>
+              )}
+            </div>
+          )}
 
           {/* Email Input */}
           <div className="space-y-2">
