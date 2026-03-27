@@ -79,198 +79,173 @@ AgileFlow is a cloud-native Agile project management platform that consolidates 
 
 ## Appendix A: Database Schema (ERD Diagram)
 
-```
-┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
-│   auth.users     │     │    profiles       │     │    boards        │
-│ (Supabase mgd)   │     │                  │     │                  │
-│ id (UUID PK)     │<────│ id (UUID PK/FK)  │     │ id (UUID PK)     │
-│ email            │     │ full_name        │     │ user_id (FK)  ───│──┐
-│ encrypted_pass   │     │ email            │     │ title            │  │
-│ ...              │     │ avatar           │     │ description      │  │
-│                  │     │ role             │     │ color, icon      │  │
-│                  │     │ theme            │     │ columns (JSONB)  │  │
-│                  │     │ settings (JSONB) │     │ groups (JSONB)   │  │
-│                  │     │ job_title        │     │ settings (JSONB) │  │
-│                  │     │ department       │     │ visibility       │  │
-│                  │     │ skills (JSONB)   │     └────────┬─────────┘  │
-│                  │     │ description      │              │            │
-│                  │     └──────────────────┘              │            │
-│                  │                                       │            │
-│                  │     ┌──────────────────┐              │            │
-│                  │     │     items        │              │            │
-│                  │     │ id (UUID PK)     │              │            │
-│                  │     │ board_id (FK) ───│──────────────┘            │
-│                  │     │ group_id         │                           │
-│                  │     │ title            │     ┌──────────────────┐  │
-│                  │     │ description      │     │  team_members    │  │
-│                  │     │ data (JSONB)     │     │ id (UUID PK)     │  │
-│                  │     │ order_index      │     │ board_id (FK) ───│──┤
-│                  │     └──────────────────┘     │ user_id (FK)  ───│──┤
-│                  │                              │ role             │  │
-│                  │     ┌──────────────────┐     │ invited_by (FK)  │  │
-│                  │<────│  calendar_events  │     └──────────────────┘  │
-│                  │     │ id (UUID PK)     │                           │
-│                  │     │ user_id (FK)     │     ┌──────────────────┐  │
-│                  │     │ title, desc      │     │   sprints        │  │
-│                  │     │ start/end_date   │     │ id (UUID PK)     │  │
-│                  │     │ color, type      │     │ user_id (FK)  ───│──┤
-│                  │     │ attendees (JSONB)│     │ board_id (FK) ───│──┘
-│                  │     └──────────────────┘     │ name, goal       │
-│                  │                              │ start/end_date   │
-│                  │     ┌──────────────────┐     │ status           │
-│                  │<────│  user_stories    │     │ capacity         │
-│                  │     │ id (UUID PK)     │     │ committed_pts    │
-│                  │     │ user_id (FK)     │     │ completed_pts    │
-│                  │     │ title, desc      │     │ velocity         │
-│                  │     │ priority, status │     └────────┬─────────┘
-│                  │     │ story_points     │              │
-│                  │     │ sprint_id (FK) ──│──────────────┘
-│                  │     │ board_id (FK)    │
-│                  │     │ acceptance (JSON)│
-│                  │     └──────────────────┘
-│                  │
-│                  │     ┌──────────────────┐     ┌──────────────────┐
-│                  │<────│  ai_sessions     │     │  ai_messages     │
-│                  │     │ id (UUID PK)     │<────│ id (UUID PK)     │
-│                  │     │ user_id (FK)     │     │ session_id (FK)  │
-│                  │     │ title            │     │ role             │
-│                  │     │ model            │     │ content          │
-│                  │     └──────────────────┘     │ tool_calls (JSON)│
-│                  │                              │ tool_results(JSON)│
-│                  │     ┌──────────────────┐     │ model            │
-│                  │<────│  notifications   │     │ tokens_used      │
-│                  │     │ id (UUID PK)     │     └──────────────────┘
-│                  │     │ user_id (FK)     │
-│                  │     │ title, message   │
-│                  │     │ type, is_read    │
-│                  │     │ link             │
-│                  │     └──────────────────┘
-└──────────────────┘
+```mermaid
+erDiagram
+    AUTH_USERS ||--|| PROFILES : owns
+    AUTH_USERS ||--o{ BOARDS : creates
+    BOARDS ||--o{ ITEMS : contains
+    BOARDS ||--o{ TEAM_MEMBERS : shares
+    AUTH_USERS ||--o{ TEAM_MEMBERS : joins
+    AUTH_USERS ||--o{ SPRINTS : creates
+    BOARDS ||--o{ SPRINTS : groups
+    AUTH_USERS ||--o{ USER_STORIES : writes
+    SPRINTS o|--o{ USER_STORIES : schedules
+    BOARDS o|--o{ USER_STORIES : tracks
+    AUTH_USERS ||--o{ CALENDAR_EVENTS : owns
+    AUTH_USERS ||--o{ NOTIFICATIONS : receives
+    AUTH_USERS ||--o{ AI_SESSIONS : opens
+    AI_SESSIONS ||--o{ AI_MESSAGES : stores
+
+    AUTH_USERS {
+        uuid id PK
+        string email
+    }
+    PROFILES {
+        uuid id PK
+        string full_name
+        string role
+        jsonb skills
+        jsonb settings
+    }
+    BOARDS {
+        uuid id PK
+        uuid user_id FK
+        string title
+        jsonb columns
+        jsonb groups
+        jsonb settings
+    }
+    ITEMS {
+        uuid id PK
+        uuid board_id FK
+        string title
+        jsonb data
+        int order_index
+    }
+    TEAM_MEMBERS {
+        uuid id PK
+        uuid board_id FK
+        uuid user_id FK
+        string role
+    }
+    SPRINTS {
+        uuid id PK
+        uuid user_id FK
+        uuid board_id FK
+        string name
+        int capacity
+        int velocity
+    }
+    USER_STORIES {
+        uuid id PK
+        uuid user_id FK
+        uuid sprint_id FK
+        uuid board_id FK
+        string title
+        int story_points
+        jsonb acceptance_criteria
+    }
+    CALENDAR_EVENTS {
+        uuid id PK
+        uuid user_id FK
+        string title
+        datetime start_date
+        datetime end_date
+    }
+    NOTIFICATIONS {
+        uuid id PK
+        uuid user_id FK
+        string type
+        boolean is_read
+    }
+    AI_SESSIONS {
+        uuid id PK
+        uuid user_id FK
+        string title
+        string model
+    }
+    AI_MESSAGES {
+        uuid id PK
+        uuid session_id FK
+        string role
+        jsonb tool_calls
+        jsonb tool_results
+    }
 ```
 
 ## Appendix B: AI Tool-Calling Sequence Diagram
 
-```
-User          Frontend (React)      OpenRouter API       Supabase
- |                  |                     |                  |
- |  "Create a task  |                     |                  |
- |   on Dev board"  |                     |                  |
- |----------------->|                     |                  |
- |                  | Build prompt with   |                  |
- |                  | system + history +  |                  |
- |                  | 16 tool definitions |                  |
- |                  |-------------------->|                  |
- |                  |                     | LLM processes    |
- |                  |                     | prompt           |
- |                  |<--------------------|                  |
- |                  | tool_call:          |                  |
- |                  | listBoards()        |                  |
- |                  |                     |                  |
- |                  | Execute tool ------>|                  |
- |                  |                     | SELECT * FROM    |
- |                  |                     | boards WHERE     |
- |                  |                     | user_id = auth() |
- |                  |<--------------------|                  |
- |                  | Send tool result    |                  |
- |                  |-------------------->|                  |
- |                  |                     | LLM processes    |
- |                  |                     | board list       |
- |                  |<--------------------|                  |
- |                  | tool_call:          |                  |
- |                  | createTask(board_id,|                  |
- |                  |   title, priority)  |                  |
- |                  |                     |                  |
- |                  | Execute tool ------>|                  |
- |                  |                     | INSERT INTO      |
- |                  |                     | items (...)      |
- |                  |<--------------------|                  |
- |                  | Send tool result    |                  |
- |                  |-------------------->|                  |
- |                  |                     | LLM generates    |
- |                  |                     | final response   |
- |                  |<----- streaming ----|                  |
- |  "Task created   |                     |                  |
- |   successfully"  |                     |                  |
- |<-- streaming ----|                     |                  |
- |                  | Persist message     |                  |
- |                  |-------------------->|                  |
- |                  |                     | INSERT INTO      |
- |                  |                     | ai_messages      |
- |                  |<--------------------|                  |
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend as Frontend (React)
+    participant OpenRouter as OpenRouter API
+    participant Supabase
+
+    User->>Frontend: Create a task on Dev board
+    Frontend->>OpenRouter: Prompt + history + 16 tool definitions
+    OpenRouter-->>Frontend: tool_call listBoards()
+    Frontend->>Supabase: SELECT boards for authenticated user
+    Supabase-->>Frontend: Board list
+    Frontend->>OpenRouter: Tool result with available boards
+    OpenRouter-->>Frontend: tool_call createTask(board_id, title, priority)
+    Frontend->>Supabase: INSERT item
+    Supabase-->>Frontend: Created task
+    Frontend->>OpenRouter: Tool result with created item
+    OpenRouter-->>Frontend: Stream final response
+    Frontend-->>User: Task created successfully
+    Frontend->>Supabase: INSERT ai_messages
+    Supabase-->>Frontend: Message persisted
 ```
 
 ## Appendix C: Authentication Flow Diagram
 
-```
-User              React SPA            Supabase Auth         PostgreSQL
- |                    |                     |                     |
- | Enter email/pass   |                     |                     |
- |------------------->|                     |                     |
- |                    | signInWithPassword  |                     |
- |                    |-------------------->|                     |
- |                    |                     | Validate bcrypt     |
- |                    |                     | hash                |
- |                    |                     |-------------------->|
- |                    |                     |<--------------------|
- |                    |                     | Issue JWT +         |
- |                    |                     | refresh token       |
- |                    |<--------------------|                     |
- |                    | Store in            |                     |
- |                    | localStorage        |                     |
- |                    |                     |                     |
- |                    | AuthContext.login()  |                     |
- |                    | sets user state      |                     |
- |  Dashboard loads   |                     |                     |
- |<-------------------|                     |                     |
- |                    |                     |                     |
- |  [Later: token     |                     |                     |
- |   near expiry]     |                     |                     |
- |                    | Auto-refresh token  |                     |
- |                    |-------------------->|                     |
- |                    |<--------------------|                     |
- |                    | New JWT stored       |                     |
- |                    |                     |                     |
- |  User clicks       |                     |                     |
- |  Logout            |                     |                     |
- |------------------->|                     |                     |
- |                    | signOut()            |                     |
- |                    |-------------------->|                     |
- |                    | Clear localStorage  |                     |
- |                    | Redirect to /login  |                     |
- |  Login page        |                     |                     |
- |<-------------------|                     |                     |
+```mermaid
+sequenceDiagram
+    participant User
+    participant SPA as React SPA
+    participant Auth as Supabase Auth
+    participant DB as PostgreSQL
+
+    User->>SPA: Enter email and password
+    SPA->>Auth: signInWithPassword()
+    Auth->>DB: Validate password hash
+    DB-->>Auth: Valid credentials
+    Auth-->>SPA: JWT + refresh token
+    SPA->>SPA: Store session in localStorage
+    SPA-->>User: Load Dashboard
+
+    Note over SPA,Auth: Later, when the token is close to expiry
+    SPA->>Auth: Refresh session
+    Auth-->>SPA: New JWT
+    SPA->>SPA: Update stored session
+
+    User->>SPA: Logout
+    SPA->>Auth: signOut()
+    Auth-->>SPA: Session cleared
+    SPA->>SPA: Clear localStorage and redirect
+    SPA-->>User: Show login page
 ```
 
 ## Appendix D: Deployment Pipeline
 
-```
-Developer           GitHub              Vercel               User
- |                    |                    |                    |
- | git push origin    |                    |                    |
- | main               |                    |                    |
- |------------------->|                    |                    |
- |                    | Webhook triggers   |                    |
- |                    | Vercel build       |                    |
- |                    |------------------->|                    |
- |                    |                    | npm install        |
- |                    |                    | npm run build      |
- |                    |                    | (Vite production   |
- |                    |                    |  bundle)           |
- |                    |                    |                    |
- |                    |                    | Deploy to edge CDN |
- |                    |                    | (global)           |
- |                    |                    |                    |
- |                    |                    | SSL certificate    |
- |                    |                    | auto-provisioned   |
- |                    |                    |                    |
- |                    |<--- Deploy URL ----|                    |
- |<--- Status OK -----|                    |                    |
- |                    |                    |  User accesses     |
- |                    |                    |  updated app       |
- |                    |                    |<-------------------|
- |                    |                    | Serve from nearest |
- |                    |                    | edge node          |
- |                    |                    |------------------->|
+```mermaid
+sequenceDiagram
+    participant Developer
+    participant GitHub
+    participant Vercel
+    participant User
+
+    Developer->>GitHub: git push origin main
+    GitHub->>Vercel: Webhook triggers deployment
+    Vercel->>Vercel: npm install
+    Vercel->>Vercel: npm run build
+    Vercel->>Vercel: Deploy static bundle to edge CDN
+    Note over Vercel: HTTPS certificate is provisioned automatically
+    Vercel-->>GitHub: Deployment URL and status OK
+    GitHub-->>Developer: Deployment succeeded
+    User->>Vercel: Request updated app
+    Vercel-->>User: Serve from nearest edge node
 ```
 
 ## Appendix E: Task Assignment Scoring Example

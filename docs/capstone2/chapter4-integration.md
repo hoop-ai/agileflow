@@ -8,9 +8,13 @@ AgileFlow integrates its three sub-systems — Frontend (React SPA), Backend (Su
 
 The integration follows a client-centric architecture where the React SPA serves as the orchestration layer. All cross-system communication originates from the browser:
 
-```
-User <-> React SPA <-> Supabase (Data + Auth)
-                   <-> OpenRouter (AI)
+```mermaid
+flowchart LR
+    U[User] --> SPA[React SPA]
+    SPA -->|HTTPS REST + JWT| SB[Supabase Data and Auth]
+    SB --> SPA
+    SPA -->|HTTPS REST + SSE + API key| OR[OpenRouter AI]
+    OR --> SPA
 ```
 
 **Key Integration Points:**

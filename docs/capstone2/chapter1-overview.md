@@ -329,3 +329,40 @@ The AgileFlow process flow begins when a user authenticates via Supabase Auth. U
 *[See Appendix D for the detailed deployment pipeline diagram]*
 
 **Figure 2. Process Diagram for AgileFlow**
+```mermaid
+flowchart TD
+    A["User signs in with Supabase Auth"] --> B["Load profile and permissions"]
+    B --> C["Render Dashboard with board and item KPIs"]
+    C --> D{"Choose workflow"}
+
+    D --> E["Board workflow"]
+    D --> F["AI workflow"]
+    D --> G["Sprint planning workflow"]
+
+    E --> E1["Open board and fetch columns, groups, and items"]
+    E1 --> E2["Work in Kanban, Timeline, or Calendar view"]
+    E2 --> E3{"Action type"}
+    E3 -->|Drag and drop| E4["Apply optimistic UI update"]
+    E4 --> E5["PATCH change to Supabase"]
+    E5 --> E6["Invalidate React Query cache and refetch"]
+    E3 -->|Create task| E7["Submit validated modal form"]
+    E7 --> E8["INSERT item in Supabase"]
+    E8 --> E6
+
+    F --> F1["Open AI panel or Chat page"]
+    F1 --> F2["Build prompt with history, page context, and tools"]
+    F2 --> F3["Send request to OpenRouter"]
+    F3 --> F4{"Tool call returned?"}
+    F4 -->|Yes| F5["Execute tool against Supabase"]
+    F5 --> F6["Send tool result back to model"]
+    F6 --> F4
+    F4 -->|No| F7["Stream final response to the UI"]
+    F7 --> F8["Persist conversation in ai_messages"]
+
+    G --> G1["Open Backlog and create user stories"]
+    G1 --> G2["Open Sprint Planning modal"]
+    G2 --> G3["Review available stories and remaining capacity"]
+    G3 --> G4["Select stories or request AI suggestion"]
+    G4 --> G5["Validate committed points against sprint capacity"]
+    G5 --> G6["Persist sprint plan"]
+```

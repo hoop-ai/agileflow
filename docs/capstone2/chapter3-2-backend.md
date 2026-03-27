@@ -60,30 +60,98 @@ Row Level Security (RLS) is a PostgreSQL feature that embeds authorization logic
 
 The AgileFlow database consists of 10 tables with the following relationships:
 
-```
-auth.users (Supabase-managed)
-  |
-  +-- profiles (1:1, FK id -> auth.users.id, CASCADE)
-  |
-  +-- boards (1:N, FK user_id -> auth.users.id, CASCADE)
-  |     |
-  |     +-- items (1:N, FK board_id -> boards.id, CASCADE)
-  |     |
-  |     +-- team_members (1:N, FK board_id -> boards.id, CASCADE)
-  |     |
-  |     +-- sprints (1:N, FK board_id -> boards.id, SET NULL)
-  |
-  +-- user_stories (1:N, FK user_id -> auth.users.id, CASCADE)
-  |     +-- (FK sprint_id -> sprints.id, SET NULL)
-  |     +-- (FK board_id -> boards.id, SET NULL)
-  |
-  +-- calendar_events (1:N, FK user_id -> auth.users.id, CASCADE)
-  |
-  +-- notifications (1:N, FK user_id -> auth.users.id, CASCADE)
-  |
-  +-- ai_sessions (1:N, FK user_id -> auth.users.id, CASCADE)
-        |
-        +-- ai_messages (1:N, FK session_id -> ai_sessions.id, CASCADE)
+```mermaid
+erDiagram
+    AUTH_USERS ||--|| PROFILES : owns
+    AUTH_USERS ||--o{ BOARDS : creates
+    BOARDS ||--o{ ITEMS : contains
+    BOARDS ||--o{ TEAM_MEMBERS : shares
+    AUTH_USERS ||--o{ TEAM_MEMBERS : joins
+    AUTH_USERS ||--o{ SPRINTS : creates
+    BOARDS ||--o{ SPRINTS : groups
+    AUTH_USERS ||--o{ USER_STORIES : writes
+    SPRINTS o|--o{ USER_STORIES : schedules
+    BOARDS o|--o{ USER_STORIES : tracks
+    AUTH_USERS ||--o{ CALENDAR_EVENTS : owns
+    AUTH_USERS ||--o{ NOTIFICATIONS : receives
+    AUTH_USERS ||--o{ AI_SESSIONS : opens
+    AI_SESSIONS ||--o{ AI_MESSAGES : stores
+
+    AUTH_USERS {
+        uuid id PK
+        string email
+    }
+    PROFILES {
+        uuid id PK
+        string full_name
+        string role
+        jsonb skills
+        jsonb settings
+    }
+    BOARDS {
+        uuid id PK
+        uuid user_id FK
+        string title
+        jsonb columns
+        jsonb groups
+        jsonb settings
+    }
+    ITEMS {
+        uuid id PK
+        uuid board_id FK
+        string title
+        jsonb data
+        int order_index
+    }
+    TEAM_MEMBERS {
+        uuid id PK
+        uuid board_id FK
+        uuid user_id FK
+        string role
+    }
+    SPRINTS {
+        uuid id PK
+        uuid user_id FK
+        uuid board_id FK
+        string name
+        int capacity
+        int velocity
+    }
+    USER_STORIES {
+        uuid id PK
+        uuid user_id FK
+        uuid sprint_id FK
+        uuid board_id FK
+        string title
+        int story_points
+        jsonb acceptance_criteria
+    }
+    CALENDAR_EVENTS {
+        uuid id PK
+        uuid user_id FK
+        string title
+        datetime start_date
+        datetime end_date
+    }
+    NOTIFICATIONS {
+        uuid id PK
+        uuid user_id FK
+        string type
+        boolean is_read
+    }
+    AI_SESSIONS {
+        uuid id PK
+        uuid user_id FK
+        string title
+        string model
+    }
+    AI_MESSAGES {
+        uuid id PK
+        uuid session_id FK
+        string role
+        jsonb tool_calls
+        jsonb tool_results
+    }
 ```
 
 **Table Definitions**

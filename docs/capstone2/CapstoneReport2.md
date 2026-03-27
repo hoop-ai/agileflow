@@ -329,6 +329,43 @@ The AgileFlow process flow begins when a user authenticates via Supabase Auth. U
 *[See Appendix D for the detailed deployment pipeline diagram]*
 
 **Figure 2. Process Diagram for AgileFlow**
+```mermaid
+flowchart TD
+    A["User signs in with Supabase Auth"] --> B["Load profile and permissions"]
+    B --> C["Render Dashboard with board and item KPIs"]
+    C --> D{"Choose workflow"}
+
+    D --> E["Board workflow"]
+    D --> F["AI workflow"]
+    D --> G["Sprint planning workflow"]
+
+    E --> E1["Open board and fetch columns, groups, and items"]
+    E1 --> E2["Work in Kanban, Timeline, or Calendar view"]
+    E2 --> E3{"Action type"}
+    E3 -->|Drag and drop| E4["Apply optimistic UI update"]
+    E4 --> E5["PATCH change to Supabase"]
+    E5 --> E6["Invalidate React Query cache and refetch"]
+    E3 -->|Create task| E7["Submit validated modal form"]
+    E7 --> E8["INSERT item in Supabase"]
+    E8 --> E6
+
+    F --> F1["Open AI panel or Chat page"]
+    F1 --> F2["Build prompt with history, page context, and tools"]
+    F2 --> F3["Send request to OpenRouter"]
+    F3 --> F4{"Tool call returned?"}
+    F4 -->|Yes| F5["Execute tool against Supabase"]
+    F5 --> F6["Send tool result back to model"]
+    F6 --> F4
+    F4 -->|No| F7["Stream final response to the UI"]
+    F7 --> F8["Persist conversation in ai_messages"]
+
+    G --> G1["Open Backlog and create user stories"]
+    G1 --> G2["Open Sprint Planning modal"]
+    G2 --> G3["Review available stories and remaining capacity"]
+    G3 --> G4["Select stories or request AI suggestion"]
+    G4 --> G5["Validate committed points against sprint capacity"]
+    G5 --> G6["Persist sprint plan"]
+```
 # 3. WORK PLAN
 
 The Work Plan for AgileFlow covers the 12-week core development cycle (January 6 - March 27, 2026), during which the Supabase backend was built, an AI collaboration engine was developed, multiple board views were implemented, and a comprehensive testing infrastructure was established.
@@ -337,49 +374,49 @@ The Work Plan for AgileFlow covers the 12-week core development cycle (January 6
 
 The AgileFlow WBS is divided into two parallel streams: Software Engineering (technical implementation) and Management Engineering (process analysis, documentation, and validation).
 
-```
-1.0 AgileFlow
-|
-+-- 1.1 Backend Infrastructure (Supabase)
-|   +-- 1.1.1 PostgreSQL schema design (10 tables, JSONB columns, FK relationships)
-|   +-- 1.1.2 Entity service layer (11 services: Board, Item, User, Sprint, etc.)
-|   +-- 1.1.3 Authentication system (Supabase Auth, email/password, JWT sessions)
-|   +-- 1.1.4 Row Level Security policy implementation (per-table RLS)
-|   +-- 1.1.5 Data seeding and verification
-|
-+-- 1.2 AI Collaboration Engine
-|   +-- 1.2.1 OpenRouter API integration (model cascade, streaming)
-|   +-- 1.2.2 Tool-calling framework (16 tools: CRUD boards, tasks, assignments)
-|   +-- 1.2.3 Task assignment scoring algorithm (competency/availability/performance)
-|   +-- 1.2.4 Streaming response pipeline (SSE, progressive rendering)
-|   +-- 1.2.5 Chat session persistence (ai_sessions, ai_messages tables)
-|   +-- 1.2.6 AI explain system (analytics widget explanations)
-|
-+-- 1.3 Multi-View Board System
-|   +-- 1.3.1 Kanban view (drag-and-drop via @hello-pangea/dnd)
-|   +-- 1.3.2 Timeline/Gantt view (week/month zoom, priority-colored bars)
-|   +-- 1.3.3 Calendar view (monthly grid, task dots, event overlays)
-|   +-- 1.3.4 Cell type implementations (11 types: text, status, priority, people,
-|           date, timeline, tags, number, checkbox, budget, dropdown)
-|
-+-- 1.4 Advanced Features
-|   +-- 1.4.1 RBAC system (viewer/member/admin/super-admin, usePermissions hook)
-|   +-- 1.4.2 Analytics dashboard (velocity, burndown, distributions, workload)
-|   +-- 1.4.3 Help center (categorized articles, search, AI integration)
-|   +-- 1.4.4 Admin panel (user management, role assignment, invite flow)
-|   +-- 1.4.5 Performance monitoring page (capacity metrics, scaling tiers)
-|   +-- 1.4.6 Chat page (full-page AI interface, session sidebar)
-|
-+-- 1.5 Testing & Quality Assurance
-|   +-- 1.5.1 Unit tests (Vitest + Testing Library, entity CRUD tests)
-|   +-- 1.5.2 End-to-end tests (Playwright, auth/board/navigation flows)
-|   +-- 1.5.3 Accessibility audits (axe-core, WCAG 2.1 AA compliance)
-|   +-- 1.5.4 Responsive design tests (4 breakpoints: 375/768/1024/1440px)
-|
-+-- 1.6 Deployment & Documentation
-    +-- 1.6.1 Vercel CI/CD setup (auto-deploy from main branch)
-    +-- 1.6.2 Environment configuration (Supabase keys, OpenRouter key)
-    +-- 1.6.3 Capstone report, PRD, verification/validation plans
+```mermaid
+flowchart TD
+    A["1.0 AgileFlow"]
+
+    A --> B["1.1 Backend Infrastructure"]
+    B --> B1["1.1.1 PostgreSQL schema design"]
+    B --> B2["1.1.2 Entity service layer"]
+    B --> B3["1.1.3 Authentication system"]
+    B --> B4["1.1.4 Row Level Security policies"]
+    B --> B5["1.1.5 Data seeding and verification"]
+
+    A --> C["1.2 AI Collaboration Engine"]
+    C --> C1["1.2.1 OpenRouter integration"]
+    C --> C2["1.2.2 Tool-calling framework"]
+    C --> C3["1.2.3 Task assignment scoring"]
+    C --> C4["1.2.4 Streaming response pipeline"]
+    C --> C5["1.2.5 Chat session persistence"]
+    C --> C6["1.2.6 AI explain system"]
+
+    A --> D["1.3 Multi-View Board System"]
+    D --> D1["1.3.1 Kanban view"]
+    D --> D2["1.3.2 Timeline or Gantt view"]
+    D --> D3["1.3.3 Calendar view"]
+    D --> D4["1.3.4 Eleven cell type implementations"]
+
+    A --> E["1.4 Advanced Features"]
+    E --> E1["1.4.1 RBAC system"]
+    E --> E2["1.4.2 Analytics dashboard"]
+    E --> E3["1.4.3 Help center"]
+    E --> E4["1.4.4 Admin panel"]
+    E --> E5["1.4.5 Performance monitoring"]
+    E --> E6["1.4.6 Full-page chat interface"]
+
+    A --> F["1.5 Testing and Quality Assurance"]
+    F --> F1["1.5.1 Unit tests"]
+    F --> F2["1.5.2 End-to-end tests"]
+    F --> F3["1.5.3 Accessibility audits"]
+    F --> F4["1.5.4 Responsive design tests"]
+
+    A --> G["1.6 Deployment and Documentation"]
+    G --> G1["1.6.1 Vercel CI or CD setup"]
+    G --> G2["1.6.2 Environment configuration"]
+    G --> G3["1.6.3 Capstone report and plans"]
 ```
 
 ## 3.2. Responsibility Matrix (RM)
@@ -852,30 +889,98 @@ Row Level Security (RLS) is a PostgreSQL feature that embeds authorization logic
 
 The AgileFlow database consists of 10 tables with the following relationships:
 
-```
-auth.users (Supabase-managed)
-  |
-  +-- profiles (1:1, FK id -> auth.users.id, CASCADE)
-  |
-  +-- boards (1:N, FK user_id -> auth.users.id, CASCADE)
-  |     |
-  |     +-- items (1:N, FK board_id -> boards.id, CASCADE)
-  |     |
-  |     +-- team_members (1:N, FK board_id -> boards.id, CASCADE)
-  |     |
-  |     +-- sprints (1:N, FK board_id -> boards.id, SET NULL)
-  |
-  +-- user_stories (1:N, FK user_id -> auth.users.id, CASCADE)
-  |     +-- (FK sprint_id -> sprints.id, SET NULL)
-  |     +-- (FK board_id -> boards.id, SET NULL)
-  |
-  +-- calendar_events (1:N, FK user_id -> auth.users.id, CASCADE)
-  |
-  +-- notifications (1:N, FK user_id -> auth.users.id, CASCADE)
-  |
-  +-- ai_sessions (1:N, FK user_id -> auth.users.id, CASCADE)
-        |
-        +-- ai_messages (1:N, FK session_id -> ai_sessions.id, CASCADE)
+```mermaid
+erDiagram
+    AUTH_USERS ||--|| PROFILES : owns
+    AUTH_USERS ||--o{ BOARDS : creates
+    BOARDS ||--o{ ITEMS : contains
+    BOARDS ||--o{ TEAM_MEMBERS : shares
+    AUTH_USERS ||--o{ TEAM_MEMBERS : joins
+    AUTH_USERS ||--o{ SPRINTS : creates
+    BOARDS ||--o{ SPRINTS : groups
+    AUTH_USERS ||--o{ USER_STORIES : writes
+    SPRINTS o|--o{ USER_STORIES : schedules
+    BOARDS o|--o{ USER_STORIES : tracks
+    AUTH_USERS ||--o{ CALENDAR_EVENTS : owns
+    AUTH_USERS ||--o{ NOTIFICATIONS : receives
+    AUTH_USERS ||--o{ AI_SESSIONS : opens
+    AI_SESSIONS ||--o{ AI_MESSAGES : stores
+
+    AUTH_USERS {
+        uuid id PK
+        string email
+    }
+    PROFILES {
+        uuid id PK
+        string full_name
+        string role
+        jsonb skills
+        jsonb settings
+    }
+    BOARDS {
+        uuid id PK
+        uuid user_id FK
+        string title
+        jsonb columns
+        jsonb groups
+        jsonb settings
+    }
+    ITEMS {
+        uuid id PK
+        uuid board_id FK
+        string title
+        jsonb data
+        int order_index
+    }
+    TEAM_MEMBERS {
+        uuid id PK
+        uuid board_id FK
+        uuid user_id FK
+        string role
+    }
+    SPRINTS {
+        uuid id PK
+        uuid user_id FK
+        uuid board_id FK
+        string name
+        int capacity
+        int velocity
+    }
+    USER_STORIES {
+        uuid id PK
+        uuid user_id FK
+        uuid sprint_id FK
+        uuid board_id FK
+        string title
+        int story_points
+        jsonb acceptance_criteria
+    }
+    CALENDAR_EVENTS {
+        uuid id PK
+        uuid user_id FK
+        string title
+        datetime start_date
+        datetime end_date
+    }
+    NOTIFICATIONS {
+        uuid id PK
+        uuid user_id FK
+        string type
+        boolean is_read
+    }
+    AI_SESSIONS {
+        uuid id PK
+        uuid user_id FK
+        string title
+        string model
+    }
+    AI_MESSAGES {
+        uuid id PK
+        uuid session_id FK
+        string role
+        jsonb tool_calls
+        jsonb tool_results
+    }
 ```
 
 **Table Definitions**
@@ -1201,9 +1306,13 @@ AgileFlow integrates its three sub-systems — Frontend (React SPA), Backend (Su
 
 The integration follows a client-centric architecture where the React SPA serves as the orchestration layer. All cross-system communication originates from the browser:
 
-```
-User <-> React SPA <-> Supabase (Data + Auth)
-                   <-> OpenRouter (AI)
+```mermaid
+flowchart LR
+    U[User] --> SPA[React SPA]
+    SPA -->|HTTPS REST + JWT| SB[Supabase Data and Auth]
+    SB --> SPA
+    SPA -->|HTTPS REST + SSE + API key| OR[OpenRouter AI]
+    OR --> SPA
 ```
 
 **Key Integration Points:**
@@ -1446,198 +1555,173 @@ AgileFlow is a cloud-native Agile project management platform that consolidates 
 
 ## Appendix A: Database Schema (ERD Diagram)
 
-```
-┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
-│   auth.users     │     │    profiles       │     │    boards        │
-│ (Supabase mgd)   │     │                  │     │                  │
-│ id (UUID PK)     │<────│ id (UUID PK/FK)  │     │ id (UUID PK)     │
-│ email            │     │ full_name        │     │ user_id (FK)  ───│──┐
-│ encrypted_pass   │     │ email            │     │ title            │  │
-│ ...              │     │ avatar           │     │ description      │  │
-│                  │     │ role             │     │ color, icon      │  │
-│                  │     │ theme            │     │ columns (JSONB)  │  │
-│                  │     │ settings (JSONB) │     │ groups (JSONB)   │  │
-│                  │     │ job_title        │     │ settings (JSONB) │  │
-│                  │     │ department       │     │ visibility       │  │
-│                  │     │ skills (JSONB)   │     └────────┬─────────┘  │
-│                  │     │ description      │              │            │
-│                  │     └──────────────────┘              │            │
-│                  │                                       │            │
-│                  │     ┌──────────────────┐              │            │
-│                  │     │     items        │              │            │
-│                  │     │ id (UUID PK)     │              │            │
-│                  │     │ board_id (FK) ───│──────────────┘            │
-│                  │     │ group_id         │                           │
-│                  │     │ title            │     ┌──────────────────┐  │
-│                  │     │ description      │     │  team_members    │  │
-│                  │     │ data (JSONB)     │     │ id (UUID PK)     │  │
-│                  │     │ order_index      │     │ board_id (FK) ───│──┤
-│                  │     └──────────────────┘     │ user_id (FK)  ───│──┤
-│                  │                              │ role             │  │
-│                  │     ┌──────────────────┐     │ invited_by (FK)  │  │
-│                  │<────│  calendar_events  │     └──────────────────┘  │
-│                  │     │ id (UUID PK)     │                           │
-│                  │     │ user_id (FK)     │     ┌──────────────────┐  │
-│                  │     │ title, desc      │     │   sprints        │  │
-│                  │     │ start/end_date   │     │ id (UUID PK)     │  │
-│                  │     │ color, type      │     │ user_id (FK)  ───│──┤
-│                  │     │ attendees (JSONB)│     │ board_id (FK) ───│──┘
-│                  │     └──────────────────┘     │ name, goal       │
-│                  │                              │ start/end_date   │
-│                  │     ┌──────────────────┐     │ status           │
-│                  │<────│  user_stories    │     │ capacity         │
-│                  │     │ id (UUID PK)     │     │ committed_pts    │
-│                  │     │ user_id (FK)     │     │ completed_pts    │
-│                  │     │ title, desc      │     │ velocity         │
-│                  │     │ priority, status │     └────────┬─────────┘
-│                  │     │ story_points     │              │
-│                  │     │ sprint_id (FK) ──│──────────────┘
-│                  │     │ board_id (FK)    │
-│                  │     │ acceptance (JSON)│
-│                  │     └──────────────────┘
-│                  │
-│                  │     ┌──────────────────┐     ┌──────────────────┐
-│                  │<────│  ai_sessions     │     │  ai_messages     │
-│                  │     │ id (UUID PK)     │<────│ id (UUID PK)     │
-│                  │     │ user_id (FK)     │     │ session_id (FK)  │
-│                  │     │ title            │     │ role             │
-│                  │     │ model            │     │ content          │
-│                  │     └──────────────────┘     │ tool_calls (JSON)│
-│                  │                              │ tool_results(JSON)│
-│                  │     ┌──────────────────┐     │ model            │
-│                  │<────│  notifications   │     │ tokens_used      │
-│                  │     │ id (UUID PK)     │     └──────────────────┘
-│                  │     │ user_id (FK)     │
-│                  │     │ title, message   │
-│                  │     │ type, is_read    │
-│                  │     │ link             │
-│                  │     └──────────────────┘
-└──────────────────┘
+```mermaid
+erDiagram
+    AUTH_USERS ||--|| PROFILES : owns
+    AUTH_USERS ||--o{ BOARDS : creates
+    BOARDS ||--o{ ITEMS : contains
+    BOARDS ||--o{ TEAM_MEMBERS : shares
+    AUTH_USERS ||--o{ TEAM_MEMBERS : joins
+    AUTH_USERS ||--o{ SPRINTS : creates
+    BOARDS ||--o{ SPRINTS : groups
+    AUTH_USERS ||--o{ USER_STORIES : writes
+    SPRINTS o|--o{ USER_STORIES : schedules
+    BOARDS o|--o{ USER_STORIES : tracks
+    AUTH_USERS ||--o{ CALENDAR_EVENTS : owns
+    AUTH_USERS ||--o{ NOTIFICATIONS : receives
+    AUTH_USERS ||--o{ AI_SESSIONS : opens
+    AI_SESSIONS ||--o{ AI_MESSAGES : stores
+
+    AUTH_USERS {
+        uuid id PK
+        string email
+    }
+    PROFILES {
+        uuid id PK
+        string full_name
+        string role
+        jsonb skills
+        jsonb settings
+    }
+    BOARDS {
+        uuid id PK
+        uuid user_id FK
+        string title
+        jsonb columns
+        jsonb groups
+        jsonb settings
+    }
+    ITEMS {
+        uuid id PK
+        uuid board_id FK
+        string title
+        jsonb data
+        int order_index
+    }
+    TEAM_MEMBERS {
+        uuid id PK
+        uuid board_id FK
+        uuid user_id FK
+        string role
+    }
+    SPRINTS {
+        uuid id PK
+        uuid user_id FK
+        uuid board_id FK
+        string name
+        int capacity
+        int velocity
+    }
+    USER_STORIES {
+        uuid id PK
+        uuid user_id FK
+        uuid sprint_id FK
+        uuid board_id FK
+        string title
+        int story_points
+        jsonb acceptance_criteria
+    }
+    CALENDAR_EVENTS {
+        uuid id PK
+        uuid user_id FK
+        string title
+        datetime start_date
+        datetime end_date
+    }
+    NOTIFICATIONS {
+        uuid id PK
+        uuid user_id FK
+        string type
+        boolean is_read
+    }
+    AI_SESSIONS {
+        uuid id PK
+        uuid user_id FK
+        string title
+        string model
+    }
+    AI_MESSAGES {
+        uuid id PK
+        uuid session_id FK
+        string role
+        jsonb tool_calls
+        jsonb tool_results
+    }
 ```
 
 ## Appendix B: AI Tool-Calling Sequence Diagram
 
-```
-User          Frontend (React)      OpenRouter API       Supabase
- |                  |                     |                  |
- |  "Create a task  |                     |                  |
- |   on Dev board"  |                     |                  |
- |----------------->|                     |                  |
- |                  | Build prompt with   |                  |
- |                  | system + history +  |                  |
- |                  | 16 tool definitions |                  |
- |                  |-------------------->|                  |
- |                  |                     | LLM processes    |
- |                  |                     | prompt           |
- |                  |<--------------------|                  |
- |                  | tool_call:          |                  |
- |                  | listBoards()        |                  |
- |                  |                     |                  |
- |                  | Execute tool ------>|                  |
- |                  |                     | SELECT * FROM    |
- |                  |                     | boards WHERE     |
- |                  |                     | user_id = auth() |
- |                  |<--------------------|                  |
- |                  | Send tool result    |                  |
- |                  |-------------------->|                  |
- |                  |                     | LLM processes    |
- |                  |                     | board list       |
- |                  |<--------------------|                  |
- |                  | tool_call:          |                  |
- |                  | createTask(board_id,|                  |
- |                  |   title, priority)  |                  |
- |                  |                     |                  |
- |                  | Execute tool ------>|                  |
- |                  |                     | INSERT INTO      |
- |                  |                     | items (...)      |
- |                  |<--------------------|                  |
- |                  | Send tool result    |                  |
- |                  |-------------------->|                  |
- |                  |                     | LLM generates    |
- |                  |                     | final response   |
- |                  |<----- streaming ----|                  |
- |  "Task created   |                     |                  |
- |   successfully"  |                     |                  |
- |<-- streaming ----|                     |                  |
- |                  | Persist message     |                  |
- |                  |-------------------->|                  |
- |                  |                     | INSERT INTO      |
- |                  |                     | ai_messages      |
- |                  |<--------------------|                  |
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend as Frontend (React)
+    participant OpenRouter as OpenRouter API
+    participant Supabase
+
+    User->>Frontend: Create a task on Dev board
+    Frontend->>OpenRouter: Prompt + history + 16 tool definitions
+    OpenRouter-->>Frontend: tool_call listBoards()
+    Frontend->>Supabase: SELECT boards for authenticated user
+    Supabase-->>Frontend: Board list
+    Frontend->>OpenRouter: Tool result with available boards
+    OpenRouter-->>Frontend: tool_call createTask(board_id, title, priority)
+    Frontend->>Supabase: INSERT item
+    Supabase-->>Frontend: Created task
+    Frontend->>OpenRouter: Tool result with created item
+    OpenRouter-->>Frontend: Stream final response
+    Frontend-->>User: Task created successfully
+    Frontend->>Supabase: INSERT ai_messages
+    Supabase-->>Frontend: Message persisted
 ```
 
 ## Appendix C: Authentication Flow Diagram
 
-```
-User              React SPA            Supabase Auth         PostgreSQL
- |                    |                     |                     |
- | Enter email/pass   |                     |                     |
- |------------------->|                     |                     |
- |                    | signInWithPassword  |                     |
- |                    |-------------------->|                     |
- |                    |                     | Validate bcrypt     |
- |                    |                     | hash                |
- |                    |                     |-------------------->|
- |                    |                     |<--------------------|
- |                    |                     | Issue JWT +         |
- |                    |                     | refresh token       |
- |                    |<--------------------|                     |
- |                    | Store in            |                     |
- |                    | localStorage        |                     |
- |                    |                     |                     |
- |                    | AuthContext.login()  |                     |
- |                    | sets user state      |                     |
- |  Dashboard loads   |                     |                     |
- |<-------------------|                     |                     |
- |                    |                     |                     |
- |  [Later: token     |                     |                     |
- |   near expiry]     |                     |                     |
- |                    | Auto-refresh token  |                     |
- |                    |-------------------->|                     |
- |                    |<--------------------|                     |
- |                    | New JWT stored       |                     |
- |                    |                     |                     |
- |  User clicks       |                     |                     |
- |  Logout            |                     |                     |
- |------------------->|                     |                     |
- |                    | signOut()            |                     |
- |                    |-------------------->|                     |
- |                    | Clear localStorage  |                     |
- |                    | Redirect to /login  |                     |
- |  Login page        |                     |                     |
- |<-------------------|                     |                     |
+```mermaid
+sequenceDiagram
+    participant User
+    participant SPA as React SPA
+    participant Auth as Supabase Auth
+    participant DB as PostgreSQL
+
+    User->>SPA: Enter email and password
+    SPA->>Auth: signInWithPassword()
+    Auth->>DB: Validate password hash
+    DB-->>Auth: Valid credentials
+    Auth-->>SPA: JWT + refresh token
+    SPA->>SPA: Store session in localStorage
+    SPA-->>User: Load Dashboard
+
+    Note over SPA,Auth: Later, when the token is close to expiry
+    SPA->>Auth: Refresh session
+    Auth-->>SPA: New JWT
+    SPA->>SPA: Update stored session
+
+    User->>SPA: Logout
+    SPA->>Auth: signOut()
+    Auth-->>SPA: Session cleared
+    SPA->>SPA: Clear localStorage and redirect
+    SPA-->>User: Show login page
 ```
 
 ## Appendix D: Deployment Pipeline
 
-```
-Developer           GitHub              Vercel               User
- |                    |                    |                    |
- | git push origin    |                    |                    |
- | main               |                    |                    |
- |------------------->|                    |                    |
- |                    | Webhook triggers   |                    |
- |                    | Vercel build       |                    |
- |                    |------------------->|                    |
- |                    |                    | npm install        |
- |                    |                    | npm run build      |
- |                    |                    | (Vite production   |
- |                    |                    |  bundle)           |
- |                    |                    |                    |
- |                    |                    | Deploy to edge CDN |
- |                    |                    | (global)           |
- |                    |                    |                    |
- |                    |                    | SSL certificate    |
- |                    |                    | auto-provisioned   |
- |                    |                    |                    |
- |                    |<--- Deploy URL ----|                    |
- |<--- Status OK -----|                    |                    |
- |                    |                    |  User accesses     |
- |                    |                    |  updated app       |
- |                    |                    |<-------------------|
- |                    |                    | Serve from nearest |
- |                    |                    | edge node          |
- |                    |                    |------------------->|
+```mermaid
+sequenceDiagram
+    participant Developer
+    participant GitHub
+    participant Vercel
+    participant User
+
+    Developer->>GitHub: git push origin main
+    GitHub->>Vercel: Webhook triggers deployment
+    Vercel->>Vercel: npm install
+    Vercel->>Vercel: npm run build
+    Vercel->>Vercel: Deploy static bundle to edge CDN
+    Note over Vercel: HTTPS certificate is provisioned automatically
+    Vercel-->>GitHub: Deployment URL and status OK
+    GitHub-->>Developer: Deployment succeeded
+    User->>Vercel: Request updated app
+    Vercel-->>User: Serve from nearest edge node
 ```
 
 ## Appendix E: Task Assignment Scoring Example

@@ -6,49 +6,49 @@ The Work Plan for AgileFlow covers the 12-week core development cycle (January 6
 
 The AgileFlow WBS is divided into two parallel streams: Software Engineering (technical implementation) and Management Engineering (process analysis, documentation, and validation).
 
-```
-1.0 AgileFlow
-|
-+-- 1.1 Backend Infrastructure (Supabase)
-|   +-- 1.1.1 PostgreSQL schema design (10 tables, JSONB columns, FK relationships)
-|   +-- 1.1.2 Entity service layer (11 services: Board, Item, User, Sprint, etc.)
-|   +-- 1.1.3 Authentication system (Supabase Auth, email/password, JWT sessions)
-|   +-- 1.1.4 Row Level Security policy implementation (per-table RLS)
-|   +-- 1.1.5 Data seeding and verification
-|
-+-- 1.2 AI Collaboration Engine
-|   +-- 1.2.1 OpenRouter API integration (model cascade, streaming)
-|   +-- 1.2.2 Tool-calling framework (16 tools: CRUD boards, tasks, assignments)
-|   +-- 1.2.3 Task assignment scoring algorithm (competency/availability/performance)
-|   +-- 1.2.4 Streaming response pipeline (SSE, progressive rendering)
-|   +-- 1.2.5 Chat session persistence (ai_sessions, ai_messages tables)
-|   +-- 1.2.6 AI explain system (analytics widget explanations)
-|
-+-- 1.3 Multi-View Board System
-|   +-- 1.3.1 Kanban view (drag-and-drop via @hello-pangea/dnd)
-|   +-- 1.3.2 Timeline/Gantt view (week/month zoom, priority-colored bars)
-|   +-- 1.3.3 Calendar view (monthly grid, task dots, event overlays)
-|   +-- 1.3.4 Cell type implementations (11 types: text, status, priority, people,
-|           date, timeline, tags, number, checkbox, budget, dropdown)
-|
-+-- 1.4 Advanced Features
-|   +-- 1.4.1 RBAC system (viewer/member/admin/super-admin, usePermissions hook)
-|   +-- 1.4.2 Analytics dashboard (velocity, burndown, distributions, workload)
-|   +-- 1.4.3 Help center (categorized articles, search, AI integration)
-|   +-- 1.4.4 Admin panel (user management, role assignment, invite flow)
-|   +-- 1.4.5 Performance monitoring page (capacity metrics, scaling tiers)
-|   +-- 1.4.6 Chat page (full-page AI interface, session sidebar)
-|
-+-- 1.5 Testing & Quality Assurance
-|   +-- 1.5.1 Unit tests (Vitest + Testing Library, entity CRUD tests)
-|   +-- 1.5.2 End-to-end tests (Playwright, auth/board/navigation flows)
-|   +-- 1.5.3 Accessibility audits (axe-core, WCAG 2.1 AA compliance)
-|   +-- 1.5.4 Responsive design tests (4 breakpoints: 375/768/1024/1440px)
-|
-+-- 1.6 Deployment & Documentation
-    +-- 1.6.1 Vercel CI/CD setup (auto-deploy from main branch)
-    +-- 1.6.2 Environment configuration (Supabase keys, OpenRouter key)
-    +-- 1.6.3 Capstone report, PRD, verification/validation plans
+```mermaid
+flowchart TD
+    A["1.0 AgileFlow"]
+
+    A --> B["1.1 Backend Infrastructure"]
+    B --> B1["1.1.1 PostgreSQL schema design"]
+    B --> B2["1.1.2 Entity service layer"]
+    B --> B3["1.1.3 Authentication system"]
+    B --> B4["1.1.4 Row Level Security policies"]
+    B --> B5["1.1.5 Data seeding and verification"]
+
+    A --> C["1.2 AI Collaboration Engine"]
+    C --> C1["1.2.1 OpenRouter integration"]
+    C --> C2["1.2.2 Tool-calling framework"]
+    C --> C3["1.2.3 Task assignment scoring"]
+    C --> C4["1.2.4 Streaming response pipeline"]
+    C --> C5["1.2.5 Chat session persistence"]
+    C --> C6["1.2.6 AI explain system"]
+
+    A --> D["1.3 Multi-View Board System"]
+    D --> D1["1.3.1 Kanban view"]
+    D --> D2["1.3.2 Timeline or Gantt view"]
+    D --> D3["1.3.3 Calendar view"]
+    D --> D4["1.3.4 Eleven cell type implementations"]
+
+    A --> E["1.4 Advanced Features"]
+    E --> E1["1.4.1 RBAC system"]
+    E --> E2["1.4.2 Analytics dashboard"]
+    E --> E3["1.4.3 Help center"]
+    E --> E4["1.4.4 Admin panel"]
+    E --> E5["1.4.5 Performance monitoring"]
+    E --> E6["1.4.6 Full-page chat interface"]
+
+    A --> F["1.5 Testing and Quality Assurance"]
+    F --> F1["1.5.1 Unit tests"]
+    F --> F2["1.5.2 End-to-end tests"]
+    F --> F3["1.5.3 Accessibility audits"]
+    F --> F4["1.5.4 Responsive design tests"]
+
+    A --> G["1.6 Deployment and Documentation"]
+    G --> G1["1.6.1 Vercel CI or CD setup"]
+    G --> G2["1.6.2 Environment configuration"]
+    G --> G3["1.6.3 Capstone report and plans"]
 ```
 
 ## 3.2. Responsibility Matrix (RM)
