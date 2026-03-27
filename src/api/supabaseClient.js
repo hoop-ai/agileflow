@@ -16,21 +16,29 @@ export const supabase = supabaseUrl && supabaseAnonKey
         autoRefreshToken: true,
         detectSessionInUrl: true,
         storageKey: 'agileflow-auth',
+        flowType: 'pkce',
       }
     })
   : null;
 
-// One-time migration: clear old auth storage keys to force fresh login
-// This runs once per browser and cleans up stale sessions from the old config
-const AUTH_VERSION = 'v2';
+// Force-clear stale sessions from any previous auth configuration.
+// Bumping AUTH_VERSION forces every browser to start fresh.
+const AUTH_VERSION = 'v3';
 if (typeof window !== 'undefined' && localStorage.getItem('agileflow-auth-version') !== AUTH_VERSION) {
-  // Remove any old Supabase auth keys that used the default storage key
-  Object.keys(localStorage).forEach(key => {
-    if (key.startsWith('sb-') && key.includes('-auth-token')) {
-      localStorage.removeItem(key);
+  try {
+    // Clear ALL possible auth keys — old and new
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('sb-') || key.includes('supabase') || key === 'agileflow-auth')) {
+        keysToRemove.push(key);
+      }
     }
-  });
-  localStorage.setItem('agileflow-auth-version', AUTH_VERSION);
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    localStorage.setItem('agileflow-auth-version', AUTH_VERSION);
+  } catch (e) {
+    // localStorage might be unavailable in some contexts
+  }
 }
 
 export const isSupabaseConfigured = !!supabase;
@@ -47,9 +55,10 @@ export function handleAuthError(error) {
     error.message?.includes('not authenticated');
 
   if (isAuthError) {
-    supabase.auth.signOut().then(() => {
-      window.location.href = '/login';
-    });
+    // Clear storage and redirect
+    try { localStorage.removeItem('agileflow-auth'); } catch (e) {}
+    supabase.auth.signOut().catch(() => {});
+    window.location.href = '/login';
     return true;
   }
   return false;

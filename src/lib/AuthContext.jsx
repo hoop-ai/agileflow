@@ -10,39 +10,75 @@ export const AuthProvider = ({ children }) => {
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [authError, setAuthError] = useState(null);
 
-  // Track current auth state for use inside callbacks (avoids stale closures)
   const isAuthenticatedRef = useRef(false);
   useEffect(() => { isAuthenticatedRef.current = isAuthenticated; }, [isAuthenticated]);
 
-  const loadProfile = async (userId) => {
+  // Profile loading is fire-and-forget — NEVER blocks auth flow
+  const loadProfile = (userId) => {
+    supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+      .then(({ data, error }) => {
+        if (!error && data) setProfile(data);
+      })
+      .catch(() => {});
+  };
+
+  // Force sign out and clear all stored auth data
+  const forceSignOut = () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      if (error) throw error;
-      setProfile(data);
-    } catch (error) {
-      console.error('Profile load failed:', error);
+      // Clear our custom storage key
+      localStorage.removeItem('agileflow-auth');
+      // Clear any other Supabase keys
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('sb-') || key.includes('supabase') || key.includes('agileflow-auth')) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (e) {
+      // localStorage might be unavailable
     }
+    setUser(null);
+    setProfile(null);
+    setIsAuthenticated(false);
+    isAuthenticatedRef.current = false;
+    setAuthError(null);
+    setIsLoadingAuth(false);
   };
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
       setIsLoadingAuth(false);
-      setAuthError({ type: 'config_error', message: 'Supabase is not configured. Check environment variables.' });
+      setAuthError({ type: 'config_error', message: 'Supabase is not configured.' });
       return;
     }
 
-    // Helper to set authenticated state from a session
-    const handleSession = async (session) => {
-      if (session?.user) {
-        setUser(session.user);
+    let didSettle = false;
+
+    // SAFETY NET: If auth hasn't resolved in 4 seconds, force it to show login.
+    // This catches ALL edge cases: hung queries, network issues, stale tokens.
+    const timeout = setTimeout(() => {
+      if (!didSettle) {
+        didSettle = true;
+        console.warn('Auth timed out — forcing login screen');
+        forceSignOut();
+      }
+    }, 4000);
+
+    const settle = (authenticated, sessionUser = null) => {
+      if (didSettle) return;
+      didSettle = true;
+      clearTimeout(timeout);
+
+      if (authenticated && sessionUser) {
+        setUser(sessionUser);
         setIsAuthenticated(true);
         isAuthenticatedRef.current = true;
         setAuthError(null);
-        try { await loadProfile(session.user.id); } catch (e) { console.error('Profile load failed:', e); }
+        // Load profile in background — doesn't block UI
+        loadProfile(sessionUser.id);
       } else {
         setUser(null);
         setProfile(null);
@@ -52,13 +88,37 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingAuth(false);
     };
 
-    // Single listener handles all auth state transitions including initial session
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Try to restore session from storage
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error || !session?.user) {
+        // No valid session — clear any stale storage
+        if (error) {
+          try { localStorage.removeItem('agileflow-auth'); } catch (e) {}
+        }
+        settle(false);
+      } else {
+        settle(true, session.user);
+      }
+    }).catch(() => {
+      settle(false);
+    });
+
+    // Listen for auth changes AFTER initial load
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'INITIAL_SESSION') {
-        // Fires once on mount with stored session (or null if not logged in)
-        await handleSession(session);
-      } else if (event === 'SIGNED_IN') {
-        await handleSession(session);
+        // Already handled by getSession above, but settle is idempotent
+        if (session?.user) {
+          settle(true, session.user);
+        } else {
+          settle(false);
+        }
+      } else if (event === 'SIGNED_IN' && session?.user) {
+        setUser(session.user);
+        setIsAuthenticated(true);
+        isAuthenticatedRef.current = true;
+        setAuthError(null);
+        setIsLoadingAuth(false);
+        loadProfile(session.user.id);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setProfile(null);
@@ -66,7 +126,6 @@ export const AuthProvider = ({ children }) => {
         isAuthenticatedRef.current = false;
         setIsLoadingAuth(false);
       } else if (event === 'TOKEN_REFRESHED') {
-        // Normal for concurrent sessions — not an error
         if (session?.user) {
           setUser(session.user);
         }
@@ -75,10 +134,15 @@ export const AuthProvider = ({ children }) => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email, password) => {
+    // Clear any stale session before login attempt
+    try { localStorage.removeItem('agileflow-auth'); } catch (e) {}
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     return data;
@@ -133,11 +197,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setProfile(null);
-    setIsAuthenticated(false);
-    isAuthenticatedRef.current = false;
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      // Sign out might fail if token is already invalid — that's fine
+    }
+    forceSignOut();
   };
 
   const navigateToLogin = () => {
