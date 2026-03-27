@@ -90,7 +90,7 @@ const TimelineItemBar = ({ item, board, timelineStartDate, timelineEndDate, zoom
 
 export default function TimelineView({ board, items }) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [zoomLevel, setZoomLevel] = useState('week');
+  const [zoomLevel, setZoomLevel] = useState('month');
   const [startDateColId, setStartDateColId] = useState(null);
   const [endDateColId, setEndDateColId] = useState(null);
   const [timelineColId, setTimelineColId] = useState(null);

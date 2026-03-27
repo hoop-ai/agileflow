@@ -26,7 +26,7 @@ export default function TextCell({ value, onUpdate }) {
         onChange={(e) => setEditValue(e.target.value)}
         onBlur={handleSave}
         onKeyDown={handleKeyPress}
-        className="border-none bg-transparent p-0 h-auto focus:ring-0 text-foreground font-medium"
+        className="border-none bg-transparent p-0 h-auto focus:ring-0 text-foreground text-xs"
         autoFocus
       />
     );
@@ -34,10 +34,11 @@ export default function TextCell({ value, onUpdate }) {
 
   return (
     <div
-      className="cursor-pointer text-foreground font-medium hover:bg-accent hover:rounded px-2 py-1 -mx-2 -my-1 transition-colors"
+      className="cursor-pointer text-foreground text-xs hover:bg-accent hover:rounded px-2 py-1 -mx-2 -my-1 transition-colors truncate max-w-full"
       onClick={() => setIsEditing(true)}
+      title={value || ''}
     >
-      {value || 'Enter text...'}
+      {value || <span className="text-muted-foreground">Enter text...</span>}
     </div>
   );
 }

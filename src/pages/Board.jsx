@@ -405,7 +405,13 @@ export default function BoardPage() {
     return acc;
   }, {}) || {};
 
-  const visibleColumns = (board?.columns || []).filter(col => !hiddenColumns?.has(col.id));
+  // Ensure task column always exists so titles are visible
+  const boardColumns = board?.columns || [];
+  const hasTaskColumn = boardColumns.some(col => col.id === 'task');
+  const allColumns = hasTaskColumn
+    ? boardColumns
+    : [{ id: 'task', title: 'Task', type: 'task', width: 250 }, ...boardColumns];
+  const visibleColumns = allColumns.filter(col => !hiddenColumns?.has(col.id));
 
   if (isLoading) {
     return (

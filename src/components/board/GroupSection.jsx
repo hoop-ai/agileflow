@@ -111,7 +111,12 @@ export default function GroupSection({
     return effectiveCols;
   };
 
-  const effectiveColumns = getEffectiveColumns();
+  const rawEffectiveColumns = getEffectiveColumns();
+  // Ensure the task column always exists at the front so titles are visible
+  const hasTaskCol = rawEffectiveColumns.some(col => col.id === 'task');
+  const effectiveColumns = hasTaskCol
+    ? rawEffectiveColumns
+    : [{ id: 'task', title: 'Task', type: 'task', width: TASK_COLUMN_DEFAULT_WIDTH }, ...rawEffectiveColumns];
   const taskColumn = effectiveColumns.find(col => col.id === 'task');
   const taskColumnWidth = taskColumn?.width || TASK_COLUMN_DEFAULT_WIDTH;
   
