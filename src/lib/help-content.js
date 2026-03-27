@@ -60,7 +60,15 @@ export const MODULE_HELP = {
       },
       {
         heading: "Analytics",
-        body: "Click the bar chart icon in the board header to open the Analytics panel. It shows completion rates, status distribution, team workload, and priority breakdown for this specific board.",
+        body: "Click the bar chart icon in the board header to open the Analytics panel. It shows completion rates, status distribution, team workload, and priority breakdown for this specific board. Each stat card has an info tooltip explaining the metric, and the AI Explain button provides a narrative summary.",
+      },
+      {
+        heading: "Unassigned Tasks",
+        body: "The Unassigned Tasks section surfaces all tasks on the board that don't have an assignee. Each card shows the task title, group, status, priority, and due date with a quick \"Assign\" button to add an owner from the team member dropdown.",
+      },
+      {
+        heading: "Permissions",
+        body: "Board actions are gated by your role:\n• **Admin/Member** — full access: add tasks, edit cells, drag items, manage columns and groups\n• **Viewer** — read-only: can view the board and analytics but cannot add, edit, drag, or delete anything. Add/edit buttons and drag handles are hidden.",
       },
     ],
   },
@@ -92,6 +100,10 @@ export const MODULE_HELP = {
       {
         heading: "Adding Columns",
         body: "Click \"+ Add Stage\" at the end of the columns to create a new workflow stage. This adds a new status option that becomes available across all views.",
+      },
+      {
+        heading: "Permissions",
+        body: "Drag and drop in Kanban is permission-controlled. Viewers see the board in read-only mode and cannot move cards between columns. Admins and Members can drag freely.",
       },
     ],
   },
@@ -235,6 +247,37 @@ export const MODULE_HELP = {
       {
         heading: "Inviting Members",
         body: "Click \"Invite Member\" to get a sign-up link. Share this link with people you want to join the workspace. They'll create their own account and appear in the user list with the default Member role.",
+      },
+      {
+        heading: "Project Advisors",
+        body: "The Advisors section at the bottom of the Admin page lists project advisors and mentors. This is informational and helps the team know who to consult for guidance.",
+      },
+    ],
+  },
+
+  aiChat: {
+    title: "AI Chat",
+    subtitle: "Your intelligent project assistant",
+    sections: [
+      {
+        heading: "What is AI Chat?",
+        body: "AI Chat is a full-page conversational interface for the AI assistant. Access it from the sidebar to have extended conversations about your projects, get recommendations, and analyze performance data.",
+      },
+      {
+        heading: "Response Modes",
+        body: "Toggle between two modes in the header:\n• **Fast Mode** (⚡) — quick answers using lightweight models like Claude Haiku 4.5 and GPT-4o Mini\n• **Thinking Mode** (🧠) — deeper analysis using thinking-optimized models for complex planning and recommendations",
+      },
+      {
+        heading: "Chat Sessions",
+        body: "Previous conversations are saved in the sidebar for reference. You can load, rename, or delete past sessions. Each new conversation starts fresh but has full access to your workspace data.",
+      },
+      {
+        heading: "Commands",
+        body: "Three slash commands for structured analysis:\n• **/assign** — AI-suggested task assignments based on team workload and skills\n• **/sprint** — sprint planning recommendations using backlog and velocity data\n• **/performance** — comprehensive team performance summary with metrics and trends",
+      },
+      {
+        heading: "Tips",
+        body: "• Use Thinking mode for complex planning and Fast mode for quick questions\n• The assistant auto-loads your boards, tasks, sprints, and team data for context\n• Press Enter to send, Shift+Enter for a new line\n• Click the stop button to cancel a long-running response",
       },
     ],
   },
