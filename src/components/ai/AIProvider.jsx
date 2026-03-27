@@ -325,6 +325,12 @@ export function AIProvider({ children }) {
         }
       }
 
+      // Ensure the final message content is set (especially after tool calls)
+      setMessages(prev =>
+        prev.map(m => m.id === assistantId ? { ...m, content: accumulated } : m)
+      );
+      setThinking(false);
+
       // Save to DB
       try {
         let currentSessionId = sessionId;
@@ -341,9 +347,12 @@ export function AIProvider({ children }) {
         console.error("Failed to save chat:", dbErr);
       }
 
-      // All models failed
-      if (lastError && !messages.find(m => m.id === assistantId)?.content) {
+      // All models failed — no accumulated text means nothing was shown to the user
+      if (!accumulated && lastError) {
         throw lastError;
+      }
+      if (!accumulated) {
+        throw new Error("No response received. Please try again.");
       }
 
     } catch (err) {

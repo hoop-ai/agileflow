@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChevronDown, ChevronRight, Plus, Trash2, Check, X } from "lucide-react";
@@ -36,6 +36,7 @@ export default function GroupSection({
   const [isCollapsed, setIsCollapsed] = useState(group.collapsed || false);
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [newItemTitle, setNewItemTitle] = useState("");
+  const addRowRef = useRef(null);
 
   const handleAddItemLocal = async () => {
     if (newItemTitle.trim()) {
@@ -45,12 +46,26 @@ export default function GroupSection({
     }
   };
 
+  const handleCancelAdd = () => {
+    setIsAddingItem(false);
+    setNewItemTitle("");
+  };
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleAddItemLocal();
     } else if (e.key === 'Escape') {
+      handleCancelAdd();
+    }
+  };
+
+  const handleInputBlur = (e) => {
+    // Don't dismiss if clicking within the add row (e.g. confirm/cancel buttons)
+    if (addRowRef.current && addRowRef.current.contains(e.relatedTarget)) {
+      return;
+    }
+    if (!newItemTitle.trim()) {
       setIsAddingItem(false);
-      setNewItemTitle("");
     }
   };
 
@@ -279,7 +294,8 @@ export default function GroupSection({
 
                           {/* Add Item Row */}
                           {isAddingItem ? (
-                            <div 
+                            <div
+                              ref={addRowRef}
                               className="flex items-center border-b border-border hover:bg-muted min-h-[48px]"
                               style={{ minWidth: `${totalMinWidth}px` }}
                             >
@@ -300,19 +316,36 @@ export default function GroupSection({
                                   zIndex: 1,
                                 }}
                               >
-                                <Input
-                                  value={newItemTitle}
-                                  onChange={(e) => setNewItemTitle(e.target.value)}
-                                  onKeyDown={handleKeyPress}
-                                  onBlur={() => {
-                                    if (!newItemTitle.trim()) {
-                                      setIsAddingItem(false);
-                                    }
-                                  }}
-                                  placeholder="Enter item name..."
-                                  className="border-none bg-transparent p-0 h-auto focus:ring-0 text-foreground font-medium"
-                                  autoFocus
-                                />
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    value={newItemTitle}
+                                    onChange={(e) => setNewItemTitle(e.target.value)}
+                                    onKeyDown={handleKeyPress}
+                                    onBlur={handleInputBlur}
+                                    placeholder="Enter item name..."
+                                    className="border-none bg-transparent p-0 h-auto focus:ring-0 text-foreground font-medium flex-1"
+                                    autoFocus
+                                  />
+                                  <button
+                                    type="button"
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    onClick={handleAddItemLocal}
+                                    disabled={!newItemTitle.trim()}
+                                    className="p-1 rounded text-green-500 hover:text-green-600 hover:bg-green-500/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                    title="Add task (Enter)"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    onClick={handleCancelAdd}
+                                    className="p-1 rounded text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-500/10 transition-colors"
+                                    title="Cancel (Esc)"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
                               </div>
 
                               {/* Regular Columns */}
