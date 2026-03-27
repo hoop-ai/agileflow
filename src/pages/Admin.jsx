@@ -46,6 +46,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import InfoTooltip from "@/components/common/InfoTooltip";
 import ModuleHelp from "@/components/common/ModuleHelp";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const AVATAR_COLORS = [
   'bg-blue-600 text-white',
@@ -116,12 +117,12 @@ export default function AdminPage() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [resetPasswordUser, setResetPasswordUser] = useState(null);
 
-  const isAdmin = currentUser?.role === 'admin';
+  const { canManageUsers, canResetPasswords, canInviteMembers, canChangeRoles, isSuperAdmin } = usePermissions();
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: () => UserService.listAll(),
-    enabled: isAdmin,
+    enabled: canManageUsers,
   });
 
   const updateUserMutation = useMutation({
@@ -179,7 +180,7 @@ export default function AdminPage() {
     };
   }, [users]);
 
-  if (!isAdmin) {
+  if (!canManageUsers) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <Card className="max-w-md w-full border border-border bg-card">
