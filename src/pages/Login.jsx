@@ -13,6 +13,7 @@ import {
   RECOVERY_SESSION_MISSING_MESSAGE,
   waitForActiveSession,
 } from '@/lib/auth-session';
+import { PASSWORD_RESET_REQUEST_SUCCESS_MESSAGE } from '@/lib/password-reset-delivery';
 
 export default function LoginPage() {
   const { login, signup, resetPassword, updatePassword, isRegistrationEnabled, isAuthenticated } = useAuth();
@@ -120,7 +121,7 @@ export default function LoginPage() {
         // Navigation handled by the isAuthenticated useEffect above
       } else if (mode === 'forgot') {
         await resetPassword(email);
-        setSuccess('Password reset link sent! Check your email.');
+        setSuccess(PASSWORD_RESET_REQUEST_SUCCESS_MESSAGE);
       } else if (mode === 'reset') {
         if (!isRecoverySessionReady) {
           throw new Error(RECOVERY_SESSION_MISSING_MESSAGE);

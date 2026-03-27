@@ -60,7 +60,8 @@ import {
 import InfoTooltip from "@/components/common/InfoTooltip";
 import ModuleHelp from "@/components/common/ModuleHelp";
 import { usePermissions } from "@/hooks/usePermissions";
-import { getLoginUrl, getPasswordResetRedirectUrl } from '@/lib/auth-redirects';
+import { getLoginUrl } from '@/lib/auth-redirects';
+import { requestPasswordResetEmail } from '@/api/password-reset';
 
 const AVATAR_COLORS = [
   'bg-blue-600 text-white',
@@ -166,17 +167,18 @@ export default function AdminPage() {
 
   const resetPasswordMutation = useMutation({
     mutationFn: async (authEmail) => {
-      const { error } = await supabase.auth.resetPasswordForEmail(authEmail, {
-        redirectTo: getPasswordResetRedirectUrl(),
-      });
-
-      if (error) throw error;
-      return authEmail;
+      const result = await requestPasswordResetEmail(authEmail);
+      return {
+        authEmail,
+        delivery: result.delivery || 'unknown',
+      };
     },
-    onSuccess: (authEmail) => {
+    onSuccess: ({ authEmail, delivery }) => {
       toast({
         title: 'Password reset requested',
-        description: `Supabase accepted a reset email request for ${authEmail}.`,
+        description: delivery === 'resend'
+          ? `Resend delivered the password reset email for ${authEmail}.`
+          : `Password reset email requested for ${authEmail}.`,
       });
       setResetPasswordUser(null);
     },

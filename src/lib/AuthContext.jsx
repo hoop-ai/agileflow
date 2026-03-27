@@ -2,7 +2,6 @@ import React, { createContext, useState, useContext, useEffect, useRef } from 'r
 import { supabase, isSupabaseConfigured } from '@/api/supabaseClient';
 import {
   getEmailVerificationRedirectUrl,
-  getPasswordResetRedirectUrl,
   getPostLoginRedirectUrl,
 } from '@/lib/auth-redirects';
 import {
@@ -16,6 +15,7 @@ import {
   isMissingAuthSessionError,
   waitForActiveSession,
 } from '@/lib/auth-session';
+import { requestPasswordResetEmail } from '@/api/password-reset';
 
 const AuthContext = createContext();
 
@@ -212,11 +212,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const resetPassword = async (email) => {
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: getPasswordResetRedirectUrl(),
-    });
-    if (error) throw error;
-    return data;
+    return requestPasswordResetEmail(email);
   };
 
   const updatePassword = async (newPassword) => {
