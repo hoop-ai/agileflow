@@ -301,6 +301,33 @@ Supabase provides the complete backend infrastructure:
 **Tier 3 — AI Services (OpenRouter):**
 The AI layer communicates with the OpenRouter API gateway to access multiple LLM providers. The client sends structured prompts (with system instructions, conversation history, and tool definitions) and receives streaming responses. Tool calls are executed client-side against the Supabase data layer, with results fed back to the LLM for synthesis.
 
+**Figure 1. AgileFlow System Architecture**
+```mermaid
+flowchart LR
+    User[User in Browser] --> UI[React SPA on Vercel]
+
+    subgraph Frontend["Frontend Layer"]
+        UI --> Router[React Router]
+        UI --> State[React Query and Context Providers]
+        UI --> Views[Dashboard, Board, Backlog, Analytics, Chat]
+    end
+
+    State --> SB[Supabase Platform]
+    State --> OR[OpenRouter API]
+
+    subgraph Backend["Supabase Layer"]
+        SB --> Auth[Supabase Auth]
+        SB --> Api[PostgREST API]
+        Api --> RLS[Row Level Security]
+        RLS --> DB[(PostgreSQL)]
+        DB --> Triggers[SQL Triggers and Policies]
+    end
+
+    OR --> Models[LLM Model Cascade]
+    Models --> Tools[Client-side Tool Execution]
+    Tools --> SB
+```
+
 ### 2.4.1. Process Diagram
 
 The AgileFlow process flow begins when a user authenticates via Supabase Auth. Upon successful login, the system loads the user's profile and permissions, then renders the Dashboard with aggregated KPI data fetched from the boards and items tables.

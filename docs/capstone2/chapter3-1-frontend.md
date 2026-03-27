@@ -142,6 +142,26 @@ The following libraries were selected based on the literature survey and the pro
 | Browse Help | User navigates the help center documentation. | Any User |
 | Manage Users | Super Admin searches, invites, and assigns roles to users. | Super Admin, System |
 
+**Figure 9. Manage Sprint Backlog Use-Case Diagram**
+```mermaid
+flowchart LR
+    User[Member or Admin] --> UC1([Create user story])
+    User --> UC2([Estimate story points])
+    User --> UC3([Open sprint planning modal])
+    User --> UC4([Select backlog stories])
+    User --> UC5([Request AI sprint suggestion])
+    User --> UC6([Commit stories to sprint])
+
+    System[System] --> UC2
+    System --> UC4
+    System --> UC6
+    AI[AI Assistant] --> UC5
+
+    UC3 --> UC4
+    UC4 --> UC6
+    UC5 --> UC6
+```
+
 **Use-Case Scenario: Execute Task (Drag & Drop)**
 
 | Field | Detail |
@@ -153,6 +173,25 @@ The following libraries were selected based on the literature survey and the pro
 | **Post-Condition** | Task status is updated in the database and reflected in all views. |
 | **Normal Flow** | 1. User drags a task card from the "To Do" column to "In Progress." 2. The SPA immediately updates the UI (optimistic update). 3. The SPA sends a PATCH request to Supabase to update the item's status field. 4. Supabase validates the JWT, checks RLS policies, and persists the change. 5. React Query invalidates the board cache and refetches to confirm server state. |
 | **Alternative Flow** | Step 4a: User does not have write permission (viewer role). System returns 403. The SPA reverts the card to its original column and displays an error toast. |
+
+**Figure 10. Execute Task (Drag & Drop) Sequence Diagram**
+```mermaid
+sequenceDiagram
+    participant User
+    participant Board as Board Page
+    participant Cache as React Query Cache
+    participant Service as Entity Service
+    participant Supabase
+
+    User->>Board: Drag task from To Do to In Progress
+    Board->>Cache: Apply optimistic update
+    Board->>Service: updateTask(status)
+    Service->>Supabase: PATCH item data
+    Supabase-->>Service: Updated row
+    Service-->>Board: Success
+    Board->>Cache: Invalidate and refetch board
+    Cache-->>Board: Confirmed server state
+```
 
 **Use-Case Scenario: Switch Board View**
 
@@ -166,17 +205,87 @@ The following libraries were selected based on the literature survey and the pro
 | **Normal Flow** | 1. User clicks a view tab (Kanban / Timeline / Calendar). 2. The Board page updates the active view state variable. 3. React renders the corresponding view component (KanbanView, TimelineView, or CalendarView). 4. The view component reads board data from the shared React Query cache (no additional API call). 5. Items are displayed according to the view's visualization logic. |
 | **Alternative Flow** | Step 5a: Timeline view requires date columns. If no date columns exist on the board, the view displays an empty state message: "Add a date or timeline column to see tasks on the timeline." |
 
+**Figure 8. Board View Switching - Kanban, Timeline, Calendar**
+```mermaid
+flowchart LR
+    Board[Board Page] --> Tabs[View Tabs]
+    Data[Shared board data in React Query] --> Kanban[KanbanView]
+    Data --> Timeline[TimelineView]
+    Data --> Calendar[CalendarView]
+
+    Tabs --> Kanban
+    Tabs --> Timeline
+    Tabs --> Calendar
+
+    Kanban --> Shared[Same tasks and columns]
+    Timeline --> Shared
+    Calendar --> Shared
+```
+
+**Figure 11. Sprint Planning Sequence Diagram**
+```mermaid
+sequenceDiagram
+    participant User
+    participant Backlog as Backlog Page
+    participant Modal as Sprint Planning Modal
+    participant Service as Sprint Service
+    participant Supabase
+
+    User->>Backlog: Open sprint planning
+    Backlog->>Modal: Load backlog stories and sprint capacity
+    User->>Modal: Select stories or request AI suggestion
+    Modal->>Modal: Validate total story points
+    Modal->>Service: updateSprint() and updateStories()
+    Service->>Supabase: Persist sprint assignment
+    Supabase-->>Service: Saved sprint plan
+    Service-->>Backlog: Updated sprint data
+```
+
 **Interface Designs**
 
 The Dashboard serves as the landing page after authentication. It presents a greeting with time-based text ("Good morning/afternoon/evening"), a statistics overview (board count, pending tasks, in-progress percentage, completion rate), a list of recent boards, an activity feed showing the latest task updates, and quick-action buttons for creating boards, tasks, and events.
 
 The Board Workspace is the primary work area. A toolbar at the top provides view-switching tabs, filter/sort/group controls, and a search bar. Below the toolbar, the active view renders: Kanban shows drag-and-drop columns grouped by status; Timeline shows a Gantt-style chart with horizontal bars colored by priority; Calendar shows a monthly grid with task indicators on their due dates. An "Add Group" button allows creating new task sections, and an AI panel can be opened as a right-side drawer.
 
+**Figure 12. AgileFlow Dashboard Interface**
+```mermaid
+flowchart TB
+    subgraph Shell["Application Shell"]
+        Sidebar[Sidebar Navigation]
+        Topbar[Top Bar and Search]
+    end
+
+    Topbar --> Stats[Statistics Overview]
+    Topbar --> Quick[Quick Actions]
+    Stats --> Boards[Recent Boards]
+    Stats --> Activity[Activity Feed]
+    Quick --> Events[Create Board, Task, or Event]
+    Boards --> Detail[Board or Backlog Navigation]
+```
+
 ### 4.1.4. Software Architecture
 
 **Component Hierarchy**
 
 The frontend architecture consists of four distinct layers:
+
+**Figure 6. Frontend Component Hierarchy Diagram**
+```mermaid
+flowchart TD
+    App[App Root]
+    App --> Providers[Providers]
+    Providers --> Layout[Layout]
+    Layout --> Pages[Page Components]
+    Pages --> Dashboard[Dashboard]
+    Pages --> Board[Board]
+    Pages --> Backlog[Backlog]
+    Pages --> Analytics[Analytics]
+    Pages --> Chat[Chat]
+    Pages --> Help[Help]
+    Board --> Views[Kanban, Timeline, Calendar Views]
+    Views --> Cells[Board Cells and Modals]
+    Analytics --> Widgets[Charts and Insight Popovers]
+```
 
 **Layer 1 — Providers (Root):** The application entry point wraps the entire component tree with context providers:
 - `QueryClientProvider` (TanStack React Query) — manages server state caching
@@ -209,6 +318,20 @@ The frontend architecture consists of four distinct layers:
 **Process Chart (Data Flow)**
 
 The application follows a unidirectional data flow pattern:
+
+**Figure 7. Frontend Data Flow Process Chart**
+```mermaid
+flowchart LR
+    User[User action] --> Handler[Event handler]
+    Handler --> Optimistic[Optimistic cache update]
+    Optimistic --> Mutation[React Query mutation]
+    Mutation --> Service[Entity service layer]
+    Service --> Supabase[Supabase API]
+    Supabase --> Invalidate[Invalidate related cache keys]
+    Invalidate --> Refetch[Background refetch]
+    Refetch --> UI[UI sync with server state]
+    Supabase -->|Error| Rollback[Rollback cache and show toast]
+```
 
 1. **User Interaction** — The user triggers an action (e.g., drops a task card, submits a form).
 2. **Event Handler** — A page-level handler calls a React Query mutation function.

@@ -6,6 +6,7 @@ The Work Plan for AgileFlow covers the 12-week core development cycle (January 6
 
 The AgileFlow WBS is divided into two parallel streams: Software Engineering (technical implementation) and Management Engineering (process analysis, documentation, and validation).
 
+**Figure 3. Work Breakdown Structure**
 ```mermaid
 flowchart TD
     A["1.0 AgileFlow"]
@@ -113,7 +114,50 @@ The AgileFlow project network follows a parallel processing model with identifie
 - Help center (1.4.3), admin panel (1.4.4), and performance page (1.4.5) are independent of each other
 - Management Engineering documentation runs continuously alongside technical implementation
 
+**Figure 4. Project Network Diagram**
+```mermaid
+flowchart LR
+    A["1.1.1 Schema Design"] --> B["1.1.2 Entity Services"]
+    B --> C["1.1.3 Auth System"]
+    C --> D["1.1.4 RLS Policies"]
+    D --> E["1.2.2 AI Tool Framework"]
+    E --> F["1.2.5 Chat Persistence"]
+    F --> G["1.5.2 E2E Tests"]
+    G --> H["1.6.1 Vercel Deployment"]
+
+    B --> P1["1.3 Multi-View Boards"]
+    B --> P2["1.2.3 Assignment Algorithm"]
+    B --> P3["1.4.1 RBAC"]
+    B --> P4["1.4.2 Analytics"]
+    P1 --> G
+    P2 --> G
+    P3 --> G
+    P4 --> G
+```
+
 ## 3.4. Gantt Chart
+
+**Figure 5. Gantt Chart (Development Timeline)**
+```mermaid
+gantt
+    title AgileFlow Development Timeline
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %d
+
+    section Engineering
+    Backend Infrastructure      :done, 2026-01-06, 2026-01-26
+    Multi-View Boards           :done, 2026-01-20, 2026-02-14
+    AI Engine                   :done, 2026-01-27, 2026-03-01
+    RBAC and Analytics          :done, 2026-02-03, 2026-02-28
+    Help, Admin, Performance    :done, 2026-02-17, 2026-03-08
+    Testing                     :done, 2026-03-03, 2026-03-20
+    Deployment and Documentation:done, 2026-03-10, 2026-03-27
+
+    section Management Engineering
+    Process Analysis            :done, 2026-01-06, 2026-01-31
+    Risk and UAT                :done, 2026-02-10, 2026-03-15
+    Final Documentation         :done, 2026-03-03, 2026-03-27
+```
 
 **Table 3. AgileFlow Development Timeline (12 Weeks)**
 
