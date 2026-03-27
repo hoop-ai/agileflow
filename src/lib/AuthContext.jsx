@@ -35,29 +35,30 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
-    // Seed initial state from existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Helper to set authenticated state from a session
+    const handleSession = async (session) => {
       if (session?.user) {
-        setUser(session.user);
-        setIsAuthenticated(true);
-        isAuthenticatedRef.current = true;
-        loadProfile(session.user.id).finally(() => setIsLoadingAuth(false));
-      } else {
-        setIsLoadingAuth(false);
-      }
-    }).catch(() => {
-      setIsLoadingAuth(false);
-    });
-
-    // Single listener handles all auth state transitions
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
         setUser(session.user);
         setIsAuthenticated(true);
         isAuthenticatedRef.current = true;
         setAuthError(null);
         try { await loadProfile(session.user.id); } catch (e) { console.error('Profile load failed:', e); }
-        setIsLoadingAuth(false);
+      } else {
+        setUser(null);
+        setProfile(null);
+        setIsAuthenticated(false);
+        isAuthenticatedRef.current = false;
+      }
+      setIsLoadingAuth(false);
+    };
+
+    // Single listener handles all auth state transitions including initial session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'INITIAL_SESSION') {
+        // Fires once on mount with stored session (or null if not logged in)
+        await handleSession(session);
+      } else if (event === 'SIGNED_IN') {
+        await handleSession(session);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setProfile(null);

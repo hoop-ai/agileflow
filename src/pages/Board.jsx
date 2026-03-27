@@ -282,8 +282,8 @@ export default function BoardPage() {
   };
 
   const handleUpdateColumn = async (columnId, updatedData) => {
-    if (!board) return;
-    const updatedColumns = board.columns.map(col => 
+    if (!board?.columns) return;
+    const updatedColumns = board.columns.map(col =>
       col.id === columnId ? { ...col, ...updatedData } : col
     );
     try {
@@ -300,7 +300,7 @@ export default function BoardPage() {
   };
 
   const handleDeleteColumn = async (columnId) => {
-    if (!board) return;
+    if (!board?.columns) return;
     const updatedColumns = board.columns.filter(col => col.id !== columnId);
     const updatedItems = items.map(item => {
       const newData = { ...item.data };
@@ -347,7 +347,7 @@ export default function BoardPage() {
       return;
     }
 
-    const updatedGroups = board.groups.filter(group => group.id !== groupIdToDelete);
+    const updatedGroups = (board.groups || []).filter(group => group.id !== groupIdToDelete);
     const itemsOfDeletedGroup = items.filter(item => item.group_id === groupIdToDelete);
     const itemDeletePromises = itemsOfDeletedGroup.map(item => Item.delete(item.id));
 
@@ -356,7 +356,6 @@ export default function BoardPage() {
       await Promise.all(itemDeletePromises);
       setBoard(prevBoard => ({ ...prevBoard, groups: updatedGroups }));
       setItems(prevItems => prevItems.filter(item => item.group_id !== groupIdToDelete));
-      console.log(`Group ${groupIdToDelete} and its items deleted successfully.`);
     } catch (error) {
       console.error("Error deleting group:", error);
       toast({
@@ -371,9 +370,9 @@ export default function BoardPage() {
   const handleHideColumnFromGroup = async (groupId, columnId) => {
     if (!board) return;
     
-    const updatedGroups = board.groups.map(group => {
+    const updatedGroups = (board.groups || []).map(group => {
       if (group.id === groupId) {
-        const currentVisibleColumns = group.visible_columns || board.columns.map(col => col.id);
+        const currentVisibleColumns = group.visible_columns || (board.columns || []).map(col => col.id);
         const newVisibleColumns = currentVisibleColumns.filter(id => id !== columnId);
         return { ...group, visible_columns: newVisibleColumns };
       }

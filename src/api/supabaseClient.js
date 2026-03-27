@@ -15,9 +15,23 @@ export const supabase = supabaseUrl && supabaseAnonKey
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        storageKey: 'agileflow-auth',
       }
     })
   : null;
+
+// One-time migration: clear old auth storage keys to force fresh login
+// This runs once per browser and cleans up stale sessions from the old config
+const AUTH_VERSION = 'v2';
+if (typeof window !== 'undefined' && localStorage.getItem('agileflow-auth-version') !== AUTH_VERSION) {
+  // Remove any old Supabase auth keys that used the default storage key
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith('sb-') && key.includes('-auth-token')) {
+      localStorage.removeItem(key);
+    }
+  });
+  localStorage.setItem('agileflow-auth-version', AUTH_VERSION);
+}
 
 export const isSupabaseConfigured = !!supabase;
 
