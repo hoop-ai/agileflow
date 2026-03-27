@@ -3,6 +3,7 @@ import { User as UserService } from "@/api/entities/User";
 import { supabase } from "@/api/supabaseClient";
 import { useTheme } from "@/components/utils/ThemeProvider";
 import { useToast } from "@/components/ui/use-toast";
+import { showErrorToast } from "@/lib/error-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,6 +40,8 @@ export default function SettingsPage() {
     email: '',
     job_title: '',
     department: '',
+    description: '',
+    skills: [],
     email_notifications: true,
     task_assignments: true,
     mentions: true,
@@ -76,8 +79,10 @@ export default function SettingsPage() {
       setSettings({
         full_name: userData.full_name || '',
         email: userData.email || '',
-        job_title: s.job_title || '',
-        department: s.department || '',
+        job_title: userData.job_title || s.job_title || '',
+        department: userData.department || s.department || '',
+        description: userData.description || '',
+        skills: Array.isArray(userData.skills) ? userData.skills : [],
         email_notifications: s.email_notifications !== false,
         task_assignments: s.task_assignments !== false,
         mentions: s.mentions !== false,
@@ -108,9 +113,11 @@ export default function SettingsPage() {
       await UserService.updateMe({
         full_name: settings.full_name,
         theme: settings.theme,
+        job_title: settings.job_title,
+        department: settings.department,
+        description: settings.description,
+        skills: settings.skills,
         settings: {
-          job_title: settings.job_title,
-          department: settings.department,
           email_notifications: settings.email_notifications,
           task_assignments: settings.task_assignments,
           mentions: settings.mentions,
@@ -123,7 +130,7 @@ export default function SettingsPage() {
           week_start: settings.week_start,
           profile_visibility: settings.profile_visibility,
           show_email: settings.show_email,
-          activity_tracking: settings.activity_tracking
+          activity_tracking: settings.activity_tracking,
         }
       });
 
@@ -132,11 +139,7 @@ export default function SettingsPage() {
       await loadUserSettings();
     } catch (error) {
       console.error('Error saving settings:', error);
-      toast({
-        title: "Save failed",
-        description: "Could not save your settings. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Save failed", error);
     }
 
     setIsSaving(false);
@@ -295,6 +298,33 @@ export default function SettingsPage() {
                       onChange={(e) => setSettings(prev => ({ ...prev, department: e.target.value }))}
                       placeholder="e.g., Engineering"
                     />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="description">About You</Label>
+                    <textarea
+                      id="description"
+                      value={settings.description || ""}
+                      onChange={(e) => setSettings(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Tell your team about yourself, your experience, and what you're working on..."
+                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="skills">Skills</Label>
+                    <Input
+                      id="skills"
+                      value={Array.isArray(settings.skills) ? settings.skills.join(", ") : (settings.skills || "")}
+                      onChange={(e) => setSettings(prev => ({ ...prev, skills: e.target.value.split(",").map(s => s.trim()).filter(Boolean) }))}
+                      placeholder="e.g. React, Project Management, UX Design"
+                    />
+                    <p className="text-xs text-muted-foreground">Comma-separated list of your skills</p>
                   </div>
                 </div>
               </div>

@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import { showErrorToast } from "@/lib/error-utils";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -62,11 +63,7 @@ export default function BacklogPage() {
     },
     onError: (error) => {
       console.error("Error creating story:", error);
-      toast({
-        title: "Creation failed",
-        description: "Could not create the user story. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Creation failed", error);
     },
   });
 
@@ -77,11 +74,7 @@ export default function BacklogPage() {
     },
     onError: (error) => {
       console.error("Error updating story:", error);
-      toast({
-        title: "Update failed",
-        description: "Could not update the user story. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Update failed", error);
     },
   });
 
@@ -93,11 +86,7 @@ export default function BacklogPage() {
     },
     onError: (error) => {
       console.error("Error deleting story:", error);
-      toast({
-        title: "Delete failed",
-        description: "Could not delete the user story. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Delete failed", error);
     },
   });
 

@@ -4,6 +4,7 @@ import { Board } from '@/api/entities/Board';
 import { useAuth } from '@/lib/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from "@/components/ui/use-toast";
+import { showErrorToast } from "@/lib/error-utils";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -68,11 +69,7 @@ export default function AdminPage() {
       });
     } catch (error) {
       console.error('Error loading admin data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load admin data. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Failed to load admin data", error);
     }
     setIsLoading(false);
   };
@@ -86,11 +83,7 @@ export default function AdminPage() {
       await loadData();
     } catch (error) {
       console.error('Error updating role:', error);
-      toast({
-        title: "Update failed",
-        description: "Could not update the user role. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Role update failed", error);
     }
   };
 

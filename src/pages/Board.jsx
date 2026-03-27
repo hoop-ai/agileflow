@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
+import { showErrorToast } from "@/lib/error-utils";
 import {
   Plus,
   Search,
@@ -165,11 +166,7 @@ export default function BoardPage() {
       setItems(prev => [...prev, newItem].sort((a, b) => (a.order_index || 0) - (b.order_index || 0)));
     } catch (error) {
       console.error("Error adding item:", error);
-      toast({
-        title: "Error",
-        description: "Could not add the task. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Error adding task", error);
     }
   };
 
@@ -184,11 +181,7 @@ export default function BoardPage() {
       }
     } catch (error) {
       console.error("Error updating item:", error);
-      toast({
-        title: "Update failed",
-        description: "Could not save your changes. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Update failed", error);
     }
   };
 
@@ -201,11 +194,7 @@ export default function BoardPage() {
       }
     } catch (error) {
       console.error("Error deleting item:", error);
-      toast({
-        title: "Delete failed",
-        description: "Could not delete the task. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Delete failed", error);
     }
   };
 
@@ -237,11 +226,7 @@ export default function BoardPage() {
       ));
     } catch (error) {
       console.error("Error reordering items:", error);
-      toast({
-        title: "Error",
-        description: "Could not reorder tasks. Refreshing data.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Reorder failed", error);
       loadBoardAndItems();
     }
   };
@@ -273,11 +258,7 @@ export default function BoardPage() {
       setShowNewColumnModal(false);
     } catch (error) {
       console.error("Error adding column:", error);
-      toast({
-        title: "Error",
-        description: "Could not add the column. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Error adding column", error);
     }
   };
 
@@ -291,11 +272,7 @@ export default function BoardPage() {
       setBoard(prev => ({ ...prev, columns: updatedColumns }));
     } catch (error) {
       console.error("Error updating column:", error);
-      toast({
-        title: "Update failed",
-        description: "Could not update the column. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Column update failed", error);
     }
   };
 
@@ -314,11 +291,7 @@ export default function BoardPage() {
       setItems(updatedItems);
     } catch (error) {
       console.error("Error deleting column:", error);
-      toast({
-        title: "Delete failed",
-        description: "Could not delete the column. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Column delete failed", error);
     }
   };
   
@@ -332,11 +305,7 @@ export default function BoardPage() {
       setShowNewGroupModal(false);
     } catch (error) {
       console.error("Error adding group:", error);
-      toast({
-        title: "Error",
-        description: "Could not add the group. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Error adding group", error);
     }
   };
 
@@ -358,11 +327,7 @@ export default function BoardPage() {
       setItems(prevItems => prevItems.filter(item => item.group_id !== groupIdToDelete));
     } catch (error) {
       console.error("Error deleting group:", error);
-      toast({
-        title: "Delete failed",
-        description: "Could not delete the group. Refreshing data.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Group delete failed", error);
       loadBoardAndItems();
     }
   };
@@ -384,11 +349,7 @@ export default function BoardPage() {
       setBoard(prev => ({ ...prev, groups: updatedGroups }));
     } catch (error) {
       console.error("Error hiding column from group:", error);
-      toast({
-        title: "Error",
-        description: "Could not hide the column. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Error hiding column", error);
     }
   };
 
@@ -511,11 +472,7 @@ export default function BoardPage() {
                 setBoard(updated);
               } catch (error) {
                 console.error("Error updating board:", error);
-                toast({
-                  title: "Update failed",
-                  description: "Could not update the board. Please try again.",
-                  variant: "destructive",
-                });
+                showErrorToast(toast, "Board update failed", error);
               }
             }}
           />

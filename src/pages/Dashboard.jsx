@@ -5,6 +5,7 @@ import { Item } from "@/api/entities/Item";
 import { User } from "@/api/entities/User";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { showErrorToast } from "@/lib/error-utils";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Folder, BarChart3, ArrowRight, AlertTriangle, RefreshCw, LogOut } from "lucide-react";
@@ -70,11 +71,7 @@ export default function Dashboard() {
       setBoards(prev => [newBoard, ...prev]);
     } catch (error) {
       console.error("Error creating board:", error);
-      toast({
-        title: "Creation failed",
-        description: "Could not create the board. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Creation failed", error);
     }
   };
 

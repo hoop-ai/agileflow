@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
+import { showErrorToast } from "@/lib/error-utils";
 import { cn } from "@/lib/utils";
 import {
   Calendar as CalendarIcon,
@@ -86,11 +87,7 @@ export default function CalendarPage() {
       setSelectedDate(null);
     } catch (error) {
       console.error('Error creating event:', error);
-      toast({
-        title: "Creation failed",
-        description: "Could not create the event. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Creation failed", error);
     }
   };
 
@@ -101,11 +98,7 @@ export default function CalendarPage() {
       setSelectedEvent(null);
     } catch (error) {
       console.error('Error deleting event:', error);
-      toast({
-        title: "Delete failed",
-        description: "Could not delete the event. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Delete failed", error);
     }
   };
 

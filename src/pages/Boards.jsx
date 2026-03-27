@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import { showErrorToast } from "@/lib/error-utils";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
@@ -81,11 +82,7 @@ export default function Boards() {
       });
     } catch (error) {
       console.error("Error creating board:", error);
-      toast({
-        title: "Creation failed",
-        description: "Could not create the board. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Creation failed", error);
       throw error; // Re-throw so CreateBoardModal knows the operation failed
     }
   };
@@ -107,11 +104,7 @@ export default function Boards() {
       setEditingBoard(null);
     } catch (error) {
       console.error("Error updating board:", error);
-      toast({
-        title: "Update failed",
-        description: "Could not update the board. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Update failed", error);
       loadBoards();
     }
   };
@@ -122,11 +115,7 @@ export default function Boards() {
       setBoards(prev => prev.filter(board => board.id !== boardId));
     } catch (error) {
       console.error("Error deleting board:", error);
-      toast({
-        title: "Delete failed",
-        description: "Could not delete the board. Please try again.",
-        variant: "destructive",
-      });
+      showErrorToast(toast, "Delete failed", error);
     }
   };
 

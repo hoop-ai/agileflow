@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useRef, useState } from "react"
 import { useLocation } from "react-router-dom";
 import { AiSession } from "@/api/entities/AiSession";
 import { AiMessage } from "@/api/entities/AiMessage";
+import { AI_TOOLS, executeTool } from "@/lib/ai-tools";
 
 function generateId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -60,7 +61,17 @@ For questions about concepts:
 - Always use proper markdown tables: | Header | Header |\\n|---|---|\\n| Cell | Cell |
 - Bold important terms and numbers
 - Use headers (##, ###) to organize longer responses
-- Never use HTML tags — only markdown`;
+- Never use HTML tags — only markdown
+
+## Available Tools
+You have tools to interact with the AgileFlow platform directly. Use them when users ask you to:
+- **Find team members** → call listTeamMembers to see everyone's roles, skills, and job titles
+- **View boards** → call listBoards to see available project boards
+- **Create tasks** → call createTask with a board_id and title
+- **Assign tasks** → call assignTask with a task_id and person's name
+- **List tasks** → call listTasks to see items on a board
+
+When assigning tasks, ALWAYS call listTeamMembers first to find the right person based on their skills and role. Confirm what you did after each action.`;
 
 export function AIProvider({ children }) {
   const [messages, setMessages] = useState([]);
@@ -153,25 +164,83 @@ export function AIProvider({ children }) {
       let lastError = null;
       let accumulated = "";
 
+      // Stream parser that detects both text content and tool calls
+      async function processStream(response, msgId) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let text = "";
+        let toolCalls = [];
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          for (const line of chunk.split("\n")) {
+            const trimmed = line.trim();
+            if (!trimmed || !trimmed.startsWith("data:")) continue;
+            const jsonStr = trimmed.slice(5).trim();
+            if (jsonStr === "[DONE]") continue;
+
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const choice = parsed.choices?.[0];
+
+              const delta = choice?.delta?.content;
+              if (delta) {
+                text += delta;
+                setThinking(false);
+                setMessages(prev =>
+                  prev.map(m => m.id === msgId ? { ...m, content: text } : m)
+                );
+              }
+
+              if (choice?.delta?.tool_calls) {
+                for (const tc of choice.delta.tool_calls) {
+                  if (tc.index !== undefined) {
+                    if (!toolCalls[tc.index]) {
+                      toolCalls[tc.index] = { id: tc.id || "", function: { name: "", arguments: "" } };
+                    }
+                    if (tc.id) toolCalls[tc.index].id = tc.id;
+                    if (tc.function?.name) toolCalls[tc.index].function.name += tc.function.name;
+                    if (tc.function?.arguments) toolCalls[tc.index].function.arguments += tc.function.arguments;
+                  }
+                }
+              }
+            } catch {
+              // Partial JSON frame, skip
+            }
+          }
+        }
+
+        return { text, toolCalls: toolCalls.filter(Boolean) };
+      }
+
+      // Call OpenRouter with tool definitions
+      async function callModel(model, msgs, signal) {
+        return fetch(OPENROUTER_BASE_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+            "HTTP-Referer": window.location.origin,
+          },
+          body: JSON.stringify({
+            model,
+            messages: msgs,
+            max_tokens: 2048,
+            temperature: 0.7,
+            stream: true,
+            tools: AI_TOOLS,
+          }),
+          signal,
+        });
+      }
+
       for (const model of models) {
         try {
           accumulated = "";
-          const response = await fetch(OPENROUTER_BASE_URL, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-              "HTTP-Referer": window.location.origin,
-            },
-            body: JSON.stringify({
-              model,
-              messages: apiMessages,
-              max_tokens: 2048,
-              temperature: 0.7,
-              stream: true,
-            }),
-            signal: controller.signal,
-          });
+          const response = await callModel(model, apiMessages, controller.signal);
 
           if (!response.ok) {
             const errText = await response.text().catch(() => "");
@@ -179,38 +248,47 @@ export function AIProvider({ children }) {
             continue;
           }
 
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder();
+          let { text, toolCalls } = await processStream(response, assistantId);
+          accumulated = text;
 
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+          // Handle tool calls — execute tools and send results back for a final answer
+          if (toolCalls.length > 0 && !accumulated) {
+            setMessages(prev =>
+              prev.map(m => m.id === assistantId ? { ...m, content: "*Checking your data...*" } : m)
+            );
 
-            const chunk = decoder.decode(value, { stream: true });
-
-            for (const line of chunk.split("\n")) {
-              const trimmed = line.trim();
-              if (!trimmed || !trimmed.startsWith("data:")) continue;
-              const jsonStr = trimmed.slice(5).trim();
-              if (jsonStr === "[DONE]") continue;
-
+            const toolResults = [];
+            for (const tc of toolCalls) {
               try {
-                const parsed = JSON.parse(jsonStr);
-                const delta = parsed.choices?.[0]?.delta?.content;
-                if (delta) {
-                  accumulated += delta;
-                  setThinking(false);
-                  setMessages(prev =>
-                    prev.map(m => m.id === assistantId ? { ...m, content: accumulated } : m)
-                  );
-                }
-              } catch {
-                // Partial JSON frame, skip
+                const args = JSON.parse(tc.function.arguments || "{}");
+                const result = await executeTool(tc.function.name, args);
+                toolResults.push({
+                  role: "tool",
+                  tool_call_id: tc.id,
+                  content: JSON.stringify(result),
+                });
+              } catch (e) {
+                toolResults.push({
+                  role: "tool",
+                  tool_call_id: tc.id,
+                  content: JSON.stringify({ error: e.message }),
+                });
               }
+            }
+
+            const followUpMsgs = [
+              ...apiMessages,
+              { role: "assistant", tool_calls: toolCalls },
+              ...toolResults,
+            ];
+
+            const followUpResponse = await callModel(model, followUpMsgs, controller.signal);
+            if (followUpResponse.ok) {
+              const result = await processStream(followUpResponse, assistantId);
+              accumulated = result.text;
             }
           }
 
-          // Success — break out of model loop
           if (accumulated) break;
 
         } catch (modelErr) {
