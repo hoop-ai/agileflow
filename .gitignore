@@ -29,3 +29,11 @@ dist-ssr
 
 .env
 .vercel
+
+# Dev tooling (local only)
+.claude/
+CLAUDE.md
+.mcp.json
+.playwright-mcp/
+docs/superpowers/
+playwright.config.js
