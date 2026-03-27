@@ -16,7 +16,7 @@ INSERT INTO boards (user_id, title, description, color, icon, columns, groups) V
   'Main development board for tracking sprint tasks and progress',
   '#0073EA',
   '🚀',
-  '[{"id":"status","title":"Status","type":"status","width":140},{"id":"person","title":"Assignee","type":"person","width":140},{"id":"priority","title":"Priority","type":"priority","width":120},{"id":"date","title":"Due Date","type":"date","width":130},{"id":"timeline","title":"Timeline","type":"timeline","width":160},{"id":"text","title":"Notes","type":"text","width":200}]'::jsonb,
+  '[{"id":"status","title":"Status","type":"status","width":140,"options":{"choices":[{"label":"Not Started","color":"#C4C4C4"},{"label":"Working on it","color":"#FFCB00"},{"label":"Done","color":"#00C875"},{"label":"Stuck","color":"#E2445C"}]}},{"id":"person","title":"Assignee","type":"person","width":140},{"id":"priority","title":"Priority","type":"priority","width":120,"options":{"choices":[{"value":"low","label":"Low","color":"#787D80"},{"value":"medium","label":"Medium","color":"#FFCB00"},{"value":"high","label":"High","color":"#FDAB3D"},{"value":"critical","label":"Critical","color":"#E2445C"}]}},{"id":"date","title":"Due Date","type":"date","width":130},{"id":"timeline","title":"Timeline","type":"timeline","width":160},{"id":"text","title":"Notes","type":"text","width":200}]'::jsonb,
   '[{"id":"grp_todo","title":"To Do","color":"#579BFC"},{"id":"grp_progress","title":"In Progress","color":"#FDAB3D"},{"id":"grp_review","title":"In Review","color":"#E2445C"},{"id":"grp_done","title":"Done","color":"#00C875"}]'::jsonb
 ) RETURNING id INTO board1_id;
 
@@ -27,7 +27,7 @@ INSERT INTO boards (user_id, title, description, color, icon, columns, groups) V
   'Track and manage reported bugs and issues',
   '#E2445C',
   '🐛',
-  '[{"id":"status","title":"Status","type":"status","width":140},{"id":"person","title":"Assigned To","type":"person","width":140},{"id":"priority","title":"Severity","type":"priority","width":120},{"id":"date","title":"Reported","type":"date","width":130},{"id":"text","title":"Steps to Reproduce","type":"text","width":250}]'::jsonb,
+  '[{"id":"status","title":"Status","type":"status","width":140,"options":{"choices":[{"label":"Not Started","color":"#C4C4C4"},{"label":"Working on it","color":"#FFCB00"},{"label":"Done","color":"#00C875"},{"label":"Stuck","color":"#E2445C"}]}},{"id":"person","title":"Assigned To","type":"person","width":140},{"id":"priority","title":"Severity","type":"priority","width":120,"options":{"choices":[{"value":"low","label":"Low","color":"#787D80"},{"value":"medium","label":"Medium","color":"#FFCB00"},{"value":"high","label":"High","color":"#FDAB3D"},{"value":"critical","label":"Critical","color":"#E2445C"}]}},{"id":"date","title":"Reported","type":"date","width":130},{"id":"text","title":"Steps to Reproduce","type":"text","width":250}]'::jsonb,
   '[{"id":"grp_new","title":"New","color":"#E2445C"},{"id":"grp_investigating","title":"Investigating","color":"#FDAB3D"},{"id":"grp_fixing","title":"Fixing","color":"#579BFC"},{"id":"grp_resolved","title":"Resolved","color":"#00C875"}]'::jsonb
 ) RETURNING id INTO board2_id;
 
@@ -38,7 +38,7 @@ INSERT INTO boards (user_id, title, description, color, icon, columns, groups) V
   'High-level feature planning and roadmap tracking',
   '#00C875',
   '🗺️',
-  '[{"id":"status","title":"Status","type":"status","width":140},{"id":"person","title":"Owner","type":"person","width":140},{"id":"priority","title":"Priority","type":"priority","width":120},{"id":"timeline","title":"Timeline","type":"timeline","width":160},{"id":"text","title":"Description","type":"text","width":250}]'::jsonb,
+  '[{"id":"status","title":"Status","type":"status","width":140,"options":{"choices":[{"label":"Not Started","color":"#C4C4C4"},{"label":"Working on it","color":"#FFCB00"},{"label":"Done","color":"#00C875"},{"label":"Stuck","color":"#E2445C"}]}},{"id":"person","title":"Owner","type":"person","width":140},{"id":"priority","title":"Priority","type":"priority","width":120,"options":{"choices":[{"value":"low","label":"Low","color":"#787D80"},{"value":"medium","label":"Medium","color":"#FFCB00"},{"value":"high","label":"High","color":"#FDAB3D"},{"value":"critical","label":"Critical","color":"#E2445C"}]}},{"id":"timeline","title":"Timeline","type":"timeline","width":160},{"id":"text","title":"Description","type":"text","width":250}]'::jsonb,
   '[{"id":"grp_q1","title":"Q1 2026","color":"#579BFC"},{"id":"grp_q2","title":"Q2 2026","color":"#00C875"},{"id":"grp_backlog","title":"Backlog","color":"#C4C4C4"}]'::jsonb
 ) RETURNING id INTO board3_id;
 
@@ -82,13 +82,13 @@ INSERT INTO items (board_id, group_id, title, description, data, order_index) VA
 
 -- Product Roadmap Items (10 features)
 INSERT INTO items (board_id, group_id, title, description, data, order_index) VALUES
-(board3_id, 'grp_q1', 'Core platform launch', 'Authentication, boards, dashboard, settings', '{"status":"Done","person":"Abdul Rahman Malak","priority":"Critical"}'::jsonb, 0),
-(board3_id, 'grp_q1', 'Agile workflow engine', 'Sprints, backlog, user stories, velocity tracking', '{"status":"Done","person":"Mohammad Houjeirat","priority":"Critical"}'::jsonb, 1),
-(board3_id, 'grp_q1', 'AI-powered assistant', 'Chat interface with tool calling capabilities', '{"status":"Working on it","person":"Abdul Rahman Malak","priority":"High"}'::jsonb, 2),
-(board3_id, 'grp_q2', 'Advanced analytics dashboard', 'Burndown charts, team velocity, task distribution', '{"status":"","person":"Maria Alftaih","priority":"High"}'::jsonb, 3),
-(board3_id, 'grp_q2', 'Real-time collaboration', 'Live cursors, presence indicators, co-editing', '{"status":"","person":"Khalid Hajjo Rifai","priority":"Medium"}'::jsonb, 4),
-(board3_id, 'grp_q2', 'Email notifications', 'Task assignment and deadline reminder emails', '{"status":"","person":"Maria Alftaih","priority":"Medium"}'::jsonb, 5),
-(board3_id, 'grp_q2', 'Mobile PWA support', 'Progressive web app for mobile access', '{"status":"","person":"Khalid Hajjo Rifai","priority":"High"}'::jsonb, 6),
+(board3_id, 'grp_q1', 'Core platform launch', 'Authentication, boards, dashboard, settings', '{"status":"Done","person":"Abdul Rahman Malak","priority":"Critical","timeline":{"from":"2026-01-15","to":"2026-03-15"}}'::jsonb, 0),
+(board3_id, 'grp_q1', 'Agile workflow engine', 'Sprints, backlog, user stories, velocity tracking', '{"status":"Done","person":"Mohammad Houjeirat","priority":"Critical","timeline":{"from":"2026-02-01","to":"2026-03-20"}}'::jsonb, 1),
+(board3_id, 'grp_q1', 'AI-powered assistant', 'Chat interface with tool calling capabilities', '{"status":"Working on it","person":"Abdul Rahman Malak","priority":"High","timeline":{"from":"2026-03-01","to":"2026-04-05"}}'::jsonb, 2),
+(board3_id, 'grp_q2', 'Advanced analytics dashboard', 'Burndown charts, team velocity, task distribution', '{"status":"","person":"Maria Alftaih","priority":"High","timeline":{"from":"2026-04-01","to":"2026-05-15"}}'::jsonb, 3),
+(board3_id, 'grp_q2', 'Real-time collaboration', 'Live cursors, presence indicators, co-editing', '{"status":"","person":"Khalid Hajjo Rifai","priority":"Medium","timeline":{"from":"2026-04-15","to":"2026-06-01"}}'::jsonb, 4),
+(board3_id, 'grp_q2', 'Email notifications', 'Task assignment and deadline reminder emails', '{"status":"","person":"Maria Alftaih","priority":"Medium","timeline":{"from":"2026-05-01","to":"2026-05-30"}}'::jsonb, 5),
+(board3_id, 'grp_q2', 'Mobile PWA support', 'Progressive web app for mobile access', '{"status":"","person":"Khalid Hajjo Rifai","priority":"High","timeline":{"from":"2026-05-15","to":"2026-06-30"}}'::jsonb, 6),
 (board3_id, 'grp_backlog', 'GitHub integration', 'Link commits and PRs to board items', '{"status":"","person":"Abdul Rahman Malak","priority":"Low"}'::jsonb, 7),
 (board3_id, 'grp_backlog', 'Custom field types', 'Allow users to define custom column types', '{"status":"","person":"Mohammad Houjeirat","priority":"Low"}'::jsonb, 8),
 (board3_id, 'grp_backlog', 'Gantt chart view', 'Timeline view for project planning', '{"status":"","person":"Khalid Hajjo Rifai","priority":"Medium"}'::jsonb, 9);

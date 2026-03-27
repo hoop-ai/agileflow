@@ -37,3 +37,4 @@ CLAUDE.md
 .playwright-mcp/
 docs/superpowers/
 playwright.config.js
+.gstack/

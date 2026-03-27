@@ -15,7 +15,7 @@ const DEFAULT_WEIGHTS = { competency: 0.4, availability: 0.3, performance: 0.3 }
  */
 function buildMemberProfiles(items, board) {
   const statusColId = board?.columns?.find(c => c.type === 'status')?.id;
-  const peopleColId = board?.columns?.find(c => c.type === 'people')?.id;
+  const peopleColId = board?.columns?.find(c => c.type === 'people' || c.type === 'person')?.id;
   const priorityColId = board?.columns?.find(c => c.type === 'priority')?.id;
   const dateColId = board?.columns?.find(c => c.type === 'date')?.id;
 

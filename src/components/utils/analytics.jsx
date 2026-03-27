@@ -150,7 +150,7 @@ export function calculateSprintBurndown(stories, sprintStartDate, sprintEndDate)
  * Returns array of {owner, assigned, completed, inProgress, completionRate, avgCompletionTime}.
  */
 export function calculateTeamMetrics(items, board) {
-  const peopleColumnId = board?.columns?.find(col => col.type === 'people')?.id;
+  const peopleColumnId = board?.columns?.find(col => col.type === 'people' || col.type === 'person')?.id;
   const statusColumnId = board?.columns?.find(col => col.type === 'status')?.id;
   const memberMap = {};
 

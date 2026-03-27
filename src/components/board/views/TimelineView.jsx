@@ -8,9 +8,26 @@ import InfoTooltip from "../../common/InfoTooltip";
 const TIMELINE_ITEM_HEIGHT = 32; // px
 const DAY_CELL_WIDTH = 40; // px
 
-const TimelineItemBar = ({ item, board, startDate, endDate, timelineStartDate, zoomLevel }) => {
-  const itemStartDateStr = item.data?.startDate; // Assuming 'startDate' column exists
-  const itemEndDateStr = item.data?.endDate || item.data?.due_date; // Assuming 'endDate' or 'due_date' column
+const TimelineItemBar = ({ item, board, startDate, endDate, timelineStartDate, zoomLevel, startDateColId, endDateColId, timelineColId }) => {
+  // If using a single timeline column with {from, to} object
+  let itemStartDateStr, itemEndDateStr;
+  if (timelineColId) {
+    const timelineVal = item.data?.[timelineColId];
+    if (timelineVal && typeof timelineVal === 'object') {
+      itemStartDateStr = timelineVal.from;
+      itemEndDateStr = timelineVal.to;
+    } else if (typeof timelineVal === 'string') {
+      try {
+        const parsed = JSON.parse(timelineVal);
+        itemStartDateStr = parsed.from;
+        itemEndDateStr = parsed.to;
+      } catch { /* not JSON */ }
+    }
+  } else {
+    // Using separate start/end date columns
+    itemStartDateStr = item.data?.[startDateColId];
+    itemEndDateStr = item.data?.[endDateColId];
+  }
 
   if (!itemStartDateStr || !itemEndDateStr) return null;
 
@@ -72,24 +89,35 @@ const TimelineItemBar = ({ item, board, startDate, endDate, timelineStartDate, z
 
 export default function TimelineView({ board, items }) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [zoomLevel, setZoomLevel] = useState('week'); // 'day', 'week', 'month'
+  const [zoomLevel, setZoomLevel] = useState('week');
   const [startDateColId, setStartDateColId] = useState(null);
   const [endDateColId, setEndDateColId] = useState(null);
+  const [timelineColId, setTimelineColId] = useState(null);
 
   useEffect(() => {
+    // First, check for a timeline type column (stores {from, to} as a single value)
+    const timelineCol = board?.columns?.find(col => col.type === 'timeline');
+    if (timelineCol) {
+      setTimelineColId(timelineCol.id);
+      setStartDateColId(null);
+      setEndDateColId(null);
+      return;
+    }
+
+    // Otherwise, look for separate date columns
+    setTimelineColId(null);
     const dateCols = board?.columns?.filter(col => col.type === 'date');
     if (dateCols?.length >= 2) {
-      setStartDateColId(dateCols[0].id); // Default to first date column
-      setEndDateColId(dateCols[1].id);   // Default to second date column
+      setStartDateColId(dateCols[0].id);
+      setEndDateColId(dateCols[1].id);
     } else if (dateCols?.length === 1) {
       setStartDateColId(dateCols[0].id);
-      setEndDateColId(dateCols[0].id); // Use same for start/end if only one
+      setEndDateColId(dateCols[0].id);
     } else {
-        // Fallback to common names if no 'date' type columns
-        const sDate = board?.columns?.find(c => c.id === 'startDate' || c.title.toLowerCase().includes('start'))?.id;
-        const eDate = board?.columns?.find(c => c.id === 'endDate' || c.id === 'due_date' || c.title.toLowerCase().includes('end') || c.title.toLowerCase().includes('due'))?.id;
-        if (sDate) setStartDateColId(sDate);
-        if (eDate) setEndDateColId(eDate);
+      const sDate = board?.columns?.find(c => c.id === 'startDate' || c.title?.toLowerCase().includes('start'))?.id;
+      const eDate = board?.columns?.find(c => c.id === 'endDate' || c.id === 'due_date' || c.title?.toLowerCase().includes('end') || c.title?.toLowerCase().includes('due'))?.id;
+      if (sDate) setStartDateColId(sDate);
+      if (eDate) setEndDateColId(eDate);
     }
   }, [board]);
 
@@ -127,23 +155,34 @@ export default function TimelineView({ board, items }) {
     return format(currentDate, 'MMMM yyyy');
   };
 
-  if (!board) return <div className="p-4 text-center text-gray-500">Board data not available.</div>;
+  if (!board) return <div className="p-4 text-center text-muted-foreground">Board data not available.</div>;
 
-  if (!startDateColId || !endDateColId) {
+  const hasTimelineSource = timelineColId || (startDateColId && endDateColId);
+
+  if (!hasTimelineSource) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <CalendarDays className="h-12 w-12 text-muted-foreground/50 mb-4" />
         <h3 className="text-lg font-medium text-foreground mb-1">Date columns required</h3>
         <p className="text-sm text-muted-foreground max-w-sm">
-          Items need start and end dates to appear on the timeline. Add date columns to your board.
+          Add a Timeline column or two Date columns to your board to use the timeline view.
         </p>
       </div>
     );
   }
 
-  // Group items for display (e.g., by original group or flat list)
-  // For simplicity, using a flat list of items here. Grouping can be added.
-  const displayItems = items.filter(item => item.data?.[startDateColId] && item.data?.[endDateColId || startDateColId]);
+  // Filter items that have valid date data
+  const displayItems = items.filter(item => {
+    if (timelineColId) {
+      const val = item.data?.[timelineColId];
+      if (val && typeof val === 'object') return val.from && val.to;
+      if (typeof val === 'string') {
+        try { const p = JSON.parse(val); return p.from && p.to; } catch { return false; }
+      }
+      return false;
+    }
+    return item.data?.[startDateColId] && item.data?.[endDateColId];
+  });
 
 
   return (
@@ -158,7 +197,7 @@ export default function TimelineView({ board, items }) {
           <Button variant="outline" size="sm" className="h-8" onClick={() => setCurrentDate(new Date())}>Today</Button>
           <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleNext}><ChevronRight className="w-4 h-4" /></Button>
           <InfoTooltip text="Zoom in to see daily detail or zoom out for a monthly overview" side="bottom" />
-          <select value={zoomLevel} onChange={(e) => setZoomLevel(e.target.value)} className="h-8 border border-gray-300 rounded-md px-2 text-sm">
+          <select value={zoomLevel} onChange={(e) => setZoomLevel(e.target.value)} className="h-8 border border-border rounded-md px-2 text-sm bg-card text-foreground">
             <option value="day">Day</option>
             <option value="week">Week</option>
             <option value="month">Month</option>
@@ -171,16 +210,16 @@ export default function TimelineView({ board, items }) {
       <CardContent className="p-0 overflow-x-auto">
         <div className="min-w-max"> {/* Ensures horizontal scrolling for timeline content */}
           {/* Timeline Header (Days) */}
-          <div className="flex sticky top-[53px] bg-gray-50 z-[5] border-b">
-            <div className="w-[200px] flex-shrink-0 p-2 border-r font-medium text-xs text-gray-600">Task</div> {/* Item Name Column */}
+          <div className="flex sticky top-[53px] bg-muted/50 z-[5] border-b border-border">
+            <div className="w-[200px] flex-shrink-0 p-2 border-r border-border font-medium text-xs text-muted-foreground">Task</div>
             {daysHeader.map(day => (
               <div
                 key={day.toString()}
-                className="flex-shrink-0 text-center p-1 border-r"
+                className="flex-shrink-0 text-center p-1 border-r border-border"
                 style={{ width: `${DAY_CELL_WIDTH * (zoomLevel === 'week' ? 1 : (zoomLevel === 'month' ? (30/7) : (1/7) ) )}px` }}
               >
-                <div className="text-xs text-gray-500">{format(day, 'EEE')}</div>
-                <div className="text-sm font-medium">{format(day, 'd')}</div>
+                <div className="text-xs text-muted-foreground">{format(day, 'EEE')}</div>
+                <div className="text-sm font-medium text-foreground">{format(day, 'd')}</div>
               </div>
             ))}
           </div>
@@ -188,16 +227,17 @@ export default function TimelineView({ board, items }) {
           {/* Timeline Rows (Items) */}
           <div className="relative"> {/* Container for absolute positioned item bars */}
             {displayItems.map((item, index) => (
-              <div key={item.id} className="flex border-b" style={{ height: `${TIMELINE_ITEM_HEIGHT}px` }}>
-                <div className="w-[200px] flex-shrink-0 p-2 border-r text-xs truncate" title={item.title}>
+              <div key={item.id} className="flex border-b border-border" style={{ height: `${TIMELINE_ITEM_HEIGHT}px` }}>
+                <div className="w-[200px] flex-shrink-0 p-2 border-r border-border text-xs text-foreground truncate" title={item.title}>
                   {item.title}
                 </div>
                 <div className="flex-grow relative h-full"> {/* This part will contain the bar */}
-                  <TimelineItemBar 
-                    item={item} 
+                  <TimelineItemBar
+                    item={item}
                     board={board}
-                    startDate={item.data[startDateColId]} 
-                    endDate={item.data[endDateColId || startDateColId]}
+                    timelineColId={timelineColId}
+                    startDateColId={startDateColId}
+                    endDateColId={endDateColId}
                     timelineStartDate={timelineStartDate}
                     timelineEndDate={timelineEndDate}
                     zoomLevel={zoomLevel}

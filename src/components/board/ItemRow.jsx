@@ -63,6 +63,7 @@ export default function ItemRow({
       case 'status':
         return <StatusCell {...commonProps} />;
       case 'people':
+      case 'person':
         return <PeopleCell {...commonProps} />;
       case 'date':
         return <DateCell {...commonProps} />;

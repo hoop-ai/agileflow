@@ -11,7 +11,7 @@ export default function AnalyticsPanel({ board, items, onClose }) {
   // Calculate analytics data
   const statusColumn = board?.columns?.find(col => col.type === 'status');
   const priorityColumn = board?.columns?.find(col => col.type === 'priority');
-  const peopleColumn = board?.columns?.find(col => col.type === 'people');
+  const peopleColumn = board?.columns?.find(col => col.type === 'people' || col.type === 'person');
   const dueDateColumn = board?.columns?.find(col => col.type === 'date');
 
   // Status distribution

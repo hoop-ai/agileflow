@@ -61,7 +61,7 @@ const KanbanCard = ({ item, index, board, groupingType, onEdit }) => {
   const priorityValue = item.data?.[priorityColumn?.id];
   const priorityOption = priorityColumn?.options?.choices?.find(c => c.value === priorityValue);
 
-  const ownerColumn = board?.columns?.find(col => col.type === 'people');
+  const ownerColumn = board?.columns?.find(col => col.type === 'people' || col.type === 'person');
   const ownerValue = item.data?.[ownerColumn?.id];
 
   const statusColumn = board?.columns?.find(col => col.type === 'status');
