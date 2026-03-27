@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-
-const SUPER_ADMIN_EMAIL = 'test@test.com';
+import { isSuperAdminEmail } from '@/lib/admin-config';
 
 // Role hierarchy: higher number = more permissions
 const ROLE_LEVEL = {
@@ -16,7 +15,7 @@ export function usePermissions() {
   return useMemo(() => {
     const role = user?.role || 'viewer';
     const level = ROLE_LEVEL[role] ?? 0;
-    const isSuperAdmin = user?.email === SUPER_ADMIN_EMAIL;
+    const isSuperAdmin = isSuperAdminEmail(user?.email);
 
     return {
       role,

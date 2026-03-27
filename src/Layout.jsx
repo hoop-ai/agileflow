@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { isSuperAdminEmail } from "@/lib/admin-config";
 
 const AVATAR_COLORS = [
   'bg-blue-600 text-white',
@@ -208,7 +209,7 @@ function NotificationsDropdown() {
       ]);
       setNotifications(notifs);
       setUnreadCount(count);
-    } catch (error) {
+    } catch {
       // Notifications table may not exist yet
     }
   };
@@ -354,7 +355,7 @@ function LayoutContent({ children }) {
     }
   };
 
-  const isSuperAdmin = currentUser?.email === 'test@test.com';
+  const isSuperAdmin = isSuperAdminEmail(currentUser?.email);
   const isAdmin = currentUser?.role === 'admin';
   const navItems = isSuperAdmin
     ? [...navigationItems, { title: "Team", url: createPageUrl("Admin"), icon: Users }]

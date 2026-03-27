@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { User as UserService } from '@/api/entities/User';
+import { deleteUserAccount } from '@/api/admin';
 import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -22,6 +23,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { isSuperAdminEmail } from '@/lib/admin-config';
 import {
   Shield,
   Users,
@@ -36,6 +38,7 @@ import {
   Copy,
   Check,
   MoreHorizontal,
+  Trash2,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -44,6 +47,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import InfoTooltip from "@/components/common/InfoTooltip";
 import ModuleHelp from "@/components/common/ModuleHelp";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -117,8 +129,9 @@ export default function AdminPage() {
   const [editingUser, setEditingUser] = useState(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [resetPasswordUser, setResetPasswordUser] = useState(null);
+  const [deleteUserTarget, setDeleteUserTarget] = useState(null);
 
-  const { canManageUsers, canResetPasswords, canInviteMembers, canChangeRoles, isSuperAdmin } = usePermissions();
+  const { canManageUsers } = usePermissions();
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['admin-users'],
@@ -151,6 +164,27 @@ export default function AdminPage() {
     },
     onError: (error) => {
       showErrorToast(toast, 'Failed to send reset email', error);
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: deleteUserAccount,
+    onSuccess: (data, deletedUserId) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      if (editingUser?.id === deletedUserId) {
+        setEditingUser(null);
+      }
+      if (resetPasswordUser?.id === deletedUserId) {
+        setResetPasswordUser(null);
+      }
+      setDeleteUserTarget(null);
+      toast({
+        title: 'User deleted',
+        description: `${data?.deletedAssignedItems || 0} assigned task(s) and ${data?.deletedAssignedStories || 0} assigned backlog stor${(data?.deletedAssignedStories || 0) === 1 ? 'y' : 'ies'} were deleted before the account was removed.`,
+      });
+    },
+    onError: (error) => {
+      showErrorToast(toast, 'Failed to delete user account', error);
     },
   });
 
@@ -347,6 +381,7 @@ export default function AdminPage() {
                     const role = u.role || 'member';
                     const roleConfig = ROLE_CONFIG[role] || ROLE_CONFIG.member;
                     const isCurrentUser = u.id === currentUser?.id;
+                    const isProtectedUser = isCurrentUser || isSuperAdminEmail(u.email);
                     const isActive = u.updated_at && (new Date() - new Date(u.updated_at)) < 24 * 60 * 60 * 1000;
 
                     return (
@@ -419,7 +454,7 @@ export default function AdminPage() {
                                   </DropdownMenuTrigger>
                                 </TooltipTrigger>
                                 <TooltipContent side="left" className="text-xs max-w-xs z-[300]">
-                                  Manage this user — edit role or reset password
+                                  Manage this user — edit role, reset password, or delete the account
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
@@ -434,6 +469,14 @@ export default function AdminPage() {
                               >
                                 <KeyRound className="w-4 h-4 mr-2" />
                                 Reset Password
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => { e.stopPropagation(); setDeleteUserTarget(u); }}
+                                disabled={isProtectedUser}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete Account
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -537,6 +580,44 @@ export default function AdminPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!deleteUserTarget}
+        onOpenChange={(open) => {
+          if (!open && !deleteUserMutation.isPending) {
+            setDeleteUserTarget(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete account permanently?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteUserTarget ? (
+                <>
+                  <span className="font-medium text-foreground">{deleteUserTarget.full_name || deleteUserTarget.email}</span>
+                  {' '}will be removed from authentication, and tasks currently assigned to this user will be deleted first.
+                </>
+              ) : (
+                'This user account will be permanently removed.'
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="text-sm text-muted-foreground">
+            This cannot be undone. Assigned board tasks and backlog stories are removed before the auth account is deleted. Active sessions may remain valid until their current access token expires.
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteUserMutation.isPending}>Cancel</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              onClick={() => deleteUserMutation.mutate(deleteUserTarget?.id)}
+              disabled={deleteUserMutation.isPending}
+            >
+              {deleteUserMutation.isPending ? 'Deleting...' : 'Delete Account'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
