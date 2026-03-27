@@ -7,7 +7,9 @@ import { Item } from "@/api/entities/Item";
 import { Notification } from "@/api/entities/Notification";
 import { supabase } from "@/api/supabaseClient";
 import { ThemeProvider, useTheme } from "@/components/utils/ThemeProvider";
-import AIAssistant from "@/components/utils/AIAssistant";
+import { AIProvider } from "@/components/ai/AIProvider";
+import { AIPanel } from "@/components/ai/AIPanel";
+import { AIFloatingButton } from "@/components/ai/AIFloatingButton";
 import {
   LayoutGrid,
   Search,
@@ -527,7 +529,8 @@ function LayoutContent({ children }) {
       </main>
 
       <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
-      <AIAssistant />
+      <AIFloatingButton />
+      <AIPanel />
     </div>
   );
 }
@@ -535,7 +538,9 @@ function LayoutContent({ children }) {
 export default function Layout({ children, currentPageName }) {
   return (
     <ThemeProvider>
-      <LayoutContent children={children} currentPageName={currentPageName} />
+      <AIProvider>
+        <LayoutContent children={children} currentPageName={currentPageName} />
+      </AIProvider>
     </ThemeProvider>
   );
 }
