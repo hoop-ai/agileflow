@@ -8,6 +8,36 @@ function generateId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+function formatToolResultsAsMarkdown(toolCalls, toolResults) {
+  const parts = toolResults.map((tr, idx) => {
+    const toolName = toolCalls[idx]?.function?.name || "unknown";
+    try {
+      const parsed = JSON.parse(tr.content);
+      if (parsed.error) return `**Error** (${toolName}): ${parsed.error}`;
+      if (parsed.success) {
+        const details = Object.entries(parsed)
+          .filter(([k]) => k !== "success")
+          .map(([k, v]) => `- **${k}**: ${v}`)
+          .join("\n");
+        return `**Done** — ${toolName}\n${details}`;
+      }
+      if (Array.isArray(parsed)) {
+        if (parsed.length === 0) return `**${toolName}**: No results found.`;
+        const preview = parsed.slice(0, 10).map(item => {
+          const label = item.name || item.title || item.id || JSON.stringify(item).slice(0, 80);
+          return `- ${label}`;
+        }).join("\n");
+        const more = parsed.length > 10 ? `\n- ...and ${parsed.length - 10} more` : "";
+        return `**${toolName}** (${parsed.length} results):\n${preview}${more}`;
+      }
+      return `**${toolName}**:\n\`\`\`json\n${JSON.stringify(parsed, null, 2).slice(0, 500)}\n\`\`\``;
+    } catch {
+      return `**${toolName}**: ${tr.content.slice(0, 300)}`;
+    }
+  });
+  return parts.join("\n\n");
+}
+
 const AIContext = createContext(null);
 
 const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
@@ -71,7 +101,14 @@ You have tools to interact with the AgileFlow platform directly. Use them when u
 - **Assign tasks** → call assignTask with a task_id and person's name
 - **List tasks** → call listTasks to see items on a board
 
-When assigning tasks, ALWAYS call listTeamMembers first to find the right person based on their skills and role. Confirm what you did after each action.`;
+When assigning tasks, ALWAYS call listTeamMembers first to find the right person based on their skills and role. Confirm what you did after each action.
+
+## Intelligent Assignment & Sprint Planning
+You can provide data-driven recommendations using the assignment engine:
+- **Suggest task assignments** → call suggestAssignment to rank team members by suitability (competency, availability, performance). Present the top candidates with their scores and reasoning.
+- **Suggest sprint composition** → call suggestSprintPlan to recommend which backlog stories to include in the next sprint based on priority, team skills, and capacity constraints.
+
+When a user asks "who should I assign this to?" or "plan my sprint", use these tools to give quantified recommendations. Always explain the reasoning behind the scores.`;
 
 export function AIProvider({ children }) {
   const [messages, setMessages] = useState([]);
@@ -222,7 +259,8 @@ export function AIProvider({ children }) {
       }
 
       // Call OpenRouter with tool definitions
-      async function callModel(model, msgs, signal) {
+      async function callModel(model, msgs, signal, options = {}) {
+        const useStream = options.stream !== false;
         return fetch(OPENROUTER_BASE_URL, {
           method: "POST",
           headers: {
@@ -235,8 +273,8 @@ export function AIProvider({ children }) {
             messages: msgs,
             max_tokens: 2048,
             temperature: 0.7,
-            stream: true,
-            tools: AI_TOOLS,
+            stream: useStream,
+            tools: useStream ? AI_TOOLS : undefined,
           }),
           signal,
         });
@@ -258,6 +296,13 @@ export function AIProvider({ children }) {
 
           // Handle tool calls — execute tools and send results back for a final answer
           if (toolCalls.length > 0) {
+            // Generate synthetic IDs for any tool calls missing an ID
+            toolCalls.forEach((tc, idx) => {
+              if (!tc.id) {
+                tc.id = `call_${Date.now()}_${idx}`;
+              }
+            });
+
             setMessages(prev =>
               prev.map(m => m.id === assistantId ? { ...m, content: "*Checking your data...*" } : m)
             );
@@ -294,25 +339,53 @@ export function AIProvider({ children }) {
               ...toolResults,
             ];
 
-            const followUpResponse = await callModel(model, followUpMsgs, controller.signal);
-            if (followUpResponse.ok) {
-              const result = await processStream(followUpResponse, assistantId);
-              accumulated = result.text || accumulated;
-            } else {
-              // Follow-up call failed; show tool results as a fallback summary
-              const errText = await followUpResponse.text().catch(() => "");
-              console.error("Tool follow-up failed:", followUpResponse.status, errText);
-              if (!accumulated) {
-                const summaries = toolResults.map(tr => {
-                  try {
-                    const parsed = JSON.parse(tr.content);
-                    if (parsed.error) return `**Error:** ${parsed.error}`;
-                    if (parsed.success) return `**Done.** ${JSON.stringify(parsed)}`;
-                    return `Results: ${tr.content.slice(0, 500)}`;
-                  } catch { return tr.content.slice(0, 500); }
-                });
-                accumulated = summaries.join("\n\n");
+            // Use non-streaming for follow-up — more reliable across models
+            let followUpDone = false;
+            try {
+              const timeoutCtrl = new AbortController();
+              const timeoutId = setTimeout(() => timeoutCtrl.abort(), 10000);
+
+              // Abort if the user cancels or the timeout fires
+              const onParentAbort = () => timeoutCtrl.abort();
+              controller.signal.addEventListener("abort", onParentAbort);
+
+              try {
+                const followUpResponse = await callModel(model, followUpMsgs, timeoutCtrl.signal, { stream: false });
+                clearTimeout(timeoutId);
+                controller.signal.removeEventListener("abort", onParentAbort);
+
+                if (followUpResponse.ok) {
+                  const json = await followUpResponse.json();
+                  const reply = json.choices?.[0]?.message?.content;
+                  if (reply) {
+                    accumulated = reply;
+                    followUpDone = true;
+                    setMessages(prev =>
+                      prev.map(m => m.id === assistantId ? { ...m, content: reply } : m)
+                    );
+                    setThinking(false);
+                  }
+                }
+              } catch (fetchErr) {
+                clearTimeout(timeoutId);
+                controller.signal.removeEventListener("abort", onParentAbort);
+                if (fetchErr instanceof DOMException && fetchErr.name === "AbortError" && controller.signal.aborted) {
+                  throw fetchErr;
+                }
+                // Timeout or network error on follow-up — fall through to fallback
               }
+            } catch (outerErr) {
+              if (outerErr instanceof DOMException && outerErr.name === "AbortError") throw outerErr;
+            }
+
+            // Fallback: format tool results as markdown if follow-up didn't produce a response
+            if (!followUpDone) {
+              const fallback = formatToolResultsAsMarkdown(toolCalls, toolResults);
+              accumulated = fallback;
+              setMessages(prev =>
+                prev.map(m => m.id === assistantId ? { ...m, content: fallback } : m)
+              );
+              setThinking(false);
             }
           }
 

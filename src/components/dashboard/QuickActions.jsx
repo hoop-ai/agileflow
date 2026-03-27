@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Users, Calendar, BarChart3, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import InfoTooltip from "@/components/common/InfoTooltip";
 
 import CreateBoardModal from "../boards/CreateBoardModal";
 import InviteTeamModal from "./InviteTeamModal";

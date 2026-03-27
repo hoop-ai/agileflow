@@ -396,7 +396,7 @@ export default function GroupSection({
                                 <Button
                                   onClick={() => setIsAddingItem(true)}
                                   variant="ghost"
-                                  className="text-muted-foreground hover:text-primary h-auto p-0 font-normal opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="text-muted-foreground hover:text-primary h-auto p-0 font-normal opacity-60 hover:opacity-100 transition-opacity"
                                 >
                                   <Plus className="w-4 h-4 mr-2" />
                                   Add task

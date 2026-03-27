@@ -13,6 +13,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, X } from "lucide-react";
 import { format } from "date-fns";
+import AssignmentSuggestion from "./AssignmentSuggestion";
 
 export default function TaskEditModal({ isOpen, onClose, task, board, onUpdate, onDelete }) {
   const [formData, setFormData] = useState({});
@@ -192,6 +193,18 @@ export default function TaskEditModal({ isOpen, onClose, task, board, onUpdate, 
               </div>
             ))}
           </div>
+
+          {/* Assignment Suggestions */}
+          <AssignmentSuggestion
+            task={{ title: formData.title, data: formData }}
+            board={board}
+            onSelectAssignee={(memberId) => {
+              const personCol = board.columns?.find(c => c.type === "person");
+              if (personCol) {
+                setFormData(prev => ({ ...prev, [personCol.id]: memberId }));
+              }
+            }}
+          />
 
           {/* Action Buttons */}
           <div className="flex justify-between pt-4 border-t">

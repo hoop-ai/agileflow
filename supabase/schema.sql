@@ -273,3 +273,8 @@ CREATE INDEX idx_team_members_board_id ON public.team_members(board_id);
 CREATE INDEX idx_team_members_user_id ON public.team_members(user_id);
 CREATE INDEX idx_notifications_user_id ON public.notifications(user_id);
 CREATE INDEX idx_notifications_is_read ON public.notifications(user_id, is_read);
+
+-- Link team_members.user_id to profiles so PostgREST can resolve the join
+ALTER TABLE public.team_members
+  ADD CONSTRAINT fk_team_members_profile
+  FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;

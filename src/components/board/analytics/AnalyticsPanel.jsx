@@ -4,6 +4,8 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, TrendingUp, Users, Calendar, Target, Clock, Inbox } from "lucide-react";
 import { format } from 'date-fns';
+import InfoTooltip from "@/components/common/InfoTooltip";
+import { AIExplainButton } from "@/components/ai/AIExplainButton";
 
 export default function AnalyticsPanel({ board, items, onClose }) {
   // Calculate analytics data

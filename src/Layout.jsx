@@ -28,6 +28,7 @@ import {
   Moon,
   LogOut,
   Bot,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -356,7 +357,7 @@ function LayoutContent({ children }) {
 
   const isAdmin = currentUser?.role === 'admin';
   const navItems = isAdmin
-    ? [...navigationItems, { title: "Admin", url: createPageUrl("Admin"), icon: Shield }]
+    ? [...navigationItems, { title: "Team", url: createPageUrl("Admin"), icon: Users }]
     : navigationItems;
 
   const userInitials = currentUser?.full_name
@@ -463,7 +464,7 @@ function LayoutContent({ children }) {
             </DropdownMenuItem>
             {isAdmin && (
               <DropdownMenuItem asChild className="cursor-pointer">
-                <Link to={createPageUrl("Admin")}>Admin Panel</Link>
+                <Link to={createPageUrl("Admin")}>Team Management</Link>
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />

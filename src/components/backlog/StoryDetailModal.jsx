@@ -32,10 +32,20 @@ export default function StoryDetailModal({ isOpen, onClose, story, onUpdate, onD
     setIsEditing(false);
   };
 
+  // Safely parse acceptance_criteria — could be array, JSON string, or null
+  const parseCriteria = (criteria) => {
+    if (Array.isArray(criteria)) return criteria;
+    if (typeof criteria === 'string') {
+      try { return JSON.parse(criteria); } catch { return []; }
+    }
+    return [];
+  };
+
   const toggleCriteria = (criteriaId) => {
+    const safeCriteria = parseCriteria(editedStory.acceptance_criteria);
     const updated = {
       ...editedStory,
-      acceptance_criteria: editedStory.acceptance_criteria.map(c =>
+      acceptance_criteria: safeCriteria.map(c =>
         c.id === criteriaId ? { ...c, completed: !c.completed } : c
       )
     };
@@ -43,8 +53,9 @@ export default function StoryDetailModal({ isOpen, onClose, story, onUpdate, onD
     onUpdate(updated);
   };
 
-  const completedCriteria = story.acceptance_criteria?.filter(c => c.completed).length || 0;
-  const totalCriteria = story.acceptance_criteria?.length || 0;
+  const safeCriteria = parseCriteria(story.acceptance_criteria);
+  const completedCriteria = safeCriteria.filter(c => c && c.completed).length;
+  const totalCriteria = safeCriteria.length;
   const completionPercentage = totalCriteria > 0 ? (completedCriteria / totalCriteria) * 100 : 0;
 
   const priorityColors = {
@@ -209,8 +220,8 @@ export default function StoryDetailModal({ isOpen, onClose, story, onUpdate, onD
             </div>
 
             <div className="space-y-3">
-              {story.acceptance_criteria && story.acceptance_criteria.length > 0 ? (
-                story.acceptance_criteria.map((criteria) => (
+              {safeCriteria.length > 0 ? (
+                safeCriteria.map((criteria) => (
                   <div
                     key={criteria.id}
                     className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"

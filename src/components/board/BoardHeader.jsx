@@ -80,8 +80,8 @@ export default function BoardHeader({
           setCollaborators(
             members.map((m) => ({
               id: m.id,
-              name: m.profiles?.full_name || m.profiles?.email || 'Unknown',
-              avatar: (m.profiles?.full_name || '??')
+              name: m.profile?.full_name || m.profile?.email || 'Unknown',
+              avatar: (m.profile?.full_name || '??')
                 .split(' ')
                 .map((n) => n[0])
                 .join('')

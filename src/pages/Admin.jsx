@@ -1,14 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { User as UserService } from '@/api/entities/User';
-import { Board } from '@/api/entities/Board';
+import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from "@/components/ui/use-toast";
 import { showErrorToast } from "@/lib/error-utils";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import {
   Dialog,
   DialogContent,
@@ -23,80 +27,156 @@ import {
   Users,
   Search,
   UserCog,
-  LayoutGrid,
-  Activity,
   Crown,
+  Activity,
   Edit2,
-  AlertTriangle
+  AlertTriangle,
+  UserPlus,
+  KeyRound,
+  Copy,
+  Check,
+  X,
+  MoreHorizontal,
+  Mail,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+const AVATAR_COLORS = [
+  'bg-blue-600 text-white',
+  'bg-emerald-600 text-white',
+  'bg-violet-600 text-white',
+  'bg-amber-600 text-white',
+  'bg-rose-600 text-white',
+  'bg-cyan-600 text-white',
+  'bg-indigo-600 text-white',
+  'bg-pink-600 text-white',
+  'bg-teal-600 text-white',
+  'bg-orange-600 text-white',
+];
+
+function getAvatarColor(name) {
+  if (!name) return 'bg-muted text-muted-foreground';
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function getInitials(name) {
+  if (!name) return 'U';
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '-';
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+const ROLE_CONFIG = {
+  admin: {
+    label: 'Admin',
+    color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    desc: 'Full system access, manage users and settings',
+  },
+  member: {
+    label: 'Member',
+    color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    desc: 'Create boards, manage own content',
+  },
+  viewer: {
+    label: 'Viewer',
+    color: 'bg-muted text-muted-foreground',
+    desc: 'View shared boards only',
+  },
+};
 
 export default function AdminPage() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { user: currentUser } = useAuth();
-  const [users, setUsers] = useState([]);
-  const [boards, setBoards] = useState([]);
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [roleFilter, setRoleFilter] = useState('all');
   const [editingUser, setEditingUser] = useState(null);
-  const [editRole, setEditRole] = useState('');
-  const [stats, setStats] = useState({ totalUsers: 0, totalBoards: 0, admins: 0, activeToday: 0 });
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [resetPasswordUser, setResetPasswordUser] = useState(null);
 
   const isAdmin = currentUser?.role === 'admin';
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: () => UserService.listAll(),
+    enabled: isAdmin,
+  });
 
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const [usersData, boardsData] = await Promise.all([
-        UserService.listAll(),
-        Board.list()
-      ]);
-      setUsers(usersData);
-      setBoards(boardsData);
-      setStats({
-        totalUsers: usersData.length,
-        totalBoards: boardsData.length,
-        admins: usersData.filter(u => u.role === 'admin').length,
-        activeToday: usersData.filter(u => {
-          const updated = new Date(u.updated_at);
-          const today = new Date();
-          return updated.toDateString() === today.toDateString();
-        }).length
-      });
-    } catch (error) {
-      console.error('Error loading admin data:', error);
-      showErrorToast(toast, "Failed to load admin data", error);
+  const updateUserMutation = useMutation({
+    mutationFn: ({ id, updates }) => UserService.updateUser(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast({ title: 'User updated', description: 'Changes have been saved.' });
+    },
+    onError: (error) => {
+      showErrorToast(toast, 'Failed to update user', error);
+    },
+  });
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: (email) => supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/Settings`,
+    }),
+    onSuccess: () => {
+      toast({ title: 'Password reset email sent', description: 'The user will receive an email with reset instructions.' });
+      setResetPasswordUser(null);
+    },
+    onError: (error) => {
+      showErrorToast(toast, 'Failed to send reset email', error);
+    },
+  });
+
+  const filteredUsers = useMemo(() => {
+    let result = users;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(u =>
+        u.full_name?.toLowerCase().includes(q) ||
+        u.email?.toLowerCase().includes(q) ||
+        u.job_title?.toLowerCase().includes(q) ||
+        u.department?.toLowerCase().includes(q)
+      );
     }
-    setIsLoading(false);
-  };
-
-  const handleUpdateRole = async () => {
-    if (!editingUser || !editRole) return;
-    try {
-      await UserService.updateUser(editingUser.id, { role: editRole });
-      setEditingUser(null);
-      setEditRole('');
-      await loadData();
-    } catch (error) {
-      console.error('Error updating role:', error);
-      showErrorToast(toast, "Role update failed", error);
+    if (roleFilter !== 'all') {
+      result = result.filter(u => (u.role || 'member') === roleFilter);
     }
-  };
+    return result;
+  }, [users, searchQuery, roleFilter]);
 
-  const filteredUsers = users.filter(u =>
-    u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.email?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const roleColors = {
-    admin:  'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    member: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-    viewer: 'bg-muted text-muted-foreground'
-  };
+  const stats = useMemo(() => {
+    const now = new Date();
+    return {
+      total: users.length,
+      admins: users.filter(u => u.role === 'admin').length,
+      members: users.filter(u => u.role === 'member' || !u.role).length,
+      activeRecently: users.filter(u => {
+        if (!u.updated_at) return false;
+        const diff = now - new Date(u.updated_at);
+        return diff < 7 * 24 * 60 * 60 * 1000;
+      }).length,
+    };
+  }, [users]);
 
   if (!isAdmin) {
     return (
@@ -120,136 +200,189 @@ export default function AdminPage() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center justify-center py-12">
           <div className="w-8 h-8 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-muted-foreground mt-3">Loading admin panel...</p>
+          <p className="text-sm text-muted-foreground mt-3">Loading team members...</p>
         </div>
       </div>
     );
   }
 
   const statCards = [
-    { label: 'Total Users',   value: stats.totalUsers,  icon: Users    },
-    { label: 'Total Boards',  value: stats.totalBoards, icon: LayoutGrid },
-    { label: 'Admins',        value: stats.admins,      icon: Crown    },
-    { label: 'Active Today',  value: stats.activeToday, icon: Activity },
+    { label: 'Total Members', value: stats.total, icon: Users },
+    { label: 'Admins', value: stats.admins, icon: Crown },
+    { label: 'Members', value: stats.members, icon: UserCog },
+    { label: 'Active This Week', value: stats.activeRecently, icon: Activity },
   ];
 
   return (
     <div className="min-h-screen bg-background p-6 transition-colors duration-200">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-8">
+          <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
               <Shield className="w-5 h-5 text-foreground" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Admin Panel</h1>
-              <p className="text-muted-foreground">Manage users, roles, and system settings</p>
+              <h1 className="text-2xl font-bold text-foreground">Team Management</h1>
+              <p className="text-sm text-muted-foreground">Manage team members, roles, and permissions</p>
             </div>
           </div>
+          <Button onClick={() => setInviteOpen(true)} className="gap-2">
+            <UserPlus className="w-4 h-4" />
+            Invite Member
+          </Button>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          {statCards.map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-            >
-              <Card className="border border-border bg-card">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">{stat.label}</p>
-                      <p className="text-3xl font-bold text-foreground mt-1">{stat.value}</p>
-                    </div>
-                    <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
-                      <stat.icon className="w-5 h-5 text-muted-foreground" />
-                    </div>
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {statCards.map((stat) => (
+            <Card key={stat.label} className="border border-border bg-card">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground">{stat.label}</p>
+                    <p className="text-2xl font-bold text-foreground mt-0.5">{stat.value}</p>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+                  <div className="w-9 h-9 bg-muted rounded-lg flex items-center justify-center">
+                    <stat.icon className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
 
-        {/* Users Table */}
+        {/* User List */}
         <Card className="border border-border bg-card">
-          <CardHeader>
-            <div className="flex items-center justify-between">
+          <CardHeader className="pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <CardTitle className="flex items-center gap-2 text-foreground">
-                  <UserCog className="w-5 h-5" />
-                  User Management
-                </CardTitle>
-                <CardDescription>
-                  {filteredUsers.length} users found
-                </CardDescription>
+                <CardTitle className="text-foreground text-base">Team Members</CardTitle>
+                <CardDescription>{filteredUsers.length} of {users.length} members</CardDescription>
               </div>
-              <div className="relative w-72">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search users..."
-                  className="pl-9"
-                />
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by name or email..."
+                    className="pl-9 w-64"
+                  />
+                </div>
+                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All roles</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="viewer">Viewer</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-muted">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground border-b border-border">User</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground border-b border-border">Email</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground border-b border-border">Role</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground border-b border-border">Boards</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground border-b border-border">Joined</th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground border-b border-border">Actions</th>
+                  <tr className="border-y border-border bg-muted/50">
+                    <th className="text-left py-2.5 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">User</th>
+                    <th className="text-left py-2.5 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">Role</th>
+                    <th className="text-left py-2.5 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Department</th>
+                    <th className="text-left py-2.5 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Last Active</th>
+                    <th className="text-left py-2.5 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Joined</th>
+                    <th className="text-right py-2.5 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider w-12"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredUsers.map((u) => {
-                    const userBoards = boards.filter(b => b.user_id === u.id).length;
-                    const initials = u.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
+                    const role = u.role || 'member';
+                    const roleConfig = ROLE_CONFIG[role] || ROLE_CONFIG.member;
+                    const isCurrentUser = u.id === currentUser?.id;
+                    const isActive = u.updated_at && (new Date() - new Date(u.updated_at)) < 24 * 60 * 60 * 1000;
+
                     return (
-                      <tr key={u.id} className="border-b border-border hover:bg-muted/40 transition-colors">
+                      <tr
+                        key={u.id}
+                        className="border-b border-border hover:bg-muted/30 transition-colors cursor-pointer"
+                        onClick={() => setEditingUser(u)}
+                      >
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
-                              <span className="text-foreground font-bold text-xs">{initials}</span>
-                            </div>
-                            <span className="font-medium text-foreground">
-                              {u.full_name || 'Unnamed User'}
-                              {u.id === currentUser?.id && (
-                                <span className="text-xs text-muted-foreground ml-1">(you)</span>
+                            <div className="relative">
+                              <div className={cn(
+                                "w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0",
+                                getAvatarColor(u.full_name)
+                              )}>
+                                <span className="font-semibold text-xs">{getInitials(u.full_name)}</span>
+                              </div>
+                              {isActive && (
+                                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-card rounded-full" />
                               )}
-                            </span>
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-medium text-sm text-foreground truncate">
+                                  {u.full_name || 'Unnamed User'}
+                                </span>
+                                {isCurrentUser && (
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">you</Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                              {u.job_title && (
+                                <p className="text-xs text-muted-foreground truncate md:hidden">{u.job_title}</p>
+                              )}
+                            </div>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-sm text-muted-foreground">{u.email}</td>
-                        <td className="py-3 px-4">
-                          <Badge variant="secondary" className={cn(roleColors[u.role] || roleColors.member)}>
-                            {u.role || 'member'}
+                        <td className="py-3 px-4 hidden md:table-cell">
+                          <Badge variant="secondary" className={cn('text-xs', roleConfig.color)}>
+                            {roleConfig.label}
                           </Badge>
                         </td>
-                        <td className="py-3 px-4 text-sm text-muted-foreground">{userBoards}</td>
-                        <td className="py-3 px-4 text-sm text-muted-foreground">
-                          {new Date(u.created_at).toLocaleDateString()}
+                        <td className="py-3 px-4 hidden lg:table-cell">
+                          <span className="text-sm text-muted-foreground">
+                            {u.department || '-'}
+                          </span>
+                          {u.job_title && (
+                            <p className="text-xs text-muted-foreground">{u.job_title}</p>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 hidden lg:table-cell">
+                          <span className="text-sm text-muted-foreground">
+                            {formatDate(u.updated_at)}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 hidden sm:table-cell">
+                          <span className="text-sm text-muted-foreground">
+                            {formatDate(u.created_at)}
+                          </span>
                         </td>
                         <td className="py-3 px-4 text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => { setEditingUser(u); setEditRole(u.role || 'member'); }}
-                            disabled={u.id === currentUser?.id}
-                          >
-                            <Edit2 className="w-4 h-4 mr-1" />
-                            Edit Role
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setEditingUser(u); }}>
+                                <Edit2 className="w-4 h-4 mr-2" />
+                                Edit User
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => { e.stopPropagation(); setResetPasswordUser(u); }}
+                                disabled={isCurrentUser}
+                              >
+                                <KeyRound className="w-4 h-4 mr-2" />
+                                Reset Password
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </td>
                       </tr>
                     );
@@ -258,50 +391,275 @@ export default function AdminPage() {
               </table>
               {filteredUsers.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
-                  No users found matching your search.
+                  <Users className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                  <p className="text-sm">No users found matching your search.</p>
                 </div>
               )}
             </div>
           </CardContent>
         </Card>
+      </div>
 
-        {/* Edit Role Dialog */}
-        <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit User Role</DialogTitle>
-              <DialogDescription>
-                Change the role for {editingUser?.full_name || editingUser?.email}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <Select value={editRole} onValueChange={setEditRole}>
-                <SelectTrigger>
+      {/* Edit User Dialog */}
+      {editingUser && (
+        <EditUserDialog
+          user={editingUser}
+          isCurrentUser={editingUser.id === currentUser?.id}
+          onClose={() => setEditingUser(null)}
+          onSave={(updates) => {
+            updateUserMutation.mutate(
+              { id: editingUser.id, updates },
+              { onSuccess: () => setEditingUser(null) }
+            );
+          }}
+          isSaving={updateUserMutation.isPending}
+        />
+      )}
+
+      {/* Invite Dialog */}
+      <InviteDialog open={inviteOpen} onClose={() => setInviteOpen(false)} />
+
+      {/* Reset Password Confirmation */}
+      <Dialog open={!!resetPasswordUser} onOpenChange={() => setResetPasswordUser(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reset Password</DialogTitle>
+            <DialogDescription>
+              Send a password reset email to <span className="font-medium text-foreground">{resetPasswordUser?.email}</span>?
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            The user will receive an email with a link to set a new password. Their current password will remain active until they complete the reset.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetPasswordUser(null)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => resetPasswordMutation.mutate(resetPasswordUser?.email)}
+              disabled={resetPasswordMutation.isPending}
+            >
+              {resetPasswordMutation.isPending ? 'Sending...' : 'Send Reset Email'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function EditUserDialog({ user, isCurrentUser, onClose, onSave, isSaving }) {
+  const [form, setForm] = useState({
+    full_name: user.full_name || '',
+    job_title: user.job_title || '',
+    department: user.department || '',
+    description: user.description || '',
+    skills: Array.isArray(user.skills) ? user.skills.join(', ') : (user.skills || ''),
+    role: user.role || 'member',
+  });
+
+  const handleChange = (field, value) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = () => {
+    const updates = {
+      full_name: form.full_name.trim(),
+      job_title: form.job_title.trim(),
+      department: form.department.trim(),
+      description: form.description.trim(),
+      skills: form.skills.split(',').map(s => s.trim()).filter(Boolean),
+      role: form.role,
+    };
+    onSave(updates);
+  };
+
+  const role = form.role;
+  const roleConfig = ROLE_CONFIG[role] || ROLE_CONFIG.member;
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-3">
+            <div className={cn(
+              "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
+              getAvatarColor(user.full_name)
+            )}>
+              <span className="font-semibold text-sm">{getInitials(user.full_name)}</span>
+            </div>
+            <div>
+              <span className="text-base">{user.full_name || 'Unnamed User'}</span>
+              <p className="text-sm font-normal text-muted-foreground">{user.email}</p>
+            </div>
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-name">Full Name</Label>
+              <Input
+                id="edit-name"
+                value={form.full_name}
+                onChange={(e) => handleChange('full_name', e.target.value)}
+                placeholder="Full name"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-role">Role</Label>
+              <Select value={form.role} onValueChange={(val) => handleChange('role', val)} disabled={isCurrentUser}>
+                <SelectTrigger id="edit-role">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Admin - Full access</SelectItem>
-                  <SelectItem value="member">Member - Can create and edit</SelectItem>
-                  <SelectItem value="viewer">Viewer - Read-only access</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="member">Member</SelectItem>
+                  <SelectItem value="viewer">Viewer</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="mt-3 text-sm text-muted-foreground space-y-1">
-                <p><strong>Admin:</strong> Full system access, manage users and settings</p>
-                <p><strong>Member:</strong> Create boards, manage own content</p>
-                <p><strong>Viewer:</strong> View shared boards only</p>
-              </div>
+              {isCurrentUser && (
+                <p className="text-xs text-muted-foreground">You cannot change your own role.</p>
+              )}
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingUser(null)}>
-                Cancel
+          </div>
+
+          <div className="rounded-md bg-muted/50 p-3 text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">{roleConfig.label}:</span> {roleConfig.desc}
+          </div>
+
+          <Separator />
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-title">Job Title</Label>
+              <Input
+                id="edit-title"
+                value={form.job_title}
+                onChange={(e) => handleChange('job_title', e.target.value)}
+                placeholder="e.g. Product Manager"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-dept">Department</Label>
+              <Input
+                id="edit-dept"
+                value={form.department}
+                onChange={(e) => handleChange('department', e.target.value)}
+                placeholder="e.g. Engineering"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="edit-desc">Bio</Label>
+            <Textarea
+              id="edit-desc"
+              value={form.description}
+              onChange={(e) => handleChange('description', e.target.value)}
+              placeholder="Short description about this team member"
+              rows={3}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="edit-skills">Skills</Label>
+            <Input
+              id="edit-skills"
+              value={form.skills}
+              onChange={(e) => handleChange('skills', e.target.value)}
+              placeholder="React, TypeScript, Project Management"
+            />
+            <p className="text-xs text-muted-foreground">Comma-separated list</p>
+          </div>
+
+          <div className="text-xs text-muted-foreground flex items-center gap-4">
+            <span>Joined {formatDate(user.created_at)}</span>
+            <span>Last active {formatDate(user.updated_at)}</span>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function InviteDialog({ open, onClose }) {
+  const [copied, setCopied] = useState(false);
+  const signupUrl = `${window.location.origin}/login`;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(signupUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const input = document.createElement('input');
+      input.value = signupUrl;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <UserPlus className="w-5 h-5" />
+            Invite Team Member
+          </DialogTitle>
+          <DialogDescription>
+            Share the sign-up link below with your team member. They can create an account and will automatically be added to your workspace.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          <div className="space-y-1.5">
+            <Label>Sign-up Link</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                value={signupUrl}
+                readOnly
+                className="bg-muted text-sm font-mono"
+              />
+              <Button variant="outline" size="sm" onClick={handleCopy} className="flex-shrink-0 gap-1.5">
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copied ? 'Copied' : 'Copy'}
               </Button>
-              <Button onClick={handleUpdateRole}>
-                Save Changes
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </div>
+            </div>
+          </div>
+
+          <div className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground space-y-2">
+            <p className="font-medium text-foreground text-xs uppercase tracking-wider">How it works</p>
+            <ul className="text-xs space-y-1">
+              <li>1. Share this link with your team member</li>
+              <li>2. They sign up with their email and password</li>
+              <li>3. New users are assigned the <span className="font-medium">Member</span> role by default</li>
+              <li>4. You can change their role from this admin panel</li>
+            </ul>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

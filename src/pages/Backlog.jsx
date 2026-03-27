@@ -29,6 +29,8 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import CreateStoryModal from "../components/backlog/CreateStoryModal";
 import StoryDetailModal from "../components/backlog/StoryDetailModal";
 import SprintPlanningModal from "../components/backlog/SprintPlanningModal";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
+import { AIExplainButton } from "@/components/ai/AIExplainButton";
 
 export default function BacklogPage() {
   const { toast } = useToast();
@@ -146,7 +148,16 @@ export default function BacklogPage() {
             <p className="text-sm text-muted-foreground mt-1">Prioritize and manage user stories</p>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
+            <AIExplainButton
+              widgetTitle="Product Backlog Overview"
+              widgetData={{
+                totalStories: backlogStats.total,
+                totalPoints: backlogStats.totalPoints,
+                criticalCount: backlogStats.critical,
+                readyForSprint: backlogStats.ready
+              }}
+            />
             <Button
               onClick={() => setShowPlanningModal(true)}
               variant="outline"
@@ -405,10 +416,10 @@ const StoryCard = ({ story, onClick, isDragging }) => {
           <p className="text-sm text-muted-foreground line-clamp-2">{story.description}</p>
 
           <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-            {story.acceptance_criteria && (
+            {story.acceptance_criteria && Array.isArray(story.acceptance_criteria) && story.acceptance_criteria.length > 0 && (
               <span className="flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3" />
-                {story.acceptance_criteria.filter(c => c.completed).length}/{story.acceptance_criteria.length} criteria
+                {story.acceptance_criteria.filter(c => c && c.completed).length}/{story.acceptance_criteria.length} criteria
               </span>
             )}
             {story.assigned_to && (

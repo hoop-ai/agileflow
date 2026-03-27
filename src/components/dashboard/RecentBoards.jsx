@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import CreateBoardModal from '@/components/boards/CreateBoardModal';
+import InfoTooltip from "@/components/common/InfoTooltip";
 
 export default function RecentBoards({ boards, isLoading, onCreateBoard }) {
   const [showCreateModal, setShowCreateModal] = useState(false);

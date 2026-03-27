@@ -26,7 +26,7 @@ export default function SprintPlanningModal({ isOpen, onClose, stories, boards }
   const [selectedStories, setSelectedStories] = useState(new Set());
   const [capacityOverridden, setCapacityOverridden] = useState(false);
   const [sprintData, setSprintData] = useState({
-    board_id: boards[0]?.id || '',
+    board_id: String(boards?.[0]?.id || ''),
     name: '',
     goal: '',
     start_date: new Date().toISOString().split('T')[0],
@@ -155,7 +155,7 @@ export default function SprintPlanningModal({ isOpen, onClose, stories, boards }
                 </SelectTrigger>
                 <SelectContent>
                   {boards.map(board => (
-                    <SelectItem key={board.id} value={board.id}>{board.title}</SelectItem>
+                    <SelectItem key={board.id} value={String(board.id)}>{board.title}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -328,9 +328,11 @@ export default function SprintPlanningModal({ isOpen, onClose, stories, boards }
                           {story.priority}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground line-clamp-1">
-                        {story.description}
-                      </p>
+                      {story.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-1">
+                          {typeof story.description === 'string' ? story.description : String(story.description)}
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))

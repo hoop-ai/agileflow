@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,15 @@ export default function NewTaskModal({ isOpen, onClose, board, onSubmit }) {
     groupId: board?.groups?.[0]?.id || ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const titleInputRef = useRef(null);
+
+  // Auto-focus title field when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setTaskData({ title: '', groupId: board?.groups?.[0]?.id || '' });
+      setTimeout(() => titleInputRef.current?.focus(), 100);
+    }
+  }, [isOpen, board]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,6 +42,8 @@ export default function NewTaskModal({ isOpen, onClose, board, onSubmit }) {
     setIsSubmitting(false);
   };
 
+  const selectedGroup = board?.groups?.find(g => g.id === taskData.groupId);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
@@ -39,14 +51,30 @@ export default function NewTaskModal({ isOpen, onClose, board, onSubmit }) {
           <DialogTitle className="text-2xl font-bold text-foreground">
             Create New Task
           </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            Adding to <span className="font-medium text-foreground">{board?.title || 'board'}</span>
+            {selectedGroup && (
+              <>
+                {' '}&middot;{' '}
+                <span className="inline-flex items-center gap-1.5">
+                  <span
+                    className="inline-block w-2.5 h-2.5 rounded-full"
+                    style={{ backgroundColor: selectedGroup.color }}
+                  />
+                  <span className="font-medium text-foreground">{selectedGroup.title}</span>
+                </span>
+              </>
+            )}
+          </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="title" className="text-foreground font-medium">
               Task Title *
             </Label>
             <Input
+              ref={titleInputRef}
               id="title"
               value={taskData.title}
               onChange={(e) => setTaskData(prev => ({ ...prev, title: e.target.value }))}

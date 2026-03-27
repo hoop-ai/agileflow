@@ -4,6 +4,7 @@ import { Activity } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import InfoTooltip from "@/components/common/InfoTooltip";
 
 const getStatusDotClass = (status) => {
   switch (status) {
