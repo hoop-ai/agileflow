@@ -5,6 +5,7 @@ import { Item } from "@/api/entities/Item";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { showErrorToast } from "@/lib/error-utils";
 import {
@@ -18,7 +19,10 @@ import {
   EyeOff,
   Group as GroupIcon,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  UserPlus,
+  Calendar,
+  Check
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -775,6 +779,14 @@ export default function BoardPage() {
               onAddItem={handleAddItem}
               onUpdateItem={handleUpdateItem}
               onDeleteItem={handleDeleteItem}
+            />
+          )}
+
+          {currentView === 'unassigned' && (
+            <UnassignedView
+              board={board}
+              items={sortedItems}
+              onUpdateItem={handleUpdateItem}
             />
           )}
         </div>

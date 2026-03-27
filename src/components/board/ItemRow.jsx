@@ -93,7 +93,7 @@ export default function ItemRow({
         ...draggableProvided.draggableProps.style,
         minWidth: `${totalMinWidth}px`
       }}
-      className={`flex items-stretch border-b border-border hover:bg-muted transition-colors group min-h-[48px] ${
+      className={`flex items-stretch border-b border-border hover:bg-muted transition-colors group min-h-[40px] ${
         isDragging ? 'opacity-80 shadow-sm' : ''
       }`}
     >

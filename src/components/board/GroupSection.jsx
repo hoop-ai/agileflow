@@ -228,23 +228,24 @@ export default function GroupSection({
                   );
                 })}
                 
-                {/* Flexible spacer to push add column and delete button to edges */}
-                <div className="flex-1 min-w-0 bg-muted" />
-                
-                {/* Add Column Button / Delete Header Space - This div will be sticky right */}
+                {/* Add Column Button - sits right after the last column header */}
                 <div
-                  className="flex items-center justify-center px-3 py-3 border-l border-border hover:bg-card transition-colors cursor-pointer bg-muted flex-shrink-0"
-                  style={{ 
-                    width: ADD_COLUMN_WIDTH, 
-                    position: 'sticky', 
-                    right: 0, 
-                    zIndex: 2  // Ensure it's above content
+                  className="flex items-center justify-center px-3 py-3 border-l border-border hover:bg-primary/10 transition-colors cursor-pointer bg-muted flex-shrink-0 group/addcol"
+                  style={{
+                    width: ADD_COLUMN_WIDTH,
+                    minWidth: ADD_COLUMN_WIDTH,
                   }}
-                  onClick={onAddColumn}
+                  onClick={(e) => { e.stopPropagation(); onAddColumn?.(); }}
                   title="Add new column"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAddColumn?.(); } }}
                 >
-                  <Plus className="w-4 h-4 text-primary" />
+                  <Plus className="w-4 h-4 text-muted-foreground group-hover/addcol:text-primary transition-colors" />
                 </div>
+
+                {/* Flexible spacer after add-column button */}
+                <div className="flex-1 min-w-0 bg-muted" />
               </div>
 
               {/* Items */}

@@ -62,8 +62,8 @@ const TimelineItemBar = ({ item, board, timelineStartDate, timelineEndDate, zoom
   durationDays = Math.max(1, durationDays); // Minimum 1 day width
 
 
-  const left = offsetDays * DAY_CELL_WIDTH * (zoomLevel === 'week' ? 1 : (zoomLevel === 'month' ? (30/7) : (1/7) )); // Adjust width based on zoom
-  const width = durationDays * DAY_CELL_WIDTH * (zoomLevel === 'week' ? 1 : (zoomLevel === 'month' ? (30/7) : (1/7) )) - 4; // -4 for padding/margin
+  const left = offsetDays * DAY_CELL_WIDTH * (zoomLevel === 'week' ? 1 : (zoomLevel === 'month' ? 0.5 : (1/7) )); // Adjust width based on zoom
+  const width = durationDays * DAY_CELL_WIDTH * (zoomLevel === 'week' ? 1 : (zoomLevel === 'month' ? 0.5 : (1/7) )) - 4; // -4 for padding/margin
 
   const priorityColumn = board?.columns?.find(col => col.type === 'priority');
   const priorityValue = item.data?.[priorityColumn?.id];
@@ -218,7 +218,7 @@ export default function TimelineView({ board, items }) {
               <div
                 key={day.toString()}
                 className="flex-shrink-0 text-center p-1 border-r border-border"
-                style={{ width: `${DAY_CELL_WIDTH * (zoomLevel === 'week' ? 1 : (zoomLevel === 'month' ? (30/7) : (1/7) ) )}px` }}
+                style={{ width: `${DAY_CELL_WIDTH * (zoomLevel === 'week' ? 1 : (zoomLevel === 'month' ? 0.5 : (1/7) ) )}px` }}
               >
                 <div className="text-xs text-muted-foreground">{format(day, 'EEE')}</div>
                 <div className="text-sm font-medium text-foreground">{format(day, 'd')}</div>
@@ -257,9 +257,9 @@ export default function TimelineView({ board, items }) {
             {displayItems.length === 0 && items.length > 0 && (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <CalendarDays className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-1">No items have dates set</h3>
+                <h3 className="text-lg font-medium text-foreground mb-1">No items visible in this time range</h3>
                 <p className="text-sm text-muted-foreground max-w-sm">
-                  Items need both a start and end date to appear on the timeline. Switch to the table view and fill in the date columns for the tasks you want to visualize here.
+                  Items may have dates outside the current view. Try navigating to a different time period or switching to the month view for a broader overview. Items need both a start and end date to appear on the timeline.
                 </p>
               </div>
             )}

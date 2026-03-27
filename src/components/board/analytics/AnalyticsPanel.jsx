@@ -180,7 +180,8 @@ export default function AnalyticsPanel({ board, items, onClose }) {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-muted-foreground">{count} tasks</span>
-                          <Badge variant="outline" title="Percentage of total tasks in this status">{percentage}%</Badge>
+                          <Badge variant="outline">{percentage}%</Badge>
+                          <InfoTooltip text="Percentage of total tasks in this status" size="xs" />
                         </div>
                       </div>
                     );
@@ -211,7 +212,10 @@ export default function AnalyticsPanel({ board, items, onClose }) {
                         </div>
                         <span className="font-medium">{person}</span>
                       </div>
-                      <Badge title="Tasks assigned to this team member">{count} tasks</Badge>
+                      <div className="flex items-center gap-1.5">
+                        <Badge>{count} tasks</Badge>
+                        <InfoTooltip text="Tasks assigned to this team member" size="xs" />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -262,7 +266,7 @@ export default function AnalyticsPanel({ board, items, onClose }) {
               <CardContent>
                 <div className="space-y-3">
                   {recentActivity.map(item => (
-                    <div key={item.id} className="flex flex-col gap-1 p-2 bg-muted rounded" title="Recently modified item on this board">
+                    <div key={item.id} className="flex flex-col gap-1 p-2 bg-muted rounded">
                       <div className="font-medium text-sm truncate">{item.title}</div>
                       <div className="text-xs text-muted-foreground">
                         Updated {format(new Date(item.updated_date), 'MMM d, HH:mm')}

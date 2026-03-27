@@ -538,6 +538,7 @@ export default function AdminPage() {
 function EditUserDialog({ user, isCurrentUser, onClose, onSave, isSaving }) {
   const [form, setForm] = useState({
     full_name: user.full_name || '',
+    email: user.email || '',
     job_title: user.job_title || '',
     department: user.department || '',
     description: user.description || '',
@@ -552,6 +553,7 @@ function EditUserDialog({ user, isCurrentUser, onClose, onSave, isSaving }) {
   const handleSave = () => {
     const updates = {
       full_name: form.full_name.trim(),
+      email: form.email.trim(),
       job_title: form.job_title.trim(),
       department: form.department.trim(),
       description: form.description.trim(),
@@ -594,6 +596,19 @@ function EditUserDialog({ user, isCurrentUser, onClose, onSave, isSaving }) {
               />
             </div>
             <div className="space-y-1.5">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={form.email}
+                onChange={(e) => handleChange('email', e.target.value)}
+                placeholder="user@example.com"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
                 <Label htmlFor="edit-role">Role</Label>
                 <InfoTooltip text="Admin = full access to everything. Member = can create and edit. Viewer = read-only access." />
@@ -612,24 +627,6 @@ function EditUserDialog({ user, isCurrentUser, onClose, onSave, isSaving }) {
                 <p className="text-xs text-muted-foreground">You cannot change your own role.</p>
               )}
             </div>
-          </div>
-
-          <div className="rounded-md bg-muted/50 p-3 text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">{roleConfig.label}:</span> {roleConfig.desc}
-          </div>
-
-          <Separator />
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-title">Job Title</Label>
-              <Input
-                id="edit-title"
-                value={form.job_title}
-                onChange={(e) => handleChange('job_title', e.target.value)}
-                placeholder="e.g. Product Manager"
-              />
-            </div>
             <div className="space-y-1.5">
               <Label htmlFor="edit-dept">Department</Label>
               <Input
@@ -639,6 +636,22 @@ function EditUserDialog({ user, isCurrentUser, onClose, onSave, isSaving }) {
                 placeholder="e.g. Engineering"
               />
             </div>
+          </div>
+
+          <div className="rounded-md bg-muted/50 p-3 text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">{roleConfig.label}:</span> {roleConfig.desc}
+          </div>
+
+          <Separator />
+
+          <div className="space-y-1.5">
+            <Label htmlFor="edit-title">Job Title</Label>
+            <Input
+              id="edit-title"
+              value={form.job_title}
+              onChange={(e) => handleChange('job_title', e.target.value)}
+              placeholder="e.g. Product Manager"
+            />
           </div>
 
           <div className="space-y-1.5">
@@ -683,7 +696,12 @@ function EditUserDialog({ user, isCurrentUser, onClose, onSave, isSaving }) {
 }
 
 function InviteDialog({ open, onClose }) {
+  const { toast } = useToast();
   const [copied, setCopied] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteName, setInviteName] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
   const signupUrl = `${window.location.origin}/login`;
 
   const handleCopy = async () => {
@@ -692,7 +710,6 @@ function InviteDialog({ open, onClose }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback for older browsers
       const input = document.createElement('input');
       input.value = signupUrl;
       document.body.appendChild(input);
@@ -704,8 +721,41 @@ function InviteDialog({ open, onClose }) {
     }
   };
 
+  const handleSendInvite = async () => {
+    if (!inviteEmail.trim()) return;
+    setSending(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: inviteEmail.trim(),
+        options: {
+          data: { full_name: inviteName.trim() || undefined },
+          emailRedirectTo: `${window.location.origin}/login`,
+        },
+      });
+      if (error) throw error;
+      setSent(true);
+      toast({ title: 'Invite sent', description: `Magic link sent to ${inviteEmail.trim()}` });
+      setTimeout(() => {
+        setSent(false);
+        setInviteEmail('');
+        setInviteName('');
+      }, 3000);
+    } catch (err) {
+      showErrorToast(toast, 'Failed to send invite', err);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleClose = () => {
+    setInviteEmail('');
+    setInviteName('');
+    setSent(false);
+    onClose();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -713,13 +763,51 @@ function InviteDialog({ open, onClose }) {
             Invite Team Member
           </DialogTitle>
           <DialogDescription>
-            Share the sign-up link below with your team member. They can create an account and will automatically be added to your workspace.
+            Send an email invite or share the sign-up link directly.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          {/* Email invite */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Send Email Invite</Label>
+            <div className="space-y-2">
+              <Input
+                type="email"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                placeholder="colleague@example.com"
+                onKeyDown={(e) => e.key === 'Enter' && handleSendInvite()}
+              />
+              <Input
+                value={inviteName}
+                onChange={(e) => setInviteName(e.target.value)}
+                placeholder="Full name (optional)"
+              />
+              <Button
+                onClick={handleSendInvite}
+                disabled={!inviteEmail.trim() || sending || sent}
+                className="w-full gap-2"
+              >
+                {sent ? (
+                  <><Check className="w-4 h-4" /> Invite Sent</>
+                ) : sending ? (
+                  'Sending...'
+                ) : (
+                  <><UserPlus className="w-4 h-4" /> Send Invite</>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          <div className="relative">
+            <Separator />
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-2 text-xs text-muted-foreground">or</span>
+          </div>
+
+          {/* Copy link */}
           <div className="space-y-1.5">
-            <Label>Sign-up Link</Label>
+            <Label className="text-sm font-medium">Share Sign-up Link</Label>
             <div className="flex items-center gap-2">
               <Input
                 value={signupUrl}
@@ -736,8 +824,8 @@ function InviteDialog({ open, onClose }) {
           <div className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground space-y-2">
             <p className="font-medium text-foreground text-xs uppercase tracking-wider">How it works</p>
             <ul className="text-xs space-y-1">
-              <li>1. Share this link with your team member</li>
-              <li>2. They sign up with their email and password</li>
+              <li>1. Enter their email and click Send Invite, or share the link</li>
+              <li>2. They'll receive a magic link to set up their account</li>
               <li>3. New users are assigned the <span className="font-medium">Member</span> role by default</li>
               <li>4. You can change their role from this admin panel</li>
             </ul>
@@ -745,7 +833,7 @@ function InviteDialog({ open, onClose }) {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={handleClose}>
             Close
           </Button>
         </DialogFooter>

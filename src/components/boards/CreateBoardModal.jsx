@@ -49,24 +49,10 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
         ...formData,
         columns: [
           {
-            id: 'task', // Always keep task column first
+            id: 'task',
             title: 'Task',
             type: 'text',
-            width: 250 // Increased default width for task
-          },
-          {
-            id: 'priority', // New default column
-            title: 'Priority',
-            type: 'dropdown', // Assuming priority is a dropdown
-            width: 120,
-            options: {
-              choices: [
-                { value: 'low', label: 'Low', color: '#787D80' },
-                { value: 'medium', label: 'Medium', color: '#FFCB00' },
-                { value: 'high', label: 'High', color: '#FDAB3D' },
-                { value: 'critical', label: 'Critical', color: '#E2445C' }
-              ]
-            }
+            width: 250
           },
           {
             id: 'status',
@@ -89,17 +75,49 @@ export default function CreateBoardModal({ isOpen, onClose, onSubmit }) {
             width: 150
           },
           {
+            id: 'priority',
+            title: 'Priority',
+            type: 'priority',
+            width: 120,
+            options: {
+              choices: [
+                { value: 'low', label: 'Low', color: '#787D80' },
+                { value: 'medium', label: 'Medium', color: '#FFCB00' },
+                { value: 'high', label: 'High', color: '#FDAB3D' },
+                { value: 'critical', label: 'Critical', color: '#E2445C' }
+              ]
+            }
+          },
+          {
             id: 'due_date',
             title: 'Due Date',
             type: 'date',
             width: 150
+          },
+          {
+            id: 'notes',
+            title: 'Notes',
+            type: 'text',
+            width: 200
           }
         ],
         groups: [
           {
-            id: 'group1', // Keep a default group
-            title: 'New Group',
-            color: formData.color, // Use selected board color for the group
+            id: 'group_todo',
+            title: 'To Do',
+            color: '#0073EA',
+            collapsed: false
+          },
+          {
+            id: 'group_in_progress',
+            title: 'In Progress',
+            color: '#FFCB00',
+            collapsed: false
+          },
+          {
+            id: 'group_done',
+            title: 'Done',
+            color: '#00C875',
             collapsed: false
           }
         ]

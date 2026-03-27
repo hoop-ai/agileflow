@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { showErrorToast } from "@/lib/error-utils";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
   Plus,
@@ -26,6 +26,7 @@ import BoardCard from "../components/boards/BoardCard";
 
 export default function Boards() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [boards, setBoards] = useState([]);
   const [filteredBoards, setFilteredBoards] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -80,6 +81,7 @@ export default function Boards() {
         title: "Board created",
         description: `"${boardData.title}" has been created successfully.`,
       });
+      navigate(createPageUrl(`Board?id=${newBoard.id}`));
     } catch (error) {
       console.error("Error creating board:", error);
       showErrorToast(toast, "Creation failed", error);
