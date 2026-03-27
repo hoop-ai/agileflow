@@ -22,7 +22,6 @@ import {
   TrendingUp,
   ListOrdered,
   Calendar as CalendarIconMenu,
-  Shield,
   CheckCheck,
   Sun,
   Moon,

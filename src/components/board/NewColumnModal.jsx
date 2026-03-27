@@ -22,6 +22,7 @@ const columnTypes = [
   { value: "priority", label: "Priority" }, // Changed from "tags" to "priority"
   { value: "checkbox", label: "Checkbox" },
   { value: "dropdown", label: "Dropdown" },
+  { value: "timeline", label: "Timeline" },
 ];
 
 export default function NewColumnModal({ isOpen, onClose, onSubmit }) {

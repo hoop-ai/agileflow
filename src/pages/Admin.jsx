@@ -35,9 +35,7 @@ import {
   KeyRound,
   Copy,
   Check,
-  X,
   MoreHorizontal,
-  Mail,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -45,6 +43,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import InfoTooltip from "@/components/common/InfoTooltip";
 
 const AVATAR_COLORS = [
   'bg-blue-600 text-white',
@@ -207,10 +206,10 @@ export default function AdminPage() {
   }
 
   const statCards = [
-    { label: 'Total Members', value: stats.total, icon: Users },
-    { label: 'Admins', value: stats.admins, icon: Crown },
-    { label: 'Members', value: stats.members, icon: UserCog },
-    { label: 'Active This Week', value: stats.activeRecently, icon: Activity },
+    { label: 'Total Members', value: stats.total, icon: Users, tooltip: 'All registered users in your workspace' },
+    { label: 'Admins', value: stats.admins, icon: Crown, tooltip: 'Users with full system access including user management' },
+    { label: 'Members', value: stats.members, icon: UserCog, tooltip: 'Users who can create and edit boards and tasks' },
+    { label: 'Active This Week', value: stats.activeRecently, icon: Activity, tooltip: 'Users who have logged in or performed an action recently' },
   ];
 
   return (
@@ -240,7 +239,10 @@ export default function AdminPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-muted-foreground">{stat.label}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="text-xs text-muted-foreground">{stat.label}</p>
+                      <InfoTooltip text={stat.tooltip} />
+                    </div>
                     <p className="text-2xl font-bold text-foreground mt-0.5">{stat.value}</p>
                   </div>
                   <div className="w-9 h-9 bg-muted rounded-lg flex items-center justify-center">
@@ -290,7 +292,12 @@ export default function AdminPage() {
                 <thead>
                   <tr className="border-y border-border bg-muted/50">
                     <th className="text-left py-2.5 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">User</th>
-                    <th className="text-left py-2.5 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">Role</th>
+                    <th className="text-left py-2.5 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">
+                      <span className="inline-flex items-center gap-1">
+                        Role
+                        <InfoTooltip text="Admin = full access. Member = create and edit. Viewer = read-only." />
+                      </span>
+                    </th>
                     <th className="text-left py-2.5 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Department</th>
                     <th className="text-left py-2.5 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Last Active</th>
                     <th className="text-left py-2.5 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Joined</th>

@@ -17,7 +17,8 @@ import BudgetCell from "./cells/BudgetCell";
 import CheckboxCell from "./cells/CheckboxCell";
 import TextCell from "./cells/TextCell";
 import DropdownCell from "./cells/DropdownCell";
-import PriorityCell from "./cells/PriorityCell"; // Changed from TagsCell to PriorityCell
+import PriorityCell from "./cells/PriorityCell";
+import TimelineCell from "./cells/TimelineCell";
 
 export default function ItemRow({ 
   item, 
@@ -73,8 +74,10 @@ export default function ItemRow({
         return <CheckboxCell {...commonProps} />;
       case 'dropdown':
         return <DropdownCell {...commonProps} />;
-      case 'priority': // Changed from 'tags' to 'priority'
+      case 'priority':
         return <PriorityCell {...commonProps} />;
+      case 'timeline':
+        return <TimelineCell {...commonProps} />;
       case 'text':
       default:
         return <TextCell {...commonProps} />;

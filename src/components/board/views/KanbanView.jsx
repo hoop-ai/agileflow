@@ -15,7 +15,7 @@ const getStatusColumns = (board) => {
 };
 
 const getPeopleColumns = (board) => {
-  return board?.columns?.filter(col => col.type === 'people') || [];
+  return board?.columns?.filter(col => col.type === 'people' || col.type === 'person') || [];
 };
 
 const getUniqueValues = (items, columnId) => {
@@ -207,14 +207,40 @@ export default function KanbanView({ board, items, isLoading, onUpdateItem, onDe
 
   let columnsData = [];
 
-  if (groupBy === 'status' && activeColumnDefinition.options?.choices) {
-    columnsData = activeColumnDefinition.options.choices.map((choice) => ({
-      id: `status-${choice.label}`,
-      title: choice.label,
-      items: items
-        .filter(item => item.data?.[activeColumnDefinition.id] === choice.label)
-        .sort((a, b) => (a.order_index || 0) - (b.order_index || 0)),
-    }));
+  if (groupBy === 'status') {
+    // Use defined choices if available, otherwise derive from item data
+    const choices = activeColumnDefinition.options?.choices;
+    if (choices && choices.length > 0) {
+      columnsData = choices.map((choice) => ({
+        id: `status-${choice.label}`,
+        title: choice.label,
+        items: items
+          .filter(item => item.data?.[activeColumnDefinition.id] === choice.label)
+          .sort((a, b) => (a.order_index || 0) - (b.order_index || 0)),
+      }));
+    } else {
+      // Derive unique status values from items
+      const uniqueStatuses = getUniqueValues(items, activeColumnDefinition.id);
+      columnsData = uniqueStatuses.map((status) => ({
+        id: `status-${status}`,
+        title: status,
+        items: items
+          .filter(item => item.data?.[activeColumnDefinition.id] === status)
+          .sort((a, b) => (a.order_index || 0) - (b.order_index || 0)),
+      }));
+    }
+
+    // Add unassigned/no-status items
+    const noStatusItems = items
+      .filter(item => !item.data?.[activeColumnDefinition.id] || item.data[activeColumnDefinition.id] === '')
+      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+    if (noStatusItems.length > 0) {
+      columnsData.push({
+        id: 'status-unset',
+        title: 'Not Started',
+        items: noStatusItems,
+      });
+    }
   } else if (groupBy === 'people') {
     const uniquePeople = getUniqueValues(items, activeColumnDefinition.id);
 

@@ -396,7 +396,10 @@ export default function SettingsPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="theme">Theme</Label>
+                    <div className="flex items-center gap-1.5">
+                      <Label htmlFor="theme">Theme</Label>
+                      <InfoTooltip text="Choose light, dark, or auto (follows your system setting)" />
+                    </div>
                     <Select value={settings.theme} onValueChange={handleThemeChange}>
                       <SelectTrigger id="theme">
                         <SelectValue />
@@ -411,7 +414,10 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="language">Language</Label>
+                    <div className="flex items-center gap-1.5">
+                      <Label htmlFor="language">Language</Label>
+                      <InfoTooltip text="Display language for the interface" />
+                    </div>
                     <Select
                       value={settings.language}
                       onValueChange={(value) => setSettings(prev => ({ ...prev, language: value }))}
@@ -429,7 +435,10 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="timezone">Timezone</Label>
+                    <div className="flex items-center gap-1.5">
+                      <Label htmlFor="timezone">Timezone</Label>
+                      <InfoTooltip text="Used for calendar events and due date calculations" />
+                    </div>
                     <Select
                       value={settings.timezone}
                       onValueChange={(value) => setSettings(prev => ({ ...prev, timezone: value }))}
@@ -497,7 +506,10 @@ export default function SettingsPage() {
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="profile_visibility">Profile Visibility</Label>
+                    <div className="flex items-center gap-1.5">
+                      <Label htmlFor="profile_visibility">Profile Visibility</Label>
+                      <InfoTooltip text="Public = visible to everyone. Team = visible to your team only. Private = visible only to you and admins." />
+                    </div>
                     <Select
                       value={settings.profile_visibility}
                       onValueChange={(value) => setSettings(prev => ({ ...prev, profile_visibility: value }))}
@@ -517,7 +529,10 @@ export default function SettingsPage() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label htmlFor="show_email" className="text-base text-foreground">Show Email Address</Label>
+                      <div className="flex items-center gap-1.5">
+                        <Label htmlFor="show_email" className="text-base text-foreground">Show Email Address</Label>
+                        <InfoTooltip text="Whether your email address is visible to other team members" />
+                      </div>
                       <p className="text-sm text-muted-foreground">Allow others to see your email address</p>
                     </div>
                     <Switch
@@ -531,7 +546,10 @@ export default function SettingsPage() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label htmlFor="activity_tracking" className="text-base text-foreground">Activity Tracking</Label>
+                      <div className="flex items-center gap-1.5">
+                        <Label htmlFor="activity_tracking" className="text-base text-foreground">Activity Tracking</Label>
+                        <InfoTooltip text="Allow the platform to track your activity for analytics and daily digest features" />
+                      </div>
                       <p className="text-sm text-muted-foreground">Allow tracking of your activity for analytics</p>
                     </div>
                     <Switch
