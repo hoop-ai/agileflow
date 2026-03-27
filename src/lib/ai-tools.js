@@ -75,19 +75,23 @@ export const AI_TOOLS = [
     function: {
       name: "createTask",
       description:
-        "Create a new task on a board. " +
+        "Create a new task on a board with full details. " +
         "Use when the user asks to add, create, or make a new task or item. " +
         "PROCESS: First call listBoards to get the board_id and column structure. " +
-        "Call listTeamMembers if the user wants to assign someone. Then call this tool.",
+        "Call listTeamMembers if the user wants to assign someone. Then call this tool. " +
+        "ALWAYS set a priority (default to 'Medium' if unspecified). " +
+        "ALWAYS set status to 'To Do' if unspecified. " +
+        "ALWAYS include a description if the task context is clear.",
       parameters: {
         type: "object",
         properties: {
           board_id: { type: "string", description: "UUID of the board to create the task on" },
           title: { type: "string", description: "Title of the task" },
+          description: { type: "string", description: "Task description with details, acceptance criteria, or context. Always provide this." },
           group_id: { type: "string", description: "Optional group ID within the board; defaults to the first group" },
-          status: { type: "string", description: "Initial status value (e.g. 'To Do', 'In Progress', 'Done')" },
-          assignee_id: { type: "string", description: "UUID of the user to assign the task to" },
-          priority: { type: "string", description: "Priority value (e.g. 'High', 'Medium', 'Low')" },
+          status: { type: "string", description: "Task status (default: 'To Do'). Options: 'To Do', 'In Progress', 'Done'" },
+          assignee_name: { type: "string", description: "Full name of the person to assign (use the exact name from listTeamMembers)" },
+          priority: { type: "string", description: "Priority level (default: 'Medium'). Options: 'Critical', 'High', 'Medium', 'Low'" },
         },
         required: ["board_id", "title"],
       },
@@ -98,7 +102,7 @@ export const AI_TOOLS = [
     function: {
       name: "updateTask",
       description:
-        "Update properties of an existing task such as title, status, assignee, or priority. " +
+        "Update properties of an existing task such as title, description, status, assignee, or priority. " +
         "Use when the user asks to change, edit, update, or modify a task. " +
         "PROCESS: Call listTasks or getTaskDetails to confirm the task_id first if the user only gave a title.",
       parameters: {
@@ -106,9 +110,10 @@ export const AI_TOOLS = [
         properties: {
           task_id: { type: "string", description: "UUID of the task to update (required)" },
           title: { type: "string", description: "New title for the task" },
-          status: { type: "string", description: "New status value" },
-          assignee_id: { type: "string", description: "UUID of the new assignee" },
-          priority: { type: "string", description: "New priority value" },
+          description: { type: "string", description: "New description text for the task" },
+          status: { type: "string", description: "New status value (e.g. 'To Do', 'In Progress', 'Done')" },
+          assignee_name: { type: "string", description: "Full name of the new assignee (use the exact name from listTeamMembers)" },
+          priority: { type: "string", description: "New priority value (e.g. 'Critical', 'High', 'Medium', 'Low')" },
           updates: {
             type: "object",
             description: "Freeform map of column_id to value for any other column types",
@@ -269,13 +274,28 @@ export async function executeTool(name, args) {
   try {
     switch (name) {
       case "listTeamMembers": {
-        const [users, allItems] = await Promise.all([User.listAll(), Item.list()]);
+        const [users, allItems, allBoards] = await Promise.all([
+          User.listAll(),
+          Item.list(),
+          Board.list("-updated_date"),
+        ]);
 
+        // Find all person-type column IDs across all boards
+        const personColIds = new Set();
+        for (const board of allBoards || []) {
+          for (const col of board.columns || []) {
+            if (col.type === "person" || col.type === "people") {
+              personColIds.add(col.id);
+            }
+          }
+        }
+
+        // Count tasks per person by matching name or UUID in person columns
         const workloadMap = {};
         for (const item of allItems || []) {
           const data = item.data || {};
-          for (const val of Object.values(data)) {
-            if (typeof val === "string" && val.length === 36) {
+          for (const [colId, val] of Object.entries(data)) {
+            if (personColIds.has(colId) && typeof val === "string" && val.length > 0) {
               workloadMap[val] = (workloadMap[val] || 0) + 1;
             }
           }
@@ -290,7 +310,7 @@ export async function executeTool(name, args) {
           department: u.department || null,
           description: u.description || null,
           skills: u.skills || [],
-          active_tasks: workloadMap[u.id] || 0,
+          active_tasks: (workloadMap[u.full_name] || 0) + (workloadMap[u.id] || 0),
         }));
       }
 
@@ -344,7 +364,7 @@ export async function executeTool(name, args) {
       }
 
       case "createTask": {
-        const { board_id, title, group_id, status, assignee_id, priority } = args;
+        const { board_id, title, description, group_id, status, assignee_name, priority } = args;
 
         let boards;
         try {
@@ -355,42 +375,59 @@ export async function executeTool(name, args) {
         const board = boards?.[0];
         if (!board) return { error: `Board not found (${board_id}).` };
 
-        if (assignee_id) {
-          try {
-            const user = await User.getById(assignee_id);
-            if (!user) return { error: `Assignee not found (${assignee_id}). Use listTeamMembers to get valid IDs.` };
-          } catch {
-            return { error: `Assignee not found (${assignee_id}). Use listTeamMembers to get valid IDs.` };
-          }
-        }
-
+        const columns = board.columns || [];
         const targetGroup = group_id || board.groups?.[0]?.id || "default";
         const taskData = { board_id, title, group_id: targetGroup, data: {} };
 
-        if (status) {
-          const statusCol = board.columns?.find(c => c.type === "status");
-          if (statusCol) taskData.data[statusCol.id] = status;
+        // Set status — default to "To Do" if not provided
+        const statusCol = columns.find(c => c.type === "status" && !c.title.toLowerCase().includes("priority"));
+        if (statusCol) taskData.data[statusCol.id] = status || "To Do";
+
+        // Set priority — default to "Medium" if not provided
+        const priorityCols = columns.filter(c => c.type === "status");
+        const priorityCol = priorityCols.find(c => c.title.toLowerCase().includes("priority")) || priorityCols[1];
+        if (priorityCol) taskData.data[priorityCol.id] = priority || "Medium";
+
+        // Set description in the first text column
+        if (description) {
+          const textCol = columns.find(c => c.type === "text");
+          if (textCol) taskData.data[textCol.id] = description;
         }
-        if (assignee_id) {
-          const personCol = board.columns?.find(c => c.type === "person");
-          if (personCol) taskData.data[personCol.id] = assignee_id;
-        }
-        if (priority) {
-          const priorityCols = board.columns?.filter(c => c.type === "status");
-          const priorityCol = priorityCols?.find(c => c.title.toLowerCase().includes("priority")) || priorityCols?.[1];
-          if (priorityCol) taskData.data[priorityCol.id] = priority;
+
+        // Assign person by name (stores the display name, not UUID)
+        if (assignee_name) {
+          const personCol = columns.find(c => c.type === "person" || c.type === "people");
+          if (personCol) {
+            // Verify the person exists
+            const users = await User.search(assignee_name);
+            if (users && users.length > 0) {
+              taskData.data[personCol.id] = users[0].full_name || assignee_name;
+            } else {
+              return { error: `No team member found matching "${assignee_name}". Use listTeamMembers to see available members.` };
+            }
+          }
         }
 
         try {
           const created = await Item.create(taskData);
-          return { success: true, task_id: created.id, title: created.title, board: board.title };
+          const result = {
+            success: true,
+            task_id: created.id,
+            title: created.title,
+            board: board.title,
+          };
+          if (assignee_name) result.assigned_to = taskData.data[columns.find(c => c.type === "person" || c.type === "people")?.id] || assignee_name;
+          if (description) result.description = description;
+          result.status = taskData.data[statusCol?.id] || "To Do";
+          result.priority = taskData.data[priorityCol?.id] || "Medium";
+          return result;
         } catch (err) {
           return { error: `Failed to create task: ${err.message}` };
         }
       }
 
       case "updateTask": {
-        const { task_id, title, status, assignee_id, priority, updates } = args;
+        const { task_id, title, description, status, assignee_name, priority, updates } = args;
 
         let task;
         try {
@@ -408,22 +445,38 @@ export async function executeTool(name, args) {
           return { error: "Could not access the board this task belongs to." };
         }
 
+        const columns = board?.columns || [];
         const patch = {};
         if (title !== undefined) patch.title = title;
 
         const mergedData = { ...(task.data || {}) };
 
         if (status !== undefined) {
-          const statusCol = board?.columns?.find(c => c.type === "status");
+          const statusCol = columns.find(c => c.type === "status" && !c.title.toLowerCase().includes("priority"));
           if (statusCol) mergedData[statusCol.id] = status;
         }
-        if (assignee_id !== undefined) {
-          const personCol = board?.columns?.find(c => c.type === "person");
-          if (personCol) mergedData[personCol.id] = assignee_id;
+        if (description !== undefined) {
+          const textCol = columns.find(c => c.type === "text");
+          if (textCol) mergedData[textCol.id] = description;
+        }
+        if (assignee_name !== undefined) {
+          const personCol = columns.find(c => c.type === "person" || c.type === "people");
+          if (personCol) {
+            if (assignee_name === "") {
+              mergedData[personCol.id] = "";
+            } else {
+              const users = await User.search(assignee_name);
+              if (users && users.length > 0) {
+                mergedData[personCol.id] = users[0].full_name || assignee_name;
+              } else {
+                return { error: `No team member found matching "${assignee_name}".` };
+              }
+            }
+          }
         }
         if (priority !== undefined) {
-          const priorityCols = board?.columns?.filter(c => c.type === "status");
-          const priorityCol = priorityCols?.find(c => c.title.toLowerCase().includes("priority")) || priorityCols?.[1];
+          const priorityCols = columns.filter(c => c.type === "status");
+          const priorityCol = priorityCols.find(c => c.title.toLowerCase().includes("priority")) || priorityCols[1];
           if (priorityCol) mergedData[priorityCol.id] = priority;
         }
         if (updates && typeof updates === "object") {
@@ -487,12 +540,15 @@ export async function executeTool(name, args) {
             const label = col ? col.title : colId;
             resolvedData[label] = val;
 
-            if (col?.type === "person" && typeof val === "string" && val.length === 36) {
-              try {
-                const user = await User.getById(val);
-                if (user) assigneeName = user.full_name;
-              } catch {
-                // non-fatal
+            if ((col?.type === "person" || col?.type === "people") && typeof val === "string") {
+              // If value looks like a UUID, resolve to name
+              if (val.length === 36 && val.includes('-')) {
+                try {
+                  const user = await User.getById(val);
+                  if (user) assigneeName = user.full_name;
+                } catch { /* non-fatal */ }
+              } else {
+                assigneeName = val;
               }
             }
           }
@@ -536,10 +592,11 @@ export async function executeTool(name, args) {
         const board = boards?.[0];
         if (!board) return { error: "Board not found for this task." };
 
-        const personCol = board.columns?.find(c => c.type === "person");
+        const personCol = board.columns?.find(c => c.type === "person" || c.type === "people");
         if (!personCol) return { error: "This board does not have a Person column for assignments." };
 
-        const mergedData = { ...(task.data || {}), [personCol.id]: assignee.id };
+        const assigneeName = assignee.full_name || assignee.email || assignee_name;
+        const mergedData = { ...(task.data || {}), [personCol.id]: assigneeName };
         await Item.update(task_id, { data: mergedData });
 
         // Verify the update was persisted
@@ -551,7 +608,7 @@ export async function executeTool(name, args) {
         }
 
         const savedAssignee = verified?.data?.[personCol.id];
-        if (savedAssignee !== assignee.id) {
+        if (savedAssignee !== assigneeName) {
           return { error: "Assignment was submitted but the saved value did not match. Please try again." };
         }
 
@@ -583,7 +640,7 @@ export async function executeTool(name, args) {
         const board = boards[0];
         const columns = board?.columns || [];
         const statusCol = columns.find(c => c.type === "status");
-        const personCol = columns.find(c => c.type === "person");
+        const personCol = columns.find(c => c.type === "person" || c.type === "people");
 
         let filtered = items || [];
         if (status && statusCol) {
@@ -593,18 +650,21 @@ export async function executeTool(name, args) {
           filtered = filtered.filter(i => i.data?.[personCol.id] === assignee_id);
         }
 
-        // Batch resolve unique assignee IDs
-        const assigneeIds = [...new Set(
+        // Resolve assignee values — could be UUIDs or names
+        const assigneeValues = [...new Set(
           filtered.map(i => personCol && i.data?.[personCol.id]).filter(Boolean)
         )];
         const assigneeMap = {};
         await Promise.all(
-          assigneeIds.map(async id => {
-            try {
-              const u = await User.getById(id);
-              if (u) assigneeMap[id] = u.full_name;
-            } catch {
-              // non-fatal
+          assigneeValues.map(async val => {
+            // If value looks like a UUID, resolve to name
+            if (typeof val === 'string' && val.length === 36 && val.includes('-')) {
+              try {
+                const u = await User.getById(val);
+                if (u) assigneeMap[val] = u.full_name;
+              } catch { /* non-fatal */ }
+            } else {
+              assigneeMap[val] = val; // Already a name
             }
           })
         );
