@@ -60,6 +60,7 @@ import InfoTooltip from "@/components/common/InfoTooltip";
 import ModuleHelp from "@/components/common/ModuleHelp";
 import { usePermissions } from "@/hooks/usePermissions";
 import { getLoginUrl, getPasswordResetRedirectUrl } from '@/lib/auth-redirects';
+import { getAdminAuthEmail } from '@/lib/auth-admin';
 
 const AVATAR_COLORS = [
   'bg-blue-600 text-white',
@@ -151,15 +152,20 @@ export default function AdminPage() {
   });
 
   const resetPasswordMutation = useMutation({
-    mutationFn: async (email) => {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    mutationFn: async (userId) => {
+      const authEmail = await getAdminAuthEmail(userId);
+      const { error } = await supabase.auth.resetPasswordForEmail(authEmail, {
         redirectTo: getPasswordResetRedirectUrl(),
       });
 
       if (error) throw error;
+      return authEmail;
     },
-    onSuccess: () => {
-      toast({ title: 'Password reset email sent', description: 'The user will receive an email with reset instructions.' });
+    onSuccess: (authEmail) => {
+      toast({
+        title: 'Password reset requested',
+        description: `Supabase accepted a reset email request for ${authEmail}.`,
+      });
       setResetPasswordUser(null);
     },
     onError: (error) => {
@@ -561,18 +567,18 @@ export default function AdminPage() {
           <DialogHeader>
             <DialogTitle>Reset Password</DialogTitle>
             <DialogDescription>
-              Send a password reset email to <span className="font-medium text-foreground">{resetPasswordUser?.email}</span>?
+              Send a password reset email for <span className="font-medium text-foreground">{resetPasswordUser?.full_name || resetPasswordUser?.email}</span>?
             </DialogDescription>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            The user will receive an email with a link to set a new password. Their current password will remain active until they complete the reset.
+            We&apos;ll send the reset link to this user&apos;s current sign-in email in Supabase Auth. Their current password will remain active until they complete the reset.
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setResetPasswordUser(null)}>
               Cancel
             </Button>
             <Button
-              onClick={() => resetPasswordMutation.mutate(resetPasswordUser?.email)}
+              onClick={() => resetPasswordMutation.mutate(resetPasswordUser?.id)}
               disabled={resetPasswordMutation.isPending}
             >
               {resetPasswordMutation.isPending ? 'Sending...' : 'Send Reset Email'}

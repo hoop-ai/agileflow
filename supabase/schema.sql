@@ -283,6 +283,30 @@ CREATE TRIGGER on_auth_user_email_updated
   WHEN (OLD.email IS DISTINCT FROM NEW.email)
   EXECUTE FUNCTION public.sync_profile_email_from_auth();
 
+UPDATE public.profiles AS profile
+SET email = auth_user.email,
+    updated_at = NOW()
+FROM auth.users AS auth_user
+WHERE profile.id = auth_user.id
+  AND profile.email IS DISTINCT FROM auth_user.email;
+
+CREATE OR REPLACE FUNCTION public.admin_get_auth_email(target_user_id UUID)
+RETURNS TEXT AS $$
+  SELECT lower(trim(auth_user.email))
+  FROM auth.users AS auth_user
+  WHERE auth_user.id = target_user_id
+    AND EXISTS (
+      SELECT 1
+      FROM public.profiles AS current_profile
+      WHERE current_profile.id = auth.uid()
+        AND current_profile.role = 'admin'
+    );
+$$ LANGUAGE sql SECURITY DEFINER STABLE
+SET search_path = public, auth;
+
+REVOKE ALL ON FUNCTION public.admin_get_auth_email(UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.admin_get_auth_email(UUID) TO authenticated, service_role;
+
 -- Auto-update updated_date timestamps
 CREATE OR REPLACE FUNCTION public.update_updated_date()
 RETURNS TRIGGER AS $$
