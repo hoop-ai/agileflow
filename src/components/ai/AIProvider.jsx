@@ -274,7 +274,7 @@ export function AIProvider({ children }) {
             max_tokens: 2048,
             temperature: 0.7,
             stream: useStream,
-            tools: useStream ? AI_TOOLS : undefined,
+            tools: AI_TOOLS,
           }),
           signal,
         });
@@ -339,43 +339,80 @@ export function AIProvider({ children }) {
               ...toolResults,
             ];
 
-            // Use non-streaming for follow-up — more reliable across models
+            // Follow-up loop: handle multiple rounds of tool calls (max 3)
+            let currentMsgs = followUpMsgs;
             let followUpDone = false;
-            try {
-              const timeoutCtrl = new AbortController();
-              const timeoutId = setTimeout(() => timeoutCtrl.abort(), 10000);
-
-              // Abort if the user cancels or the timeout fires
-              const onParentAbort = () => timeoutCtrl.abort();
-              controller.signal.addEventListener("abort", onParentAbort);
-
+            for (let round = 0; round < 3; round++) {
               try {
-                const followUpResponse = await callModel(model, followUpMsgs, timeoutCtrl.signal, { stream: false });
-                clearTimeout(timeoutId);
-                controller.signal.removeEventListener("abort", onParentAbort);
+                const timeoutCtrl = new AbortController();
+                const timeoutId = setTimeout(() => timeoutCtrl.abort(), 15000);
+                const onParentAbort = () => timeoutCtrl.abort();
+                controller.signal.addEventListener("abort", onParentAbort);
 
-                if (followUpResponse.ok) {
-                  const json = await followUpResponse.json();
-                  const reply = json.choices?.[0]?.message?.content;
-                  if (reply) {
-                    accumulated = reply;
-                    followUpDone = true;
-                    setMessages(prev =>
-                      prev.map(m => m.id === assistantId ? { ...m, content: reply } : m)
-                    );
-                    setThinking(false);
+                try {
+                  const followUpResponse = await callModel(model, currentMsgs, timeoutCtrl.signal, { stream: false });
+                  clearTimeout(timeoutId);
+                  controller.signal.removeEventListener("abort", onParentAbort);
+
+                  if (followUpResponse.ok) {
+                    const json = await followUpResponse.json();
+                    const msg = json.choices?.[0]?.message;
+
+                    // Check if model wants to call more tools
+                    if (msg?.tool_calls && msg.tool_calls.length > 0) {
+                      const nextToolResults = [];
+                      for (const tc of msg.tool_calls) {
+                        try {
+                          const args = JSON.parse(tc.function?.arguments || "{}");
+                          const result = await executeTool(tc.function.name, args);
+                          nextToolResults.push({
+                            role: "tool",
+                            tool_call_id: tc.id || `call_${Date.now()}_${nextToolResults.length}`,
+                            content: JSON.stringify(result),
+                          });
+                        } catch (e) {
+                          nextToolResults.push({
+                            role: "tool",
+                            tool_call_id: tc.id || `call_${Date.now()}_${nextToolResults.length}`,
+                            content: JSON.stringify({ error: e.message }),
+                          });
+                        }
+                      }
+                      // Build next round messages
+                      currentMsgs = [
+                        ...currentMsgs,
+                        { role: "assistant", content: msg.content || null, tool_calls: msg.tool_calls },
+                        ...nextToolResults,
+                      ];
+                      setMessages(prev =>
+                        prev.map(m => m.id === assistantId ? { ...m, content: "*Working on it...*" } : m)
+                      );
+                      continue; // Next round
+                    }
+
+                    // No more tool calls — use the text response
+                    if (msg?.content) {
+                      accumulated = msg.content;
+                      followUpDone = true;
+                      setMessages(prev =>
+                        prev.map(m => m.id === assistantId ? { ...m, content: msg.content } : m)
+                      );
+                      setThinking(false);
+                    }
                   }
+                  break; // Exit loop on success or non-tool response
+                } catch (fetchErr) {
+                  clearTimeout(timeoutId);
+                  controller.signal.removeEventListener("abort", onParentAbort);
+                  if (fetchErr instanceof DOMException && fetchErr.name === "AbortError" && controller.signal.aborted) {
+                    throw fetchErr;
+                  }
+                  break; // Exit loop on network error
                 }
-              } catch (fetchErr) {
-                clearTimeout(timeoutId);
-                controller.signal.removeEventListener("abort", onParentAbort);
-                if (fetchErr instanceof DOMException && fetchErr.name === "AbortError" && controller.signal.aborted) {
-                  throw fetchErr;
-                }
-                // Timeout or network error on follow-up — fall through to fallback
+              } catch (outerErr) {
+                if (outerErr instanceof DOMException && outerErr.name === "AbortError") throw outerErr;
+                break;
               }
-            } catch (outerErr) {
-              if (outerErr instanceof DOMException && outerErr.name === "AbortError") throw outerErr;
             }
 
             // Fallback: format tool results as markdown if follow-up didn't produce a response
