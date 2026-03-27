@@ -189,49 +189,84 @@ export default function BoardHeader({
                       </Button>
                     </div>
                   ) : (
-                    <h1
-                      className="text-lg font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group"
-                      onClick={() => setIsEditing(true)}
-                    >
-                      {board?.title}
-                      <Edit3 className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </h1>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <h1
+                          className="text-lg font-semibold text-foreground cursor-pointer hover:text-primary transition-colors flex items-center gap-2 group"
+                          onClick={() => setIsEditing(true)}
+                        >
+                          {board?.title}
+                          <Edit3 className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </h1>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">Click to rename this board</TooltipContent>
+                    </Tooltip>
                   )}
 
                   <div className="flex items-center gap-3 text-xs">
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground hover:bg-muted rounded-md">
-                          <Table2 className="w-3 h-3 mr-1" />
-                          {currentView === 'table' ? 'Main table' :
-                           currentView === 'kanban' ? 'Kanban' :
-                           currentView === 'calendar' ? 'Calendar' :
-                           currentView === 'timeline' ? 'Timeline' :
-                           currentView === 'unassigned' ? 'Unassigned Tasks' : 'Main table'}
-                          <ChevronDown className="w-3 h-3 ml-1" />
-                        </Button>
-                      </DropdownMenuTrigger>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground hover:bg-muted rounded-md">
+                              <Table2 className="w-3 h-3 mr-1" />
+                              {currentView === 'table' ? 'Main table' :
+                               currentView === 'kanban' ? 'Kanban' :
+                               currentView === 'calendar' ? 'Calendar' :
+                               currentView === 'timeline' ? 'Timeline' :
+                               currentView === 'unassigned' ? 'Unassigned Tasks' : 'Main table'}
+                              <ChevronDown className="w-3 h-3 ml-1" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">Switch between Table, Kanban, Calendar, Timeline, and Unassigned views</TooltipContent>
+                      </Tooltip>
                       <DropdownMenuContent>
-                        <DropdownMenuItem onClick={() => onViewChange('table')}>
-                          <Table2 className="w-4 h-4 mr-2" />
-                          Main Table
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onViewChange('kanban')}>
-                          <Table2 className="w-4 h-4 mr-2" />
-                          Kanban Board
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onViewChange('calendar')}>
-                          <Table2 className="w-4 h-4 mr-2" />
-                          Calendar View
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onViewChange('timeline')}>
-                          <Table2 className="w-4 h-4 mr-2" />
-                          Timeline
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onViewChange('unassigned')}>
-                          <UserMinus className="w-4 h-4 mr-2" />
-                          Unassigned Tasks
-                        </DropdownMenuItem>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <DropdownMenuItem onClick={() => onViewChange('table')}>
+                              <Table2 className="w-4 h-4 mr-2" />
+                              Main Table
+                            </DropdownMenuItem>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">Spreadsheet-style rows and columns — best for detailed editing and bulk updates</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <DropdownMenuItem onClick={() => onViewChange('kanban')}>
+                              <Table2 className="w-4 h-4 mr-2" />
+                              Kanban Board
+                            </DropdownMenuItem>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">Drag-and-drop cards organized by status — great for visualizing workflow</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <DropdownMenuItem onClick={() => onViewChange('calendar')}>
+                              <Table2 className="w-4 h-4 mr-2" />
+                              Calendar View
+                            </DropdownMenuItem>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">Tasks plotted on a monthly calendar by due date — spot deadline clusters</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <DropdownMenuItem onClick={() => onViewChange('timeline')}>
+                              <Table2 className="w-4 h-4 mr-2" />
+                              Timeline
+                            </DropdownMenuItem>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">Gantt-style bars showing task duration — ideal for scheduling and dependencies</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <DropdownMenuItem onClick={() => onViewChange('unassigned')}>
+                              <UserMinus className="w-4 h-4 mr-2" />
+                              Unassigned Tasks
+                            </DropdownMenuItem>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">Show tasks that have no owner yet — useful for sprint planning and workload balancing</TooltipContent>
+                        </Tooltip>
                       </DropdownMenuContent>
                     </DropdownMenu>
 
@@ -269,15 +304,20 @@ export default function BoardHeader({
             </div>
 
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 px-3 text-xs"
-                onClick={onShowAnalytics}
-              >
-                <TrendingUp className="w-3 h-3 mr-1" />
-                Analytics
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-3 text-xs"
+                    onClick={onShowAnalytics}
+                  >
+                    <TrendingUp className="w-3 h-3 mr-1" />
+                    Analytics
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">View completion rates, status breakdown, team workload, and priority distribution for this board</TooltipContent>
+              </Tooltip>
 
               {collaborators.length > 0 && (
                 <Popover>

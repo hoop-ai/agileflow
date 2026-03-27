@@ -11,6 +11,8 @@ import { createPageUrl } from "@/utils";
 import { Folder, BarChart3, ArrowRight, AlertTriangle, RefreshCw, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/api/supabaseClient";
+import InfoTooltip from "@/components/common/InfoTooltip";
+import ModuleHelp from "@/components/common/ModuleHelp";
 
 import StatsOverview from "../components/dashboard/StatsOverview";
 import RecentBoards from "../components/dashboard/RecentBoards";
@@ -125,17 +127,32 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-1 mb-8"
         >
-          <h1 className="text-2xl font-semibold text-foreground">
-            {getGreeting()}, {user?.full_name?.split(' ')[0] || 'there'}
-          </h1>
-          <p className="text-sm text-muted-foreground">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-semibold text-foreground">
+              {getGreeting()}, {user?.full_name?.split(' ')[0] || 'there'}
+            </h1>
+            <ModuleHelp moduleKey="dashboard" />
+          </div>
+          <p className="text-sm text-muted-foreground flex items-center gap-1">
             {pendingTasks > 0
               ? `You have ${pendingTasks} task${pendingTasks === 1 ? '' : 's'} pending.`
               : "Everything is up to date."}
+            {pendingTasks > 0 && (
+              <InfoTooltip
+                text="Pending tasks include everything not marked as 'Done' — items that are not started, in progress, or stuck."
+                size="xs"
+              />
+            )}
           </p>
 
           <div className="flex flex-wrap gap-3 pt-4">
             <Link to={createPageUrl("Boards")}>
+              <InfoTooltip
+                text="Go to the full board listing where you can create, search, and manage all your boards"
+                side="bottom"
+                variant="info"
+                size="xs"
+              />
               <Button>
                 <Folder className="w-4 h-4 mr-2" />
                 View All Boards
@@ -144,6 +161,12 @@ export default function Dashboard() {
             </Link>
 
             <Link to={createPageUrl("Analytics")}>
+              <InfoTooltip
+                text="See performance metrics, trends, and insights across all your projects"
+                side="bottom"
+                variant="info"
+                size="xs"
+              />
               <Button variant="outline">
                 <BarChart3 className="w-4 h-4 mr-2" />
                 View Analytics

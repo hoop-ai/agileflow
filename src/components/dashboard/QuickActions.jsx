@@ -25,25 +25,25 @@ export default function QuickActions({ onCreateBoard }) {
   const actions = [
     {
       title: "Create Board",
-      description: "Start new project",
+      description: "Set up a new project board with custom columns and groups",
       icon: Plus,
       onClick: () => setShowCreateModal(true)
     },
     {
       title: "Invite Team",
-      description: "Add collaborators",
+      description: "Send invitations to collaborators so they can join your workspace",
       icon: Users,
       onClick: () => setShowInviteModal(true)
     },
     {
       title: "Calendar",
-      description: "View deadlines",
+      description: "View upcoming deadlines and scheduled events across all boards",
       icon: Calendar,
       onClick: () => setShowCalendarModal(true)
     },
     {
       title: "Analytics",
-      description: "View insights",
+      description: "Explore performance metrics, trends, and project health insights",
       icon: BarChart3,
       link: createPageUrl("Analytics")
     }

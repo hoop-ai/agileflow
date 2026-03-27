@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart3, TrendingUp, Users, Calendar, Target, Clock, Inbox } from "lucide-react";
 import { format } from 'date-fns';
 import InfoTooltip from "@/components/common/InfoTooltip";
+import ModuleHelp from "@/components/common/ModuleHelp";
 import { AIExplainButton } from "@/components/ai/AIExplainButton";
 
 export default function AnalyticsPanel({ board, items, onClose }) {
@@ -85,12 +86,15 @@ export default function AnalyticsPanel({ board, items, onClose }) {
               />
             )}
           </div>
-          <button
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground text-xl font-bold w-8 h-8 flex items-center justify-center hover:bg-muted rounded-full"
-          >
-            ×
-          </button>
+          <div className="flex items-center gap-2">
+            <ModuleHelp moduleKey="analytics" />
+            <button
+              onClick={onClose}
+              className="text-muted-foreground hover:text-foreground text-xl font-bold w-8 h-8 flex items-center justify-center hover:bg-muted rounded-full"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -176,7 +180,7 @@ export default function AnalyticsPanel({ board, items, onClose }) {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-muted-foreground">{count} tasks</span>
-                          <Badge variant="outline">{percentage}%</Badge>
+                          <Badge variant="outline" title="Percentage of total tasks in this status">{percentage}%</Badge>
                         </div>
                       </div>
                     );
@@ -207,7 +211,7 @@ export default function AnalyticsPanel({ board, items, onClose }) {
                         </div>
                         <span className="font-medium">{person}</span>
                       </div>
-                      <Badge>{count} tasks</Badge>
+                      <Badge title="Tasks assigned to this team member">{count} tasks</Badge>
                     </div>
                   ))}
                 </div>
@@ -258,7 +262,7 @@ export default function AnalyticsPanel({ board, items, onClose }) {
               <CardContent>
                 <div className="space-y-3">
                   {recentActivity.map(item => (
-                    <div key={item.id} className="flex flex-col gap-1 p-2 bg-muted rounded">
+                    <div key={item.id} className="flex flex-col gap-1 p-2 bg-muted rounded" title="Recently modified item on this board">
                       <div className="font-medium text-sm truncate">{item.title}</div>
                       <div className="text-xs text-muted-foreground">
                         Updated {format(new Date(item.updated_date), 'MMM d, HH:mm')}

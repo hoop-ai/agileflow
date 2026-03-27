@@ -10,6 +10,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import CreateBoardModal from '@/components/boards/CreateBoardModal';
 import InfoTooltip from "@/components/common/InfoTooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function RecentBoards({ boards, isLoading, onCreateBoard }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -36,11 +42,12 @@ export default function RecentBoards({ boards, isLoading, onCreateBoard }) {
                 <p className="text-sm text-muted-foreground mt-0.5">Your latest project boards</p>
               </div>
             </div>
-            <Link to={createPageUrl("Boards")}>
+            <Link to={createPageUrl("Boards")} className="flex items-center gap-1">
               <Button variant="ghost" size="sm" className="text-sm font-medium">
                 View All
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
+              <InfoTooltip text="See all your boards in a searchable list" size="xs" />
             </Link>
           </div>
         </CardHeader>
@@ -70,48 +77,68 @@ export default function RecentBoards({ boards, isLoading, onCreateBoard }) {
               </Button>
             </div>
           ) : (
-            <div>
-              {boards.slice(0, 10).map((board, index) => (
-                <motion.div
-                  key={board.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.04 }}
-                >
-                  <Link to={createPageUrl(`Board?id=${board.id}`)}>
-                    <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-accent transition-colors duration-150">
-                      <div
-                        className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: board.color || '#0073EA' }}
-                      >
-                        <Folder className="w-4 h-4 text-white" />
-                      </div>
+            <TooltipProvider delayDuration={150}>
+              <div>
+                {boards.slice(0, 10).map((board, index) => (
+                  <motion.div
+                    key={board.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.04 }}
+                  >
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Link to={createPageUrl(`Board?id=${board.id}`)}>
+                          <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-accent transition-colors duration-150">
+                            <div
+                              className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
+                              style={{ backgroundColor: board.color || '#0073EA' }}
+                            >
+                              <Folder className="w-4 h-4 text-white" />
+                            </div>
 
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {board.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Updated {format(new Date(board.updated_date), 'MMM d, yyyy')}
-                        </p>
-                      </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">
+                                {board.title}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Updated {format(new Date(board.updated_date), 'MMM d, yyyy')}
+                              </p>
+                            </div>
 
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Badge variant="secondary" className="text-xs capitalize">
-                          {board.visibility === 'private' ? (
-                            <Lock className="w-3 h-3 mr-1" />
-                          ) : (
-                            <Globe className="w-3 h-3 mr-1" />
-                          )}
-                          {board.visibility}
-                        </Badge>
-                        <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div>
+                                    <Badge variant="secondary" className="text-xs capitalize">
+                                      {board.visibility === 'private' ? (
+                                        <Lock className="w-3 h-3 mr-1" />
+                                      ) : (
+                                        <Globe className="w-3 h-3 mr-1" />
+                                      )}
+                                      {board.visibility}
+                                    </Badge>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="left" className="text-xs">
+                                  {board.visibility === 'private'
+                                    ? 'Private — only you can see this board'
+                                    : 'Public — visible to your team'}
+                                </TooltipContent>
+                              </Tooltip>
+                              <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                            </div>
+                          </div>
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="text-xs">
+                        Click to open this board
+                      </TooltipContent>
+                    </Tooltip>
+                  </motion.div>
+                ))}
+              </div>
+            </TooltipProvider>
           )}
         </CardContent>
       </Card>

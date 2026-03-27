@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -26,6 +27,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import InfoTooltip from "@/components/common/InfoTooltip";
+import ModuleHelp from "@/components/common/ModuleHelp";
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -210,27 +212,64 @@ export default function SettingsPage() {
               <h1 className="text-3xl font-bold text-foreground">Settings</h1>
               <p className="text-muted-foreground mt-1">Manage your account and preferences</p>
             </div>
+            <ModuleHelp moduleKey="settings" />
           </div>
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList>
-            <TabsTrigger value="profile" className="flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Profile
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2">
-              <Bell className="w-4 h-4" />
-              Notifications
-            </TabsTrigger>
-            <TabsTrigger value="preferences" className="flex items-center gap-2">
-              <Palette className="w-4 h-4" />
-              Preferences
-            </TabsTrigger>
-            <TabsTrigger value="privacy" className="flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              Privacy
-            </TabsTrigger>
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger value="profile" className="flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Profile
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs max-w-xs z-[300]">
+                  Your name, avatar, job title, department, and bio
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger value="notifications" className="flex items-center gap-2">
+                    <Bell className="w-4 h-4" />
+                    Notifications
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs max-w-xs z-[300]">
+                  Control which email and in-app alerts you receive
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger value="preferences" className="flex items-center gap-2">
+                    <Palette className="w-4 h-4" />
+                    Preferences
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs max-w-xs z-[300]">
+                  Theme, language, timezone, date format, and calendar options
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger value="privacy" className="flex items-center gap-2">
+                    <Shield className="w-4 h-4" />
+                    Privacy
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs max-w-xs z-[300]">
+                  Profile visibility, email display, and activity tracking
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </TabsList>
 
           {/* Profile Tab */}
@@ -261,7 +300,10 @@ export default function SettingsPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="full_name">Full Name</Label>
+                    <div className="flex items-center gap-1.5">
+                      <Label htmlFor="full_name">Full Name</Label>
+                      <InfoTooltip text="Your display name visible to team members" />
+                    </div>
                     <Input
                       id="full_name"
                       value={settings.full_name}
@@ -459,7 +501,10 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="date_format">Date Format</Label>
+                    <div className="flex items-center gap-1.5">
+                      <Label htmlFor="date_format">Date Format</Label>
+                      <InfoTooltip text="How dates appear throughout the app (e.g., 03/27/2026 vs 27 Mar 2026)" />
+                    </div>
                     <Select
                       value={settings.date_format}
                       onValueChange={(value) => setSettings(prev => ({ ...prev, date_format: value }))}
@@ -476,7 +521,10 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="week_start">Week Starts On</Label>
+                    <div className="flex items-center gap-1.5">
+                      <Label htmlFor="week_start">Week Starts On</Label>
+                      <InfoTooltip text="Sets whether your calendar starts on Sunday or Monday" />
+                    </div>
                     <Select
                       value={settings.week_start}
                       onValueChange={(value) => setSettings(prev => ({ ...prev, week_start: value }))}

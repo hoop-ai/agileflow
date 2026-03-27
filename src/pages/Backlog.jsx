@@ -21,7 +21,8 @@ import {
   CheckCircle2,
   Clock,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  GripVertical
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -30,7 +31,14 @@ import CreateStoryModal from "../components/backlog/CreateStoryModal";
 import StoryDetailModal from "../components/backlog/StoryDetailModal";
 import SprintPlanningModal from "../components/backlog/SprintPlanningModal";
 import InfoTooltip from "@/components/common/InfoTooltip";
+import ModuleHelp from "@/components/common/ModuleHelp";
 import { AIExplainButton } from "@/components/ai/AIExplainButton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function BacklogPage() {
   const { toast } = useToast();
@@ -158,19 +166,38 @@ export default function BacklogPage() {
                 readyForSprint: backlogStats.ready
               }}
             />
-            <Button
-              onClick={() => setShowPlanningModal(true)}
-              variant="outline"
-            >
-              <CalendarPlus className="w-4 h-4 mr-2" />
-              Plan Sprint
-            </Button>
-            <Button
-              onClick={() => setShowCreateModal(true)}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              New User Story
-            </Button>
+            <ModuleHelp moduleKey="backlog" />
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => setShowPlanningModal(true)}
+                    variant="outline"
+                  >
+                    <CalendarPlus className="w-4 h-4 mr-2" />
+                    Plan Sprint
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs text-xs">
+                  Open sprint planning to select stories for your next sprint and set sprint dates
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => setShowCreateModal(true)}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    New User Story
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs text-xs">
+                  Create a new user story to add to the backlog
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
 
@@ -181,7 +208,7 @@ export default function BacklogPage() {
               <div>
                 <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
                   Total Stories
-                  <InfoTooltip text="Number of user stories in the backlog that haven't been assigned to a sprint yet" />
+                  <InfoTooltip text="User stories in the backlog waiting to be assigned to a sprint" />
                 </p>
                 <p className="text-2xl font-semibold text-foreground">{backlogStats.total}</p>
               </div>
@@ -194,7 +221,7 @@ export default function BacklogPage() {
               <div>
                 <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
                   Story Points
-                  <InfoTooltip text="Total estimated effort across all backlog stories. Higher points mean more work. Common scale: 1, 2, 3, 5, 8, 13" />
+                  <InfoTooltip text="Total estimated effort. Teams use Fibonacci numbers (1, 2, 3, 5, 8, 13) where higher = more complex" />
                 </p>
                 <p className="text-2xl font-semibold text-foreground">{backlogStats.totalPoints}</p>
               </div>
@@ -207,7 +234,7 @@ export default function BacklogPage() {
               <div>
                 <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
                   Critical Priority
-                  <InfoTooltip text="Stories marked as critical urgency — these should be addressed in the next sprint" />
+                  <InfoTooltip text="Stories needing immediate attention — should be in the very next sprint" />
                 </p>
                 <p className="text-2xl font-semibold text-foreground">{backlogStats.critical}</p>
               </div>
@@ -220,7 +247,7 @@ export default function BacklogPage() {
               <div>
                 <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
                   Ready for Sprint
-                  <InfoTooltip text="Stories with status 'Ready' — they have enough detail and acceptance criteria to be pulled into a sprint" />
+                  <InfoTooltip text="Fully defined stories with acceptance criteria — ready to be pulled into a sprint" />
                 </p>
                 <p className="text-2xl font-semibold text-foreground">{backlogStats.ready}</p>
               </div>
@@ -238,7 +265,7 @@ export default function BacklogPage() {
                 <div>
                   <p className="font-semibold text-foreground flex items-center gap-1">
                     {activeSprints.length} Active Sprint{activeSprints.length > 1 ? 's' : ''}
-                    <InfoTooltip text="Sprints currently in progress. Stories can be moved from backlog into these sprints." />
+                    <InfoTooltip text="These sprints are currently running. You can move backlog stories into active sprints during planning." />
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {activeSprints.map(s => s.name).join(', ')}
@@ -253,29 +280,55 @@ export default function BacklogPage() {
         <Card className="mb-6">
           <CardContent className="p-4">
             <div className="flex gap-4 items-center">
-              <div className="relative flex-1">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search user stories..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+              <TooltipProvider delayDuration={150}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="relative flex-1">
+                      <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        placeholder="Search user stories..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs text-xs">
+                    Search stories by title or description
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
 
               <div className="flex gap-2 items-center">
-                <InfoTooltip text="Filter stories by urgency level. Drag stories to reorder their priority." />
-                {['all', 'critical', 'high', 'medium', 'low'].map(priority => (
-                  <Button
-                    key={priority}
-                    variant={filterPriority === priority ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setFilterPriority(priority)}
-                    className="capitalize"
-                  >
-                    {priority}
-                  </Button>
-                ))}
+                <InfoTooltip text="Filter by urgency. Critical items need immediate action. Low items can wait." />
+                {['all', 'critical', 'high', 'medium', 'low'].map(priority => {
+                  const priorityTooltips = {
+                    all: "Show all stories regardless of priority",
+                    critical: "Urgent — needs immediate action, must be in the next sprint",
+                    high: "Important — should be addressed soon",
+                    medium: "Standard priority — plan for an upcoming sprint",
+                    low: "Nice-to-have — can wait until higher priorities are handled"
+                  };
+                  return (
+                    <TooltipProvider key={priority} delayDuration={150}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant={filterPriority === priority ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setFilterPriority(priority)}
+                            className="capitalize"
+                          >
+                            {priority}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-xs text-xs">
+                          {priorityTooltips[priority]}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                })}
               </div>
             </div>
           </CardContent>
@@ -427,20 +480,63 @@ const StoryCard = ({ story, onClick, isDragging }) => {
       onClick={onClick}
     >
       <div className="flex items-start justify-between gap-4">
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center self-center text-muted-foreground/40 hover:text-muted-foreground transition-colors mr-1">
+                <GripVertical className="w-4 h-4" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="max-w-xs text-xs">
+              Drag to reorder priority
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <Badge className={cn("border-0", priorityClasses[story.priority])}>
-              {story.priority}
-            </Badge>
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Badge className={cn("border-0", priorityClasses[story.priority])}>
+                      {story.priority}
+                    </Badge>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs text-xs">
+                  This story&apos;s urgency level
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             {story.story_points && (
-              <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium">
-                {story.story_points} SP
-              </span>
+              <TooltipProvider delayDuration={150}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium">
+                      {story.story_points} SP
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs text-xs">
+                    Estimated effort for this story (Fibonacci scale)
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
             {story.status !== 'backlog' && (
-              <Badge className={cn("border-0", statusClasses[story.status])}>
-                {story.status.replace('_', ' ')}
-              </Badge>
+              <TooltipProvider delayDuration={150}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Badge className={cn("border-0", statusClasses[story.status])}>
+                        {story.status.replace('_', ' ')}
+                      </Badge>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs text-xs">
+                    Current workflow status
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
 
@@ -449,18 +545,36 @@ const StoryCard = ({ story, onClick, isDragging }) => {
 
           <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
             {story.acceptance_criteria && Array.isArray(story.acceptance_criteria) && story.acceptance_criteria.length > 0 && (
-              <span className="flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" />
-                {story.acceptance_criteria.filter(c => c && c.completed).length}/{story.acceptance_criteria.length} criteria
-              </span>
+              <TooltipProvider delayDuration={150}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      {story.acceptance_criteria.filter(c => c && c.completed).length}/{story.acceptance_criteria.length} criteria
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs text-xs">
+                    How many acceptance criteria are completed out of total
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
             {story.assigned_to && (
-              <span className="flex items-center gap-1">
-                <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xs">
-                  {story.assigned_to.charAt(0).toUpperCase()}
-                </div>
-                {story.assigned_to.split('@')[0]}
-              </span>
+              <TooltipProvider delayDuration={150}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="flex items-center gap-1">
+                      <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xs">
+                        {story.assigned_to.charAt(0).toUpperCase()}
+                      </div>
+                      {story.assigned_to.split('@')[0]}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs text-xs">
+                    Team member assigned to this story
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
         </div>

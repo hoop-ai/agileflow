@@ -44,6 +44,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import InfoTooltip from "@/components/common/InfoTooltip";
+import ModuleHelp from "@/components/common/ModuleHelp";
 
 const AVATAR_COLORS = [
   'bg-blue-600 text-white',
@@ -225,8 +226,9 @@ export default function AdminPage() {
               <h1 className="text-2xl font-bold text-foreground">Team Management</h1>
               <p className="text-sm text-muted-foreground">Manage team members, roles, and permissions</p>
             </div>
+            <ModuleHelp moduleKey="admin" />
           </div>
-          <Button onClick={() => setInviteOpen(true)} className="gap-2">
+          <Button onClick={() => setInviteOpen(true)} className="gap-2" title="Generate a sign-up link to invite new team members to your workspace">
             <UserPlus className="w-4 h-4" />
             Invite Member
           </Button>
@@ -263,17 +265,17 @@ export default function AdminPage() {
                 <CardDescription>{filteredUsers.length} of {users.length} members</CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                <div className="relative">
+                <div className="relative" title="Find users by name, email, or job title">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by name or email..."
+                    placeholder="Search by name, email, or title..."
                     className="pl-9 w-64"
                   />
                 </div>
                 <Select value={roleFilter} onValueChange={setRoleFilter}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-32" title="Show only users with a specific role">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -372,7 +374,7 @@ export default function AdminPage() {
                         <td className="py-3 px-4 text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Manage this user — edit role or reset password">
                                 <MoreHorizontal className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -553,7 +555,10 @@ function EditUserDialog({ user, isCurrentUser, onClose, onSave, isSaving }) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="edit-role">Role</Label>
+              <div className="flex items-center gap-1.5">
+                <Label htmlFor="edit-role">Role</Label>
+                <InfoTooltip text="Admin = full access to everything. Member = can create and edit. Viewer = read-only access." />
+              </div>
               <Select value={form.role} onValueChange={(val) => handleChange('role', val)} disabled={isCurrentUser}>
                 <SelectTrigger id="edit-role">
                   <SelectValue />

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, CalendarDays, MoreHorizontal, Users, List } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -8,6 +9,7 @@ import { cn } from "@/lib/utils";
 
 import TaskEditModal from "../TaskEditModal";
 import InfoTooltip from "../../common/InfoTooltip";
+import ModuleHelp from "../../common/ModuleHelp";
 
 // Helper functions
 const getStatusColumns = (board) => {
@@ -68,9 +70,7 @@ const KanbanCard = ({ item, index, board, groupingType, onEdit }) => {
   const statusValue = item.data?.[statusColumn?.id];
   const statusOption = statusColumn?.options?.choices?.find(c => c.label === statusValue);
 
-  const dueDateColumn = board?.columns?.find(
-    col => col.type === 'date' && (col.id.toLowerCase().includes('due') || col.title.toLowerCase().includes('due'))
-  );
+  const dueDateColumn = board?.columns?.find(col => col.type === 'date');
   const dueDateValue = item.data?.[dueDateColumn?.id];
 
   return (
@@ -104,6 +104,7 @@ const KanbanCard = ({ item, index, board, groupingType, onEdit }) => {
               variant="ghost"
               size="icon"
               className="h-6 w-6 text-muted-foreground hover:text-foreground rounded"
+              title="Edit, move, or delete this task"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(item);
@@ -156,10 +157,12 @@ const KanbanCard = ({ item, index, board, groupingType, onEdit }) => {
   );
 };
 
-export default function KanbanView({ board, items, isLoading, onUpdateItem, onDeleteItem, onReorderItems }) {
+export default function KanbanView({ board, items, isLoading, onUpdateItem, onDeleteItem, onReorderItems, onUpdateBoard }) {
   const [groupBy, setGroupBy] = useState('status');
   const [editingTask, setEditingTask] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [isAddingStage, setIsAddingStage] = useState(false);
+  const [newStageName, setNewStageName] = useState('');
 
   if (!board) return (
     <div className="p-8 text-center text-muted-foreground">
@@ -208,37 +211,74 @@ export default function KanbanView({ board, items, isLoading, onUpdateItem, onDe
   let columnsData = [];
 
   if (groupBy === 'status') {
-    // Use defined choices if available, otherwise derive from item data
     const choices = activeColumnDefinition.options?.choices;
     if (choices && choices.length > 0) {
+      // Build a set of known choice labels for quick lookup
+      const choiceLabels = new Set(choices.map(c => c.label));
+      // Items with empty/null status go into the first choice column
+      const defaultLabel = choices[0].label;
+
       columnsData = choices.map((choice) => ({
         id: `status-${choice.label}`,
         title: choice.label,
+        color: choice.color,
         items: items
-          .filter(item => item.data?.[activeColumnDefinition.id] === choice.label)
+          .filter(item => {
+            const val = item.data?.[activeColumnDefinition.id];
+            if (choice.label === defaultLabel) {
+              // First column also collects items with no status set
+              return val === choice.label || (!val || val === '');
+            }
+            return val === choice.label;
+          })
           .sort((a, b) => (a.order_index || 0) - (b.order_index || 0)),
       }));
-    } else {
-      // Derive unique status values from items
-      const uniqueStatuses = getUniqueValues(items, activeColumnDefinition.id);
-      columnsData = uniqueStatuses.map((status) => ({
-        id: `status-${status}`,
-        title: status,
-        items: items
-          .filter(item => item.data?.[activeColumnDefinition.id] === status)
-          .sort((a, b) => (a.order_index || 0) - (b.order_index || 0)),
-      }));
-    }
 
-    // Add unassigned/no-status items
-    const noStatusItems = items
-      .filter(item => !item.data?.[activeColumnDefinition.id] || item.data[activeColumnDefinition.id] === '')
-      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-    if (noStatusItems.length > 0) {
-      columnsData.push({
-        id: 'status-unset',
+      // Catch items with status values not in any known choice
+      const unmatchedItems = items
+        .filter(item => {
+          const val = item.data?.[activeColumnDefinition.id];
+          return val && val !== '' && !choiceLabels.has(val);
+        })
+        .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+
+      // Group unmatched items by their status value
+      const unmatchedGroups = {};
+      unmatchedItems.forEach(item => {
+        const val = item.data[activeColumnDefinition.id];
+        if (!unmatchedGroups[val]) unmatchedGroups[val] = [];
+        unmatchedGroups[val].push(item);
+      });
+      Object.entries(unmatchedGroups).forEach(([status, statusItems]) => {
+        columnsData.push({
+          id: `status-${status}`,
+          title: status,
+          items: statusItems,
+        });
+      });
+    } else {
+      // No choices defined — derive columns from item data, plus a default empty column
+      const uniqueStatuses = getUniqueValues(items, activeColumnDefinition.id);
+
+      // Always show a "Not Started" column for empty-status items
+      const noStatusItems = items
+        .filter(item => !item.data?.[activeColumnDefinition.id] || item.data[activeColumnDefinition.id] === '')
+        .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+
+      columnsData = [{
+        id: 'status-Not Started',
         title: 'Not Started',
         items: noStatusItems,
+      }];
+
+      uniqueStatuses.forEach((status) => {
+        columnsData.push({
+          id: `status-${status}`,
+          title: status,
+          items: items
+            .filter(item => item.data?.[activeColumnDefinition.id] === status)
+            .sort((a, b) => (a.order_index || 0) - (b.order_index || 0)),
+        });
       });
     }
   } else if (groupBy === 'people') {
@@ -356,6 +396,34 @@ export default function KanbanView({ board, items, isLoading, onUpdateItem, onDe
     setEditingTask(null);
   };
 
+  const handleAddStage = async () => {
+    if (!newStageName.trim() || !onUpdateBoard) return;
+
+    const statusCol = board.columns.find(col => col.type === 'status');
+    if (!statusCol) return;
+
+    const stageColors = ['#C4C4C4', '#FFCB00', '#00C875', '#E2445C', '#579BFC', '#A25DDC', '#FF642E', '#00D9FF'];
+    const existingChoices = statusCol.options?.choices || [];
+    const newColor = stageColors[existingChoices.length % stageColors.length];
+
+    const updatedColumns = board.columns.map(col => {
+      if (col.id === statusCol.id) {
+        return {
+          ...col,
+          options: {
+            ...col.options,
+            choices: [...existingChoices, { label: newStageName.trim(), color: newColor }],
+          },
+        };
+      }
+      return col;
+    });
+
+    await onUpdateBoard({ columns: updatedColumns });
+    setNewStageName('');
+    setIsAddingStage(false);
+  };
+
   return (
     <div className="h-full">
       {/* Header with grouping selector */}
@@ -368,11 +436,12 @@ export default function KanbanView({ board, items, isLoading, onUpdateItem, onDe
             <h2 className="text-base font-semibold text-foreground">Kanban Board</h2>
             <p className="text-xs text-muted-foreground">Drag and drop to manage your tasks</p>
           </div>
+          <ModuleHelp moduleKey="kanban" />
         </div>
 
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-muted-foreground">Group by:</span>
-          <InfoTooltip text="Choose how to organize your Kanban columns — by status, priority, or assignee" side="bottom" />
+          <InfoTooltip text="Choose how columns are organized. 'Status' creates a column for each workflow stage. 'People' groups by assignee." side="bottom" />
           <Select value={groupBy} onValueChange={setGroupBy}>
             <SelectTrigger className="w-32 rounded-lg border border-border bg-card">
               <SelectValue />
@@ -417,24 +486,19 @@ export default function KanbanView({ board, items, isLoading, onUpdateItem, onDe
                   <div className="px-1 py-2 mb-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
+                        {column.color && (
+                          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: column.color }} />
+                        )}
                         <h3 className="text-sm font-medium text-foreground">
                           {column.title}
-                          {column.id === 'people-unassigned' && (
-                            <span className="text-xs font-normal text-muted-foreground ml-1">(Unassigned)</span>
-                          )}
                         </h3>
-                        <span className="px-1.5 py-0.5 text-xs rounded bg-background text-muted-foreground border border-border">
+                        <span
+                          className="px-1.5 py-0.5 text-xs rounded bg-background text-muted-foreground border border-border"
+                          title="Number of tasks currently in this stage"
+                        >
                           {column.items.length}
                         </span>
-                        <InfoTooltip text="Number of tasks in this column" side="top" />
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 rounded text-muted-foreground hover:text-foreground"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
                     </div>
                   </div>
 
@@ -443,9 +507,7 @@ export default function KanbanView({ board, items, isLoading, onUpdateItem, onDe
                     {column.items.length === 0 && !snapshot.isDraggingOver && (
                       <div className="text-center py-8 px-4">
                         <div className="border border-dashed border-border rounded-lg py-6 px-3">
-                          <p className="text-xs text-muted-foreground">
-                            {column.id === 'people-unassigned' ? 'Drag unassigned tasks here' : 'Drag tasks here'}
-                          </p>
+                          <p className="text-xs text-muted-foreground">Drag tasks here or change their status in the table view to move them into this column</p>
                         </div>
                       </div>
                     )}
@@ -465,6 +527,44 @@ export default function KanbanView({ board, items, isLoading, onUpdateItem, onDe
               )}
             </Droppable>
           ))}
+
+          {/* Add Stage Column */}
+          {groupBy === 'status' && onUpdateBoard && (
+            <div className="w-72 flex-shrink-0">
+              {isAddingStage ? (
+                <div className="rounded-lg p-3 bg-muted/50">
+                  <Input
+                    value={newStageName}
+                    onChange={(e) => setNewStageName(e.target.value)}
+                    placeholder="Stage name..."
+                    className="mb-2 h-9 text-sm"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleAddStage();
+                      if (e.key === 'Escape') { setIsAddingStage(false); setNewStageName(''); }
+                    }}
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" className="h-8 text-xs" onClick={handleAddStage} disabled={!newStageName.trim()}>
+                      Add
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setIsAddingStage(false); setNewStageName(''); }}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsAddingStage(true)}
+                  className="w-full h-12 rounded-lg border border-dashed border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors flex items-center justify-center gap-2 text-sm"
+                  title="Create a new workflow stage. This adds a new status option available across all views."
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Stage
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </DragDropContext>
 

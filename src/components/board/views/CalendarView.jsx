@@ -9,6 +9,8 @@ import { motion } from "framer-motion";
 
 import TaskEditModal from "../TaskEditModal";
 import CreateEventModal from "../../calendar/CreateEventModal";
+import InfoTooltip from "../../common/InfoTooltip";
+import ModuleHelp from "../../common/ModuleHelp";
 
 const CalendarEvent = ({ item, board, onEdit, isTask }) => {
   const priorityColumn = board?.columns?.find(col => col.type === 'priority');
@@ -257,25 +259,28 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem 
   const renderHeader = () => {
     return (
       <div className="flex justify-between items-center mb-4 px-2">
-        <Button variant="outline" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+        <Button variant="outline" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} title="Navigate to the previous month">
           <ChevronLeft className="w-4 h-4" />
         </Button>
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-semibold text-foreground">
             {format(currentMonth, 'MMMM yyyy')}
           </h2>
+          <InfoTooltip text="This calendar shows board tasks by due date and any team events. Click a day to add an event, or click an existing item to view details." side="bottom" />
+          <ModuleHelp moduleKey="calendarView" />
           <Button
             onClick={() => {
               setSelectedDate(new Date());
               setShowCreateEventModal(true);
             }}
             className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg h-9 px-4 text-sm"
+            title="Create a new calendar event for today"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Event
           </Button>
         </div>
-        <Button variant="outline" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+        <Button variant="outline" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} title="Navigate to the next month">
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>
@@ -322,6 +327,7 @@ export default function CalendarView({ board, items, onUpdateItem, onDeleteItem 
                 ${isSameDay(day, today) ? 'ring-2 ring-primary ring-inset' : ''}
               `}
               onClick={() => handleDayClick(day)}
+              title={`${format(day, 'EEEE, MMMM d')} — click to add an event`}
             >
               <span className={`text-xs font-medium ${isSameDay(day, today) ? 'text-primary' : ''}`}>
                 {format(day, 'd')}

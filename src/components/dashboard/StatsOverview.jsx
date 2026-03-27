@@ -14,10 +14,10 @@ export default function StatsOverview({ boards, items, isLoading }) {
   const isEmpty = !isLoading && boards.length === 0;
 
   const tooltips = {
-    "Total Boards": "The number of project boards you own or have access to",
-    "Completed Tasks": "Tasks marked as 'Done' across all your boards",
-    "Pending Tasks": "Tasks not yet marked as 'Done' — includes working, stuck, and not started",
-    "Total Tasks": "All tasks across all your boards, regardless of status",
+    "Total Boards": "All project boards you currently own. Each board contains groups, tasks, and columns for tracking work.",
+    "Completed Tasks": "Tasks marked as 'Done' across every board. A higher number relative to total tasks indicates strong progress.",
+    "Pending Tasks": "Tasks still in progress — includes 'Not Started', 'Working On It', and 'Stuck' statuses. These need your attention.",
+    "Total Tasks": "The combined count of all tasks across all boards, regardless of their current status.",
   };
 
   const stats = [

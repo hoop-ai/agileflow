@@ -34,8 +34,15 @@ import {
 } from 'date-fns';
 import { motion } from "framer-motion";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import CreateEventModal from "../components/calendar/CreateEventModal";
 import InfoTooltip from "@/components/common/InfoTooltip";
+import ModuleHelp from "@/components/common/ModuleHelp";
 import { AIExplainButton } from "@/components/ai/AIExplainButton";
 
 // Semantic Tailwind color classes for event types — no hex values
@@ -108,46 +115,80 @@ export default function CalendarPage() {
     return (
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">Previous month</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <h2 className="text-2xl font-bold text-foreground">
             {format(currentMonth, 'MMMM yyyy')}
           </h2>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setCurrentMonth(new Date())}
-          >
-            Today
-          </Button>
-          <InfoTooltip text="Jump back to the current month" />
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">Next month</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentMonth(new Date())}
+                >
+                  Today
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">Jump back to the current month and highlight today</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline">
-            <Filter className="w-4 h-4 mr-2" />
-            Filter
-          </Button>
-          <Button
-            onClick={() => {
-              setSelectedDate(new Date());
-              setShowCreateModal(true);
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Event
-          </Button>
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline">
+                  <Filter className="w-4 h-4 mr-2" />
+                  Filter
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">Filter events by type (meeting, deadline, milestone, etc.)</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => {
+                    setSelectedDate(new Date());
+                    setShowCreateModal(true);
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Event
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">Schedule a new event — meeting, deadline, milestone, or any other type</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
     );
@@ -187,11 +228,12 @@ export default function CalendarPage() {
             <div
               key={day.toString()}
               className={cn(
-                "min-h-[120px] p-3 rounded-lg border border-border transition-colors cursor-pointer hover:bg-muted/50",
+                "min-h-[120px] p-3 rounded-lg border border-border transition-colors cursor-pointer hover:bg-muted/50 group/cell",
                 !sameMonth && "bg-muted/30 opacity-60",
                 sameMonth && "bg-card",
                 todayDay && "ring-2 ring-foreground"
               )}
+              title={`Click to create an event on ${format(day, 'MMM d')}`}
               onClick={() => {
                 setSelectedDate(day);
                 setShowCreateModal(true);
@@ -209,38 +251,61 @@ export default function CalendarPage() {
                   {format(day, 'd')}
                 </span>
                 {dayEvents.length > 0 && (
-                  <Badge variant="secondary" className="text-xs">
-                    {dayEvents.length}
-                  </Badge>
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="secondary" className="text-xs">
+                          {dayEvents.length}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">
+                        {dayEvents.length} {dayEvents.length === 1 ? 'event' : 'events'} on this day
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
               </div>
 
               <div className="space-y-1">
                 {dayEvents.slice(0, 3).map((event) => {
                   const cfg = getEventConfig(event.event_type);
+                  const eventTime = !event.all_day
+                    ? format(new Date(event.start_date), 'h:mm a')
+                    : 'All day';
                   return (
-                    <div
-                      key={event.id}
-                      className={cn(
-                        "text-xs p-1.5 rounded-md cursor-pointer transition-colors border-l-2",
-                        cfg.bg,
-                        cfg.border,
-                        "hover:opacity-80"
-                      )}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedEvent(event);
-                      }}
-                    >
-                      <div className={cn("font-medium truncate", cfg.text)}>
-                        {event.title}
-                      </div>
-                      {!event.all_day && (
-                        <div className="text-muted-foreground text-[10px]">
-                          {format(new Date(event.start_date), 'h:mm a')}
-                        </div>
-                      )}
-                    </div>
+                    <TooltipProvider key={event.id} delayDuration={300}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={cn(
+                              "text-xs p-1.5 rounded-md cursor-pointer transition-colors border-l-2",
+                              cfg.bg,
+                              cfg.border,
+                              "hover:opacity-80"
+                            )}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedEvent(event);
+                            }}
+                          >
+                            <div className={cn("font-medium truncate", cfg.text)}>
+                              {event.title}
+                            </div>
+                            {!event.all_day && (
+                              <div className="text-muted-foreground text-[10px]">
+                                {eventTime}
+                              </div>
+                            )}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs max-w-[200px]">
+                          <p className="font-medium">{event.title}</p>
+                          <p className="text-muted-foreground capitalize">{event.event_type} · {eventTime}</p>
+                          {event.location && <p className="text-muted-foreground truncate">{event.location}</p>}
+                          <p className="text-muted-foreground mt-0.5">Click to view details</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   );
                 })}
                 {dayEvents.length > 3 && (
@@ -291,6 +356,7 @@ export default function CalendarPage() {
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
             <CalendarIcon className="w-8 h-8 text-foreground" />
             Team Calendar
+            <ModuleHelp moduleKey="calendar" />
           </h1>
           <p className="text-muted-foreground mt-2">Manage meetings, milestones, and important dates</p>
           <AIExplainButton
@@ -312,14 +378,14 @@ export default function CalendarPage() {
             <div className="flex flex-wrap gap-4">
               {Object.entries(eventTypeConfig).map(([type, cfg]) => {
                 const tooltipMap = {
-                  meeting: "Team meetings, standups, and 1-on-1s",
-                  milestone: "Key project milestones and deliverables",
-                  deadline: "Hard deadlines for tasks or deliverables",
-                  review: "Code reviews, design reviews, and sprint reviews",
-                  retrospective: "Sprint retrospectives to reflect on what went well and what to improve",
-                  planning: "Sprint planning and roadmap sessions",
-                  holiday: "Team holidays and days off",
-                  other: "Any other event that doesn't fit the above categories",
+                  meeting: "Use for standups, 1-on-1s, syncs, and any team gathering with a set time",
+                  milestone: "Use to mark major deliverables, launches, or key project checkpoints",
+                  deadline: "Use for hard due dates — submissions, approvals, or go/no-go cutoffs",
+                  review: "Use for code reviews, design critiques, sprint reviews, and demo sessions",
+                  retrospective: "Use for end-of-sprint retros to discuss wins, blockers, and improvements",
+                  planning: "Use for sprint planning, roadmap sessions, and backlog grooming",
+                  holiday: "Use for team holidays, PTO, and company-wide days off",
+                  other: "Use for events that don't fit the categories above",
                 };
                 return (
                   <div key={type} className="flex items-center gap-2">
@@ -347,7 +413,7 @@ export default function CalendarPage() {
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4">
               <h3 className="text-lg font-semibold text-foreground">Upcoming Events</h3>
-              <InfoTooltip text="Events scheduled in the future, sorted by date. Click any event to see details." />
+              <InfoTooltip text="Your next 5 upcoming events, sorted by date. Click any event to view its full details — time, location, attendees, and description." />
               <AIExplainButton
                 widgetTitle="Upcoming Events"
                 widgetData={{
@@ -437,9 +503,16 @@ export default function CalendarPage() {
                       <div className={cn("w-3 h-3 rounded-full flex-shrink-0", getEventConfig(selectedEvent.event_type).dot)} />
                       <h2 className="text-2xl font-bold text-foreground">{selectedEvent.title}</h2>
                     </div>
-                    <Badge variant="secondary" className="mt-2 capitalize">
-                      {selectedEvent.event_type}
-                    </Badge>
+                    <TooltipProvider delayDuration={200}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant="secondary" className="mt-2 capitalize cursor-default">
+                            {selectedEvent.event_type}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="text-xs">The category of this event</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                   <button
                     onClick={() => setSelectedEvent(null)}
@@ -484,8 +557,9 @@ export default function CalendarPage() {
                   <div className="flex items-start gap-3 text-sm">
                     <Users className="w-5 h-5 text-muted-foreground mt-0.5" />
                     <div className="flex-1">
-                      <p className="font-medium text-foreground mb-2">
+                      <p className="font-medium text-foreground mb-2 flex items-center gap-1.5">
                         Attendees ({selectedEvent.attendees.length})
+                        <InfoTooltip text="People invited to this event" size="xs" />
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {selectedEvent.attendees.map((email, index) => (
@@ -508,16 +582,23 @@ export default function CalendarPage() {
                 )}
 
                 <div className="flex justify-between pt-4 border-t border-border">
-                  <Button
-                    variant="destructive"
-                    onClick={() => {
-                      if (window.confirm('Delete this event?')) {
-                        handleDeleteEvent(selectedEvent.id);
-                      }
-                    }}
-                  >
-                    Delete Event
-                  </Button>
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          onClick={() => {
+                            if (window.confirm('Delete this event?')) {
+                              handleDeleteEvent(selectedEvent.id);
+                            }
+                          }}
+                        >
+                          Delete Event
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">Permanently delete this event</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <Button variant="outline" onClick={() => setSelectedEvent(null)}>
                     Close
                   </Button>

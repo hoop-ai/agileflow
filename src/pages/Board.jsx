@@ -39,7 +39,14 @@ import TimelineView from "../components/board/views/TimelineView";
 
 import AnalyticsPanel from "../components/board/analytics/AnalyticsPanel";
 import InfoTooltip from "../components/common/InfoTooltip";
+import ModuleHelp from "../components/common/ModuleHelp";
 import { AIExplainButton } from "../components/ai/AIExplainButton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 
 const generateId = () => {
@@ -457,6 +464,7 @@ export default function BoardPage() {
   const numHiddenColumns = hiddenColumns?.size || 0;
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="bg-background min-h-screen">
       <div className="max-w-full">
         <div className="sticky top-0 z-20 bg-background pb-4">
@@ -484,15 +492,20 @@ export default function BoardPage() {
           {currentView === 'table' && (
             <div className="flex items-center justify-between mb-6 bg-card rounded-xl p-4 shadow-sm border border-border">
               <div className="flex items-center gap-4">
-                <Button
-                  onClick={() => setShowNewTaskModal(true)}
-                  className="rounded-lg h-10 px-4 font-medium"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Task
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => setShowNewTaskModal(true)}
+                      className="rounded-lg h-10 px-4 font-medium"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      New Task
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Create a new task in this board. You can assign it to a group after creation.</TooltipContent>
+                </Tooltip>
 
-                <div className="relative">
+                <div className="relative flex items-center gap-1">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                   <Input
                     placeholder="Search"
@@ -500,22 +513,28 @@ export default function BoardPage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 w-64 rounded-lg h-10"
                   />
+                  <InfoTooltip text="Search tasks by title — results update as you type" side="bottom" size="xs" />
                 </div>
 
-                <div className="relative">
-                  <Button
-                    variant="outline"
-                    className="rounded-lg h-10 px-4"
-                    onClick={() => setShowPersonFilter(!showPersonFilter)}
-                  >
-                    <Users className="w-4 h-4 mr-2" />
-                    Person
-                    {filters.people.length > 0 && (
-                      <Badge className="ml-2 rounded-full w-5 h-5 text-xs p-0 flex items-center justify-center">
-                        {filters.people.length}
-                      </Badge>
-                    )}
-                  </Button>
+                <div className="relative flex items-center gap-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="rounded-lg h-10 px-4"
+                        onClick={() => setShowPersonFilter(!showPersonFilter)}
+                      >
+                        <Users className="w-4 h-4 mr-2" />
+                        Person
+                        {filters.people.length > 0 && (
+                          <Badge className="ml-2 rounded-full w-5 h-5 text-xs p-0 flex items-center justify-center">
+                            {filters.people.length}
+                          </Badge>
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Show only tasks assigned to a specific team member. The badge shows how many filters are active.</TooltipContent>
+                  </Tooltip>
                   {showPersonFilter && (
                     <PersonFilter
                       items={items}
@@ -525,22 +544,26 @@ export default function BoardPage() {
                     />
                   )}
                 </div>
-                
-                <div className="relative">
-                  <Button
-                    variant="outline"
-                    className="rounded-lg h-10 px-4"
-                    onClick={() => setShowFilterPanel(!showFilterPanel)}
-                  >
-                    <Filter className="w-4 h-4 mr-2" />
-                    Filter
-                    {(filters.status.length + (filters.priority?.length || 0)) > 0 && (
-                      <Badge className="ml-2 rounded-full w-5 h-5 text-xs p-0 flex items-center justify-center">
-                        {filters.status.length + (filters.priority?.length || 0)}
-                      </Badge>
-                    )}
-                  </Button>
-                  <InfoTooltip text="Filter and sort tasks to focus on what matters" side="bottom" />
+
+                <div className="relative flex items-center gap-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="rounded-lg h-10 px-4"
+                        onClick={() => setShowFilterPanel(!showFilterPanel)}
+                      >
+                        <Filter className="w-4 h-4 mr-2" />
+                        Filter
+                        {(filters.status.length + (filters.priority?.length || 0)) > 0 && (
+                          <Badge className="ml-2 rounded-full w-5 h-5 text-xs p-0 flex items-center justify-center">
+                            {filters.status.length + (filters.priority?.length || 0)}
+                          </Badge>
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Narrow down tasks by status, priority, date, or other columns. Combine multiple filters.</TooltipContent>
+                  </Tooltip>
                   {showFilterPanel && (
                     <FilterPanel
                       filters={filters}
@@ -550,16 +573,21 @@ export default function BoardPage() {
                     />
                   )}
                 </div>
-                
-                <div className="relative">
-                  <Button
-                    variant="outline"
-                    className="rounded-lg h-10 px-4"
-                    onClick={() => setShowSortMenu(!showSortMenu)}
-                  >
-                    <SortAsc className="w-4 h-4 mr-2" />
-                    Sort
-                  </Button>
+
+                <div className="relative flex items-center gap-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="rounded-lg h-10 px-4"
+                        onClick={() => setShowSortMenu(!showSortMenu)}
+                      >
+                        <SortAsc className="w-4 h-4 mr-2" />
+                        Sort
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Reorder tasks by any column. Click again to reverse the direction (ascending / descending).</TooltipContent>
+                  </Tooltip>
                   {showSortMenu && (
                     <SortMenu
                       sortBy={sortBy}
@@ -573,22 +601,26 @@ export default function BoardPage() {
                     />
                   )}
                 </div>
-                
-                <div className="relative">
-                  <Button
-                    variant="outline"
-                    className="rounded-lg h-10 px-4"
-                    onClick={() => setShowHideMenu(!showHideMenu)}
-                  >
-                    {numHiddenColumns > 0 ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-                    Hide
-                    {numHiddenColumns > 0 && (
-                      <Badge className="ml-2 rounded-full w-5 h-5 text-xs p-0 flex items-center justify-center">
-                        {numHiddenColumns}
-                      </Badge>
-                    )}
-                  </Button>
-                  <InfoTooltip text="Show or hide specific columns in the table view" side="bottom" />
+
+                <div className="relative flex items-center gap-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="rounded-lg h-10 px-4"
+                        onClick={() => setShowHideMenu(!showHideMenu)}
+                      >
+                        {numHiddenColumns > 0 ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+                        Hide
+                        {numHiddenColumns > 0 && (
+                          <Badge className="ml-2 rounded-full w-5 h-5 text-xs p-0 flex items-center justify-center">
+                            {numHiddenColumns}
+                          </Badge>
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Toggle which columns are visible. Hidden columns still store data — they are just not shown.</TooltipContent>
+                  </Tooltip>
                   {showHideMenu && (
                     <HideMenu
                       columns={board.columns}
@@ -598,17 +630,21 @@ export default function BoardPage() {
                     />
                   )}
                 </div>
-                
-                <div className="relative">
-                  <Button
-                    variant="outline"
-                    className="rounded-lg h-10 px-4"
-                    onClick={() => setShowGroupByMenu(!showGroupByMenu)}
-                  >
-                    <GroupIcon className="w-4 h-4 mr-2" />
-                    Group by
-                  </Button>
-                  <InfoTooltip text="Group tasks by status, priority, person, or other fields" side="bottom" />
+
+                <div className="relative flex items-center gap-1">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="rounded-lg h-10 px-4"
+                        onClick={() => setShowGroupByMenu(!showGroupByMenu)}
+                      >
+                        <GroupIcon className="w-4 h-4 mr-2" />
+                        Group by
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Reorganize tasks into groups based on a column. For example, group by Status to see all &quot;Done&quot; tasks together.</TooltipContent>
+                  </Tooltip>
                   {showGroupByMenu && (
                     <GroupByMenu
                       groupBy={groupBy}
@@ -619,15 +655,18 @@ export default function BoardPage() {
                   )}
                 </div>
               </div>
-              
-              <AIExplainButton
-                widgetTitle="Board Overview"
-                widgetData={{
-                  boardTitle: board.title,
-                  totalItems: filteredItems.length,
-                  groupCount: (board.groups || []).length,
-                }}
-              />
+
+              <div className="flex items-center gap-2">
+                <ModuleHelp moduleKey="board" />
+                <AIExplainButton
+                  widgetTitle="Board Overview"
+                  widgetData={{
+                    boardTitle: board.title,
+                    totalItems: filteredItems.length,
+                    groupCount: (board.groups || []).length,
+                  }}
+                />
+              </div>
             </div>
           )}
 
@@ -676,14 +715,19 @@ export default function BoardPage() {
               )}
 
               <div className="p-4 border-t border-border">
-                <Button
-                  variant="outline"
-                  className="w-full border-dashed rounded-lg h-10"
-                  onClick={() => setShowNewGroupModal(true)}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add New Group
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full border-dashed rounded-lg h-10"
+                      onClick={() => setShowNewGroupModal(true)}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add New Group
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Create a new section to organize related tasks. Groups are like folders within your board.</TooltipContent>
+                </Tooltip>
               </div>
             </div>
           )}
@@ -697,6 +741,14 @@ export default function BoardPage() {
               onUpdateItem={handleUpdateItem}
               onDeleteItem={handleDeleteItem}
               onReorderItems={handleReorderItems}
+              onUpdateBoard={async (updates) => {
+                try {
+                  const updated = await Board.update(board.id, updates);
+                  setBoard(updated);
+                } catch (error) {
+                  console.error("Error updating board:", error);
+                }
+              }}
             />
           )}
 
@@ -748,5 +800,6 @@ export default function BoardPage() {
 
       </div>
     </div>
+    </TooltipProvider>
   );
 }
