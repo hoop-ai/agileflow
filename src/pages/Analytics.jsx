@@ -98,16 +98,21 @@ export default function AnalyticsPage() {
     setIsLoading(true);
     setLoadError(false);
     try {
+      // Load each source independently so one failure doesn't block the rest
       const [boardsData, itemsData, sprintsData, storiesData] = await Promise.all([
-        Board.list("-updated_date"),
-        Item.list("-updated_date"),
-        Sprint.list("-start_date"),
-        UserStory.list("-created_date"),
+        Board.list("-updated_date").catch((err) => { console.error("Board.list failed:", err); return []; }),
+        Item.list("-updated_date").catch((err) => { console.error("Item.list failed:", err); return []; }),
+        Sprint.list("-start_date").catch(() => []),
+        UserStory.list("-created_date").catch(() => []),
       ]);
-      setBoards(boardsData);
-      setItems(itemsData);
-      setSprints(sprintsData);
-      setStories(storiesData);
+      setBoards(boardsData || []);
+      setItems(itemsData || []);
+      setSprints(sprintsData || []);
+      setStories(storiesData || []);
+      // Only show error if everything failed
+      if ((!boardsData || boardsData.length === 0) && (!itemsData || itemsData.length === 0)) {
+        setLoadError(true);
+      }
     } catch (error) {
       console.error("Error loading analytics data:", error);
       setLoadError(true);
@@ -305,6 +310,22 @@ export default function AnalyticsPage() {
               <RefreshCw className="w-4 h-4 mr-2" />
               Try again
             </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state when no boards or items exist
+  const hasNoData = boards.length === 0 && items.length === 0;
+  if (hasNoData) {
+    return (
+      <div className="p-6 min-h-screen">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <BarChart3 className="h-12 w-12 text-muted-foreground/50 mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-1">No data available for analytics</h3>
+            <p className="text-sm text-muted-foreground max-w-sm">Create boards and add items to get started.</p>
           </div>
         </div>
       </div>

@@ -8,14 +8,12 @@ import { TeamMember } from "@/api/entities/TeamMember";
 import {
   ArrowLeft,
   Star,
-  Activity,
   Table2,
   ChevronDown,
   TrendingUp,
   Edit3,
   Save,
   UserPlus,
-  Zap,
   UserMinus
 } from "lucide-react";
 import {
@@ -66,8 +64,6 @@ export default function BoardHeader({
   currentView,
   onViewChange,
   onShowAnalytics,
-  onShowIntegrations,
-  onShowAutomations,
   onUpdateBoard
 }) {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -282,37 +278,6 @@ export default function BoardHeader({
                 <TrendingUp className="w-3 h-3 mr-1" />
                 Analytics
               </Button>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3 text-xs"
-                    onClick={onShowIntegrations}
-                  >
-                    <Activity className="w-3 h-3 mr-1" />
-                    Integrate
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Connect external tools</TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3 text-xs relative"
-                    onClick={onShowAutomations}
-                  >
-                    <Zap className="w-3 h-3 mr-1" />
-                    Automate
-                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Manage automations</TooltipContent>
-              </Tooltip>
 
               {collaborators.length > 0 && (
                 <Popover>

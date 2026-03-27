@@ -366,7 +366,13 @@ export default function CalendarPage() {
                   );
                 })}
               {events.filter(e => new Date(e.start_date) >= new Date()).length === 0 && (
-                <p className="text-sm text-muted-foreground">No upcoming events.</p>
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <CalendarIcon className="h-10 w-10 text-muted-foreground/50 mb-3" />
+                  <h3 className="text-sm font-medium text-foreground mb-1">No upcoming events</h3>
+                  <p className="text-xs text-muted-foreground max-w-sm">
+                    Click any date on the calendar or use the "New Event" button to schedule one.
+                  </p>
+                </div>
               )}
             </div>
           </CardContent>

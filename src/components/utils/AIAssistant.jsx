@@ -49,9 +49,23 @@ export default function AIAssistant() {
       const response = await processMessage(userMessage);
       addMessage('assistant', response);
     } catch (error) {
-      addMessage('assistant', 'Sorry, I encountered an error. Please try again.');
+      addMessage('assistant', getErrorMessage(error));
     }
     setIsLoading(false);
+  };
+
+  const getErrorMessage = (error) => {
+    const msg = error?.message?.toLowerCase() || '';
+    if (msg.includes('api key') || msg.includes('unauthorized')) {
+      return 'AI features need to be configured. Check your API key.';
+    }
+    if (msg.includes('network') || msg.includes('fetch')) {
+      return "Couldn't reach the AI service. Check your connection.";
+    }
+    if (msg.includes('all models failed')) {
+      return 'AI service is temporarily unavailable. Try again in a moment.';
+    }
+    return `Something went wrong: ${error.message}`;
   };
 
   const processMessage = async (message) => {
@@ -185,7 +199,7 @@ export default function AIAssistant() {
         const analysis = await invokeLLM(analysisPrompt);
         result += `\n**AI Insights:**\n${analysis}`;
       } catch {
-        // LLM call is optional enhancement
+        result += '\n\n*Performance insights unavailable — could not reach the AI service.*';
       }
 
       return result;
@@ -223,8 +237,8 @@ export default function AIAssistant() {
     processMessage(command).then(response => {
       addMessage('assistant', response);
       setIsLoading(false);
-    }).catch(() => {
-      addMessage('assistant', 'Sorry, I encountered an error. Please try again.');
+    }).catch((error) => {
+      addMessage('assistant', getErrorMessage(error));
       setIsLoading(false);
     });
   };

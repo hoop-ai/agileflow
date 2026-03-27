@@ -216,7 +216,7 @@ export default function Boards() {
         <AnimatePresence mode="wait">
           {isLoading ? (
             <div className={`gap-6 ${viewMode === "grid" ? "grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "space-y-3"}`}>
-              {Array(viewMode === "grid" ? 8 : 5).fill(0).map((_, i) => (
+              {Array(viewMode === "grid" ? 3 : 3).fill(0).map((_, i) => (
                  viewMode === "grid" ? (
                     <Card key={i} className="animate-pulse bg-card rounded-xl border border-border h-[220px]">
                       <CardContent className="p-5 space-y-3 h-full flex flex-col justify-between">
@@ -265,14 +265,13 @@ export default function Boards() {
               <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
                 <Folder className="w-12 h-12 text-muted-foreground" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                {searchQuery ? "No boards found" : "No boards yet"}
+              <h3 className="text-lg font-medium text-foreground mb-1">
+                {searchQuery ? "No boards match your search" : "No boards yet"}
               </h3>
-              <p className="text-muted-foreground mb-6">
+              <p className="text-sm text-muted-foreground max-w-sm mb-6">
                 {searchQuery
-                  ? "Try adjusting your search query or filters."
-                  : "Get started by creating your first project board!"
-                }
+                  ? "Try adjusting your search query or clearing filters."
+                  : "Create your first board to get started."}
               </p>
               {!searchQuery && (
                 <Button

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, differenceInDays, isWithinInterval, addMonths, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 
 const TIMELINE_ITEM_HEIGHT = 32; // px
@@ -130,9 +130,12 @@ export default function TimelineView({ board, items }) {
 
   if (!startDateColId || !endDateColId) {
     return (
-      <div className="p-8 text-center text-gray-500">
-        Timeline view requires at least one date-type column (ideally two for start/end dates).
-        Please ensure your board has columns named 'startDate' and 'endDate' (or 'due_date'), or date-type columns.
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <CalendarDays className="h-12 w-12 text-muted-foreground/50 mb-4" />
+        <h3 className="text-lg font-medium text-foreground mb-1">Date columns required</h3>
+        <p className="text-sm text-muted-foreground max-w-sm">
+          Items need start and end dates to appear on the timeline. Add date columns to your board.
+        </p>
       </div>
     );
   }
@@ -197,9 +200,20 @@ export default function TimelineView({ board, items }) {
                 </div>
               </div>
             ))}
-            {displayItems.length === 0 && (
-              <div className="p-8 text-center text-gray-500">
-                No items with valid start and end dates to display in the timeline.
+            {displayItems.length === 0 && items.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <CalendarDays className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-1">No items to display on the timeline</h3>
+                <p className="text-sm text-muted-foreground max-w-sm">Add items to your board to see them here.</p>
+              </div>
+            )}
+            {displayItems.length === 0 && items.length > 0 && (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <CalendarDays className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-1">No items have dates set</h3>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  Items need start and end dates to appear on the timeline. Add date values to your items.
+                </p>
               </div>
             )}
           </div>

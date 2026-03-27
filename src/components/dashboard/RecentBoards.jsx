@@ -46,7 +46,7 @@ export default function RecentBoards({ boards, isLoading, onCreateBoard }) {
         <CardContent className="space-y-1">
           {isLoading ? (
             <div className="space-y-3">
-              {Array(4).fill(0).map((_, i) => (
+              {Array(Math.min(3, boards?.length || 3)).fill(0).map((_, i) => (
                 <div key={i} className="flex items-center gap-4 p-3 rounded-lg">
                   <Skeleton className="w-8 h-8 rounded-md" />
                   <div className="flex-1">

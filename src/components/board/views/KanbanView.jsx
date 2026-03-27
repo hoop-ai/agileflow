@@ -155,7 +155,7 @@ const KanbanCard = ({ item, index, board, groupingType, onEdit }) => {
   );
 };
 
-export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, onReorderItems }) {
+export default function KanbanView({ board, items, isLoading, onUpdateItem, onDeleteItem, onReorderItems }) {
   const [groupBy, setGroupBy] = useState('status');
   const [editingTask, setEditingTask] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -163,6 +163,13 @@ export default function KanbanView({ board, items, onUpdateItem, onDeleteItem, o
   if (!board) return (
     <div className="p-8 text-center text-muted-foreground">
       Board data not available.
+    </div>
+  );
+
+  if (isLoading) return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-3"></div>
+      <p className="text-sm text-muted-foreground">Loading kanban board...</p>
     </div>
   );
 

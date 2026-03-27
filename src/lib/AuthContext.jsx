@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { supabase, isSupabaseConfigured } from '@/api/supabaseClient';
 
 const AuthContext = createContext();
@@ -10,54 +10,9 @@ export const AuthProvider = ({ children }) => {
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [authError, setAuthError] = useState(null);
 
-  useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setIsLoadingAuth(false);
-      setAuthError({ type: 'config_error', message: 'Supabase is not configured. Check environment variables.' });
-      return;
-    }
-
-    checkSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        setIsAuthenticated(true);
-        setAuthError(null);
-        await loadProfile(session.user.id);
-      } else {
-        const wasAuthenticated = isAuthenticated;
-        setUser(null);
-        setProfile(null);
-        setIsAuthenticated(false);
-        if (event === 'TOKEN_REFRESHED' && wasAuthenticated) {
-          setAuthError({ type: 'session_expired' });
-        } else if (event === 'SIGNED_OUT') {
-          setAuthError({ type: 'auth_required' });
-        }
-      }
-      setIsLoadingAuth(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const checkSession = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-        setIsAuthenticated(true);
-        await loadProfile(session.user.id);
-      } else {
-        setAuthError({ type: 'auth_required' });
-      }
-    } catch (error) {
-      console.error('Session check failed:', error);
-      setAuthError({ type: 'unknown', message: error.message });
-    }
-    setIsLoadingAuth(false);
-  };
+  // Track current auth state for use inside callbacks (avoids stale closures)
+  const isAuthenticatedRef = useRef(false);
+  useEffect(() => { isAuthenticatedRef.current = isAuthenticated; }, [isAuthenticated]);
 
   const loadProfile = async (userId) => {
     try {
@@ -69,9 +24,58 @@ export const AuthProvider = ({ children }) => {
       if (error) throw error;
       setProfile(data);
     } catch (error) {
-      console.error('Error loading profile:', error);
+      console.error('Profile load failed:', error);
     }
   };
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setIsLoadingAuth(false);
+      setAuthError({ type: 'config_error', message: 'Supabase is not configured. Check environment variables.' });
+      return;
+    }
+
+    // Seed initial state from existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user);
+        setIsAuthenticated(true);
+        isAuthenticatedRef.current = true;
+        loadProfile(session.user.id).finally(() => setIsLoadingAuth(false));
+      } else {
+        setIsLoadingAuth(false);
+      }
+    }).catch(() => {
+      setIsLoadingAuth(false);
+    });
+
+    // Single listener handles all auth state transitions
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setUser(session.user);
+        setIsAuthenticated(true);
+        isAuthenticatedRef.current = true;
+        setAuthError(null);
+        try { await loadProfile(session.user.id); } catch (e) { console.error('Profile load failed:', e); }
+        setIsLoadingAuth(false);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setProfile(null);
+        setIsAuthenticated(false);
+        isAuthenticatedRef.current = false;
+        setIsLoadingAuth(false);
+      } else if (event === 'TOKEN_REFRESHED') {
+        // Normal for concurrent sessions — not an error
+        if (session?.user) {
+          setUser(session.user);
+        }
+      } else if (event === 'USER_UPDATED' && session?.user) {
+        setUser(session.user);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const login = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -132,6 +136,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setProfile(null);
     setIsAuthenticated(false);
+    isAuthenticatedRef.current = false;
   };
 
   const navigateToLogin = () => {
@@ -156,7 +161,7 @@ export const AuthProvider = ({ children }) => {
       updatePassword,
       logout,
       navigateToLogin,
-      checkAppState: checkSession
+      checkAppState: () => supabase.auth.getSession()
     }}>
       {children}
     </AuthContext.Provider>

@@ -5,8 +5,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 export default function StatsOverview({ boards, items, isLoading }) {
-  const completedItems = items.filter(item => item.data?.status === 'done').length;
-  const pendingItems = items.filter(item => !item.data?.status || item.data?.status !== 'done').length;
+  const completedItems = items?.filter(item => item.data?.status === 'done').length || 0;
+  const pendingItems = items?.filter(item => !item.data?.status || item.data?.status !== 'done').length || 0;
+
+  // When not loading and no boards exist, show a hint instead of zeros
+  const isEmpty = !isLoading && boards.length === 0;
 
   const stats = [
     {
@@ -57,6 +60,8 @@ export default function StatsOverview({ boards, items, isLoading }) {
             </div>
             {isLoading ? (
               <Skeleton className="mt-2 h-8 w-16" />
+            ) : isEmpty ? (
+              <p className="mt-2 text-lg text-muted-foreground">--</p>
             ) : (
               <p className="mt-2 text-2xl font-semibold text-foreground">{stat.value}</p>
             )}

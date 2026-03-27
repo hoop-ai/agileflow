@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, TrendingUp, Users, Calendar, Target, Clock } from "lucide-react";
+import { BarChart3, TrendingUp, Users, Calendar, Target, Clock, Inbox } from "lucide-react";
 import { format } from 'date-fns';
 
 export default function AnalyticsPanel({ board, items, onClose }) {
@@ -78,6 +78,18 @@ export default function AnalyticsPanel({ board, items, onClose }) {
         </div>
 
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {items.length === 0 ? (
+            <Card className="md:col-span-3">
+              <CardContent className="p-0">
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Inbox className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-1">No data to analyze yet</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm">Add items to your board to see analytics.</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+          <>
           {/* Overview Cards */}
           <Card className="bg-blue-500 text-white">
             <CardHeader className="pb-2">
@@ -230,15 +242,7 @@ export default function AnalyticsPanel({ board, items, onClose }) {
             </Card>
           )}
 
-          {/* Empty State */}
-          {items.length === 0 && (
-            <Card className="md:col-span-3 text-center p-8">
-              <div className="text-gray-500">
-                <BarChart3 className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <h3 className="text-lg font-medium mb-2">No Data Available</h3>
-                <p>Add some tasks to your board to see analytics</p>
-              </div>
-            </Card>
+          </>
           )}
         </div>
       </div>

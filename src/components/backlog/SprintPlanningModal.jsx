@@ -15,7 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Calendar, Target, AlertTriangle } from "lucide-react";
+import { Calendar, Target, AlertTriangle, Loader2 } from "lucide-react";
 import { Sprint } from "@/api/entities/Sprint";
 import { UserStory } from "@/api/entities/UserStory";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -140,6 +140,12 @@ export default function SprintPlanningModal({ isOpen, onClose, stories, boards }
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Board *</Label>
+              {!boards || boards.length === 0 ? (
+                <div className="flex items-center gap-2 h-10 px-3 border border-border rounded-md text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading boards...
+                </div>
+              ) : (
               <Select
                 value={sprintData.board_id}
                 onValueChange={(value) => setSprintData(prev => ({ ...prev, board_id: value }))}
@@ -153,6 +159,7 @@ export default function SprintPlanningModal({ isOpen, onClose, stories, boards }
                   ))}
                 </SelectContent>
               </Select>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -279,10 +286,17 @@ export default function SprintPlanningModal({ isOpen, onClose, stories, boards }
               <Badge variant="secondary">{selectedStories.size} selected</Badge>
             </div>
             <div className="max-h-96 overflow-y-auto space-y-2 border border-border rounded-lg p-4">
-              {availableStories.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  No stories available in backlog
-                </p>
+              {!stories ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Loader2 className="h-8 w-8 text-muted-foreground animate-spin mb-3" />
+                  <p className="text-sm text-muted-foreground">Loading stories...</p>
+                </div>
+              ) : availableStories.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Target className="h-10 w-10 text-muted-foreground/50 mb-3" />
+                  <h3 className="text-sm font-medium text-foreground mb-1">No stories available</h3>
+                  <p className="text-xs text-muted-foreground">All stories are already assigned to sprints, or the backlog is empty.</p>
+                </div>
               ) : (
                 availableStories.map(story => (
                   <div

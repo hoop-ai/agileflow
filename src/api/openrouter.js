@@ -38,7 +38,17 @@ async function callModel(model, messages) {
   }
 
   const data = await response.json();
-  return data.choices[0]?.message?.content || 'No response generated.';
+
+  if (!Array.isArray(data.choices) || data.choices.length === 0) {
+    throw new Error(`Model ${model} returned an unexpected response structure (no choices)`);
+  }
+
+  const content = data.choices[0]?.message?.content;
+  if (!content) {
+    throw new Error(`Model ${model} returned an empty response`);
+  }
+
+  return content;
 }
 
 export async function invokeLLM(prompt) {
@@ -75,5 +85,5 @@ Be concise, helpful, and specific. Use markdown formatting for clarity.`
     }
   }
 
-  throw new Error('All AI models failed. Please check your OpenRouter API key and try again.');
+  throw new Error('All models failed: gpt-4o-mini, llama-3.3-8b, gemini-2.0-flash, claude-3.5-haiku');
 }

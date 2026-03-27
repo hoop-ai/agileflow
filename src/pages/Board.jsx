@@ -37,8 +37,7 @@ import CalendarView from "../components/board/views/CalendarView";
 import TimelineView from "../components/board/views/TimelineView";
 
 import AnalyticsPanel from "../components/board/analytics/AnalyticsPanel";
-import IntegrationsPanel from "../components/board/integrations/IntegrationsPanel";
-import AutomationsPanel from "../components/board/automations/AutomationsPanel";
+
 
 const generateId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -67,8 +66,7 @@ export default function BoardPage() {
   const [showNewGroupModal, setShowNewGroupModal] = useState(false);
 
   const [showAnalytics, setShowAnalytics] = useState(false);
-  const [showIntegrations, setShowIntegrations] = useState(false);
-  const [showAutomations, setShowAutomations] = useState(false);
+
   
   const [filters, setFilters] = useState({
     status: [],
@@ -181,8 +179,7 @@ export default function BoardPage() {
       setItems(prev => prev.map(item => 
         item.id === itemId ? { ...item, ...updates } : item
       ));
-      // If items are updated, reload them to refresh panels if visible
-      if (showAnalytics || showIntegrations || showAutomations) {
+      if (showAnalytics) {
         loadBoardAndItems();
       }
     } catch (error) {
@@ -199,7 +196,7 @@ export default function BoardPage() {
     try {
       await Item.delete(itemId);
       setItems(prev => prev.filter(item => item.id !== itemId));
-       if (showAnalytics || showIntegrations || showAutomations) {
+      if (showAnalytics) {
         loadBoardAndItems();
       }
     } catch (error) {
@@ -509,8 +506,6 @@ export default function BoardPage() {
             currentView={currentView}
             onViewChange={handleViewChange}
             onShowAnalytics={() => setShowAnalytics(true)}
-            onShowIntegrations={() => setShowIntegrations(true)}
-            onShowAutomations={() => setShowAutomations(true)}
             onUpdateBoard={async (updates) => {
               try {
                 const updated = await Board.update(boardId, updates);
@@ -728,7 +723,8 @@ export default function BoardPage() {
           {currentView === 'kanban' && (
             <KanbanView
               board={board}
-              items={sortedItems} // Pass sorted items
+              items={sortedItems}
+              isLoading={isLoading}
               onAddItem={handleAddItem}
               onUpdateItem={handleUpdateItem}
               onDeleteItem={handleDeleteItem}
@@ -782,16 +778,6 @@ export default function BoardPage() {
           />
         )}
 
-        {showIntegrations && (
-          <IntegrationsPanel board={board} onClose={() => setShowIntegrations(false)} />
-        )}
-
-        {showAutomations && (
-          <AutomationsPanel 
-            board={board} 
-            onClose={() => setShowAutomations(false)} 
-          />
-        )}
       </div>
     </div>
   );

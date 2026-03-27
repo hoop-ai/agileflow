@@ -30,7 +30,7 @@ export default function ActivityFeed({ items, isLoading }) {
       <CardContent>
         {isLoading ? (
           <div className="space-y-4">
-            {Array(4).fill(0).map((_, i) => (
+            {Array(Math.min(3, items?.length || 3)).fill(0).map((_, i) => (
               <div key={i} className="flex items-center gap-3">
                 <Skeleton className="w-2 h-2 rounded-full" />
                 <div className="flex-1">
@@ -41,9 +41,10 @@ export default function ActivityFeed({ items, isLoading }) {
             ))}
           </div>
         ) : items.length === 0 ? (
-          <div className="text-center py-8">
-            <Activity className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">No recent activity</p>
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <Activity className="h-10 w-10 text-muted-foreground/50 mb-3" />
+            <h3 className="text-sm font-medium text-foreground mb-1">No recent activity</h3>
+            <p className="text-xs text-muted-foreground">Activity will appear here as you work on tasks.</p>
           </div>
         ) : (
           <div>

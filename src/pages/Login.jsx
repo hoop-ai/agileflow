@@ -9,7 +9,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle2 } from 'lucide-react';
 
 export default function LoginPage() {
-  const { login, signup, resetPassword, updatePassword, isRegistrationEnabled } = useAuth();
+  const { login, signup, resetPassword, updatePassword, isRegistrationEnabled, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [mode, setMode] = useState('login');
@@ -20,6 +20,13 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect when auth state changes (driven by AuthContext listener)
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     if (searchParams.get('reset') === 'true') {
@@ -46,7 +53,7 @@ export default function LoginPage() {
         setMode('login');
       } else if (mode === 'login') {
         await login(email, password);
-        navigate('/');
+        // Navigation handled by the isAuthenticated useEffect above
       } else if (mode === 'forgot') {
         await resetPassword(email);
         setSuccess('Password reset link sent! Check your email.');

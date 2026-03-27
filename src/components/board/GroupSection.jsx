@@ -129,7 +129,9 @@ export default function GroupSection({
             )}
           </Button>
           <h3 className="font-bold text-foreground text-lg">{group.title}</h3>
-          <span className="text-sm text-muted-foreground">({items.length})</span>
+          <span className="text-sm text-muted-foreground">
+            {isCollapsed && items.length === 0 ? '(empty)' : `(${items.length})`}
+          </span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -228,15 +230,17 @@ export default function GroupSection({
               {/* Items */}
               <div>
                 {isLoading ? (
-                  <div className="p-8 text-center text-muted-foreground">
-                    Loading items...
+                  <div className="p-8 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3"></div>
+                    <p className="text-sm text-muted-foreground">Loading items...</p>
                   </div>
                 ) : items.length === 0 && !isAddingItem ? (
-                  <div className="p-8 text-center">
-                    <p className="text-muted-foreground mb-4">No items in this group</p>
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <p className="text-sm text-muted-foreground mb-3">No items in this group. Click + to add one.</p>
                     <Button
                       onClick={() => setIsAddingItem(true)}
                       variant="outline"
+                      size="sm"
                       className="border-border rounded-lg"
                     >
                       <Plus className="w-4 h-4 mr-2" />

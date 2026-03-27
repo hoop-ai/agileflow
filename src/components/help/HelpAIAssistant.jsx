@@ -1,63 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { invokeLLM } from "@/api/openrouter";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bot, Send, X, Sparkles, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
-const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
-
-const MODEL_CASCADE = [
-  "openai/gpt-4o-mini",
-  "meta-llama/llama-3.3-8b-instruct:free",
-  "google/gemini-2.0-flash-001",
-  "anthropic/claude-3.5-haiku",
-];
-
-async function callModel(model, messages) {
-  if (!OPENROUTER_API_KEY) {
-    throw new Error("OpenRouter API key not configured");
-  }
-
-  const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": window.location.origin,
-      "X-Title": "AgileFlow Help Center",
-    },
-    body: JSON.stringify({
-      model,
-      messages,
-      max_tokens: 1024,
-      temperature: 0.5,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(
-      error.error?.message || `Model ${model} failed (${response.status})`
-    );
-  }
-
-  const data = await response.json();
-  return data.choices[0]?.message?.content || "No response generated.";
-}
-
-async function askHelpAI(messages) {
-  for (const model of MODEL_CASCADE) {
-    try {
-      return await callModel(model, messages);
-    } catch (error) {
-      console.warn(`Help AI model ${model} failed:`, error.message);
-    }
-  }
-  throw new Error(
-    "All AI models are currently unavailable. Please try again later."
-  );
-}
 
 function extractArticleText(article) {
   if (!article?.content) return "";
@@ -125,13 +71,13 @@ export default function HelpAIAssistant({ article, category }) {
 
     try {
       const systemPrompt = buildSystemPrompt(article, category);
-      const apiMessages = [
-        { role: "system", content: systemPrompt },
-        ...messages.map((m) => ({ role: m.role, content: m.content })),
-        { role: "user", content: trimmed },
-      ];
+      const conversationHistory = messages
+        .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
+        .join("\n\n");
 
-      const reply = await askHelpAI(apiMessages);
+      const fullPrompt = `${systemPrompt}\n\n${conversationHistory ? `Previous conversation:\n${conversationHistory}\n\n` : ""}User: ${trimmed}`;
+
+      const reply = await invokeLLM(fullPrompt);
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: reply },
@@ -159,7 +105,7 @@ export default function HelpAIAssistant({ article, category }) {
     [handleSend]
   );
 
-  if (!OPENROUTER_API_KEY) return null;
+  const isAIAvailable = !!import.meta.env.VITE_OPENROUTER_API_KEY;
 
   return (
     <>
@@ -212,7 +158,16 @@ export default function HelpAIAssistant({ article, category }) {
           {/* Messages */}
           <ScrollArea className="flex-1 max-h-[400px] min-h-[200px]">
             <div ref={scrollRef} className="p-4 space-y-4">
-              {messages.length === 0 && (
+              {!isAIAvailable && (
+                <div className="text-center py-8">
+                  <Bot className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    AI help is currently unavailable. The API key has not been configured.
+                  </p>
+                </div>
+              )}
+
+              {isAIAvailable && messages.length === 0 && (
                 <div className="text-center py-8">
                   <Bot className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
                   <p className="text-sm text-muted-foreground mb-4">
@@ -285,15 +240,15 @@ export default function HelpAIAssistant({ article, category }) {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask a question..."
-                disabled={isLoading}
-                className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                disabled={isLoading || !isAIAvailable}
+                className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none disabled:opacity-50"
               />
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 flex-shrink-0"
                 onClick={handleSend}
-                disabled={!input.trim() || isLoading}
+                disabled={!input.trim() || isLoading || !isAIAvailable}
               >
                 <Send className="h-4 w-4" />
               </Button>

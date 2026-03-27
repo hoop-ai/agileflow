@@ -295,14 +295,20 @@ export default function BacklogPage() {
                 </Button>
               </div>
             ) : sortedStories.length === 0 ? (
-              <div className="text-center py-12">
-                <Target className="w-16 h-16 text-muted-foreground/40 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-foreground mb-2">No stories in backlog</h3>
-                <p className="text-muted-foreground mb-6">Start by creating your first user story</p>
-                <Button onClick={() => setShowCreateModal(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create User Story
-                </Button>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Target className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-1">No user stories yet</h3>
+                <p className="text-sm text-muted-foreground max-w-sm mb-6">
+                  {searchQuery || filterPriority !== 'all'
+                    ? "No stories match your current filters. Try adjusting your search or priority filter."
+                    : "Create your first story to get started."}
+                </p>
+                {!searchQuery && filterPriority === 'all' && (
+                  <Button onClick={() => setShowCreateModal(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create User Story
+                  </Button>
+                )}
               </div>
             ) : (
               <DragDropContext onDragEnd={handleDragEnd}>

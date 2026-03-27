@@ -10,19 +10,16 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = supabaseUrl && supabaseAnonKey
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      }
+    })
   : null;
 
 export const isSupabaseConfigured = !!supabase;
-
-// Redirect to login on session expiry
-if (supabase) {
-  supabase.auth.onAuthStateChange((event) => {
-    if (event === 'SIGNED_OUT' && !window.location.pathname.startsWith('/login')) {
-      window.location.href = '/login';
-    }
-  });
-}
 
 // Detect auth errors from Supabase queries and force logout on session expiry
 export function handleAuthError(error) {
