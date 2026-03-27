@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import InfoTooltip from "@/components/common/InfoTooltip";
-import AIExplainButton from "@/components/ai/AIExplainButton";
+import { AIExplainButton } from "@/components/ai/AIExplainButton";
 
 export default function StatsOverview({ boards, items, isLoading }) {
   const completedItems = items?.filter(item => item.data?.status === 'done').length || 0;

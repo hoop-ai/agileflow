@@ -152,11 +152,13 @@ export default function AnalyticsPanel({ board, items, onClose }) {
           {/* Status Distribution */}
           {Object.keys(statusStats).length > 0 && (
             <Card className="md:col-span-2">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="w-5 h-5" />
                   Status Distribution
+                  <InfoTooltip text="How tasks are spread across different statuses like Not Started, Working, Done, and Stuck" />
                 </CardTitle>
+                <AIExplainButton widgetTitle="Status Distribution" widgetData={statusStats} />
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -173,7 +175,7 @@ export default function AnalyticsPanel({ board, items, onClose }) {
                           <span className="font-medium">{status}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-600">{count} tasks</span>
+                          <span className="text-sm text-muted-foreground">{count} tasks</span>
                           <Badge variant="outline">{percentage}%</Badge>
                         </div>
                       </div>
@@ -187,11 +189,13 @@ export default function AnalyticsPanel({ board, items, onClose }) {
           {/* People Workload */}
           {Object.keys(peopleStats).length > 0 && (
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <Users className="w-5 h-5" />
                   Team Workload
+                  <InfoTooltip text="Number of tasks assigned to each team member on this board" />
                 </CardTitle>
+                <AIExplainButton widgetTitle="Team Workload" widgetData={peopleStats} />
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -214,21 +218,25 @@ export default function AnalyticsPanel({ board, items, onClose }) {
           {/* Priority Breakdown */}
           {Object.keys(priorityStats).length > 0 && (
             <Card className="md:col-span-2">
-              <CardHeader>
-                <CardTitle>Priority Distribution</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  Priority Distribution
+                  <InfoTooltip text="Breakdown of tasks by urgency level — Critical items need immediate attention, while Low items can wait" />
+                </CardTitle>
+                <AIExplainButton widgetTitle="Priority Distribution" widgetData={priorityStats} />
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {Object.entries(priorityStats).map(([priority, count]) => {
                     const priorityChoice = priorityColumn?.options?.choices?.find(c => c.label === priority);
                     return (
-                      <div key={priority} className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div key={priority} className="text-center p-4 bg-muted rounded-lg">
                         <div 
                           className="w-4 h-4 rounded-full mx-auto mb-2"
                           style={{ backgroundColor: priorityChoice?.color || '#gray' }}
                         />
                         <div className="text-2xl font-bold">{count}</div>
-                        <div className="text-sm text-gray-600">{priority}</div>
+                        <div className="text-sm text-muted-foreground">{priority}</div>
                       </div>
                     );
                   })}
@@ -244,14 +252,15 @@ export default function AnalyticsPanel({ board, items, onClose }) {
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="w-5 h-5" />
                   Recent Activity
+                  <InfoTooltip text="The five most recently updated items on this board" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {recentActivity.map(item => (
-                    <div key={item.id} className="flex flex-col gap-1 p-2 bg-gray-50 rounded">
+                    <div key={item.id} className="flex flex-col gap-1 p-2 bg-muted rounded">
                       <div className="font-medium text-sm truncate">{item.title}</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-muted-foreground">
                         Updated {format(new Date(item.updated_date), 'MMM d, HH:mm')}
                       </div>
                     </div>

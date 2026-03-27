@@ -29,7 +29,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import CreateStoryModal from "../components/backlog/CreateStoryModal";
 import StoryDetailModal from "../components/backlog/StoryDetailModal";
 import SprintPlanningModal from "../components/backlog/SprintPlanningModal";
-import { InfoTooltip } from "@/components/common/InfoTooltip";
+import InfoTooltip from "@/components/common/InfoTooltip";
 import { AIExplainButton } from "@/components/ai/AIExplainButton";
 
 export default function BacklogPage() {
@@ -218,7 +218,10 @@ export default function BacklogPage() {
           <div className="rounded-lg border border-border bg-card p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Ready for Sprint</p>
+                <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
+                  Ready for Sprint
+                  <InfoTooltip text="Stories with status 'Ready' — they have enough detail and acceptance criteria to be pulled into a sprint" />
+                </p>
                 <p className="text-2xl font-semibold text-foreground">{backlogStats.ready}</p>
               </div>
               <CheckCircle2 className="w-8 h-8 text-muted-foreground" />
@@ -233,8 +236,9 @@ export default function BacklogPage() {
               <div className="flex items-center gap-3">
                 <Clock className="w-5 h-5 text-primary" />
                 <div>
-                  <p className="font-semibold text-foreground">
+                  <p className="font-semibold text-foreground flex items-center gap-1">
                     {activeSprints.length} Active Sprint{activeSprints.length > 1 ? 's' : ''}
+                    <InfoTooltip text="Sprints currently in progress. Stories can be moved from backlog into these sprints." />
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {activeSprints.map(s => s.name).join(', ')}
@@ -259,7 +263,8 @@ export default function BacklogPage() {
                 />
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <InfoTooltip text="Filter stories by urgency level. Drag stories to reorder their priority." />
                 {['all', 'critical', 'high', 'medium', 'low'].map(priority => (
                   <Button
                     key={priority}
@@ -285,6 +290,24 @@ export default function BacklogPage() {
               <Badge variant="secondary" className="ml-2">
                 {sortedStories.length} stories
               </Badge>
+              <AIExplainButton
+                widgetTitle="Prioritized Backlog"
+                widgetData={{
+                  totalStories: backlogStats.total,
+                  totalPoints: backlogStats.totalPoints,
+                  criticalCount: backlogStats.critical,
+                  readyForSprint: backlogStats.ready,
+                  filteredCount: filteredStories.length,
+                  activeFilter: filterPriority,
+                  priorityBreakdown: {
+                    critical: filteredStories.filter(s => s.priority === 'critical').length,
+                    high: filteredStories.filter(s => s.priority === 'high').length,
+                    medium: filteredStories.filter(s => s.priority === 'medium').length,
+                    low: filteredStories.filter(s => s.priority === 'low').length
+                  }
+                }}
+                className="ml-auto"
+              />
             </CardTitle>
           </CardHeader>
           <CardContent>

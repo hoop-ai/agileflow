@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { format, addDays, subDays, startOfWeek, endOfWeek, eachDayOfInterval, differenceInDays, isWithinInterval, addMonths, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import InfoTooltip from "../../common/InfoTooltip";
 
 const TIMELINE_ITEM_HEIGHT = 32; // px
 const DAY_CELL_WIDTH = 40; // px
@@ -148,11 +149,15 @@ export default function TimelineView({ board, items }) {
   return (
     <Card className="shadow-sm border-border overflow-hidden">
       <CardHeader className="p-3 border-b flex flex-row items-center justify-between sticky top-0 bg-card z-10">
-        <CardTitle className="text-base font-semibold text-foreground">{getHeaderLabel()}</CardTitle>
+        <div className="flex items-center gap-2">
+          <CardTitle className="text-base font-semibold text-foreground">{getHeaderLabel()}</CardTitle>
+          <InfoTooltip text="Tasks shown as bars spanning their start and end dates. Only tasks with both dates set are displayed." side="bottom" />
+        </div>
         <div className="flex items-center gap-1">
           <Button variant="outline" size="icon" className="h-8 w-8" onClick={handlePrev}><ChevronLeft className="w-4 h-4" /></Button>
           <Button variant="outline" size="sm" className="h-8" onClick={() => setCurrentDate(new Date())}>Today</Button>
           <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleNext}><ChevronRight className="w-4 h-4" /></Button>
+          <InfoTooltip text="Zoom in to see daily detail or zoom out for a monthly overview" side="bottom" />
           <select value={zoomLevel} onChange={(e) => setZoomLevel(e.target.value)} className="h-8 border border-gray-300 rounded-md px-2 text-sm">
             <option value="day">Day</option>
             <option value="week">Week</option>

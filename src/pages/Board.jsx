@@ -540,6 +540,7 @@ export default function BoardPage() {
                       </Badge>
                     )}
                   </Button>
+                  <InfoTooltip text="Filter and sort tasks to focus on what matters" side="bottom" />
                   {showFilterPanel && (
                     <FilterPanel
                       filters={filters}
@@ -587,6 +588,7 @@ export default function BoardPage() {
                       </Badge>
                     )}
                   </Button>
+                  <InfoTooltip text="Show or hide specific columns in the table view" side="bottom" />
                   {showHideMenu && (
                     <HideMenu
                       columns={board.columns}

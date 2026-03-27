@@ -25,6 +25,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import { motion } from "framer-motion";
+import InfoTooltip from "@/components/common/InfoTooltip";
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -281,7 +282,10 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="job_title">Job Title</Label>
+                    <div className="flex items-center gap-1.5">
+                      <Label htmlFor="job_title">Job Title</Label>
+                      <InfoTooltip text="Your role title, visible to team members" />
+                    </div>
                     <Input
                       id="job_title"
                       value={settings.job_title}
@@ -291,7 +295,10 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="department">Department</Label>
+                    <div className="flex items-center gap-1.5">
+                      <Label htmlFor="department">Department</Label>
+                      <InfoTooltip text="The department or team you belong to" />
+                    </div>
                     <Input
                       id="department"
                       value={settings.department}
@@ -305,7 +312,10 @@ export default function SettingsPage() {
 
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="description">About You</Label>
+                    <div className="flex items-center gap-1.5">
+                      <Label htmlFor="description">About You</Label>
+                      <InfoTooltip text="A short bio visible on your profile" />
+                    </div>
                     <textarea
                       id="description"
                       value={settings.description || ""}
@@ -317,7 +327,10 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="skills">Skills</Label>
+                    <div className="flex items-center gap-1.5">
+                      <Label htmlFor="skills">Skills</Label>
+                      <InfoTooltip text="Comma-separated list of your skills. Used by the AI to suggest task assignments." />
+                    </div>
                     <Input
                       id="skills"
                       value={Array.isArray(settings.skills) ? settings.skills.join(", ") : (settings.skills || "")}
@@ -342,18 +355,21 @@ export default function SettingsPage() {
 
                 <div className="space-y-4">
                   {[
-                    { id: 'email_notifications', label: 'Email Notifications', desc: 'Receive email notifications for updates' },
-                    { id: 'task_assignments',    label: 'Task Assignments',    desc: 'Get notified when tasks are assigned to you' },
-                    { id: 'mentions',            label: 'Mentions',            desc: 'Get notified when someone mentions you' },
-                    { id: 'due_date_reminders',  label: 'Due Date Reminders',  desc: 'Receive reminders for upcoming due dates' },
-                    { id: 'sprint_updates',      label: 'Sprint Updates',      desc: 'Get notified about sprint changes and updates' },
-                    { id: 'daily_digest',        label: 'Daily Digest',        desc: 'Receive a daily summary of your tasks' },
+                    { id: 'email_notifications', label: 'Email Notifications', desc: 'Receive email notifications for updates', tooltip: 'Receive email alerts for important updates' },
+                    { id: 'task_assignments',    label: 'Task Assignments',    desc: 'Get notified when tasks are assigned to you', tooltip: 'Get notified when someone assigns a task to you' },
+                    { id: 'mentions',            label: 'Mentions',            desc: 'Get notified when someone mentions you', tooltip: 'Get notified when someone @mentions you in a comment' },
+                    { id: 'due_date_reminders',  label: 'Due Date Reminders',  desc: 'Receive reminders for upcoming due dates', tooltip: 'Reminders before a task\'s due date' },
+                    { id: 'sprint_updates',      label: 'Sprint Updates',      desc: 'Get notified about sprint changes and updates', tooltip: 'Notifications about sprint starts, ends, and status changes' },
+                    { id: 'daily_digest',        label: 'Daily Digest',        desc: 'Receive a daily summary of your tasks', tooltip: 'A daily summary email of all activity across your boards' },
                   ].map((item, i) => (
                     <React.Fragment key={item.id}>
                       {i > 0 && <Separator />}
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label htmlFor={item.id} className="text-base text-foreground">{item.label}</Label>
+                          <div className="flex items-center gap-1.5">
+                            <Label htmlFor={item.id} className="text-base text-foreground">{item.label}</Label>
+                            <InfoTooltip text={item.tooltip} />
+                          </div>
                           <p className="text-sm text-muted-foreground">{item.desc}</p>
                         </div>
                         <Switch

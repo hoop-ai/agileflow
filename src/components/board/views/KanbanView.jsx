@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 import TaskEditModal from "../TaskEditModal";
+import InfoTooltip from "../../common/InfoTooltip";
 
 // Helper functions
 const getStatusColumns = (board) => {
@@ -345,6 +346,7 @@ export default function KanbanView({ board, items, isLoading, onUpdateItem, onDe
 
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-muted-foreground">Group by:</span>
+          <InfoTooltip text="Choose how to organize your Kanban columns — by status, priority, or assignee" side="bottom" />
           <Select value={groupBy} onValueChange={setGroupBy}>
             <SelectTrigger className="w-32 rounded-lg border border-border bg-card">
               <SelectValue />
@@ -398,6 +400,7 @@ export default function KanbanView({ board, items, isLoading, onUpdateItem, onDe
                         <span className="px-1.5 py-0.5 text-xs rounded bg-background text-muted-foreground border border-border">
                           {column.items.length}
                         </span>
+                        <InfoTooltip text="Number of tasks in this column" side="top" />
                       </div>
                       <Button
                         variant="ghost"
