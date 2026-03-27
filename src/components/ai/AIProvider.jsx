@@ -1,5 +1,7 @@
 import { createContext, useCallback, useContext, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { AiSession } from "@/api/entities/AiSession";
+import { AiMessage } from "@/api/entities/AiMessage";
 
 function generateId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -66,6 +68,8 @@ export function AIProvider({ children }) {
   const [streaming, setStreaming] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [sessions, setSessions] = useState([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
   const abortRef = useRef(null);
   const location = useLocation();
 
@@ -82,6 +86,32 @@ export function AIProvider({ children }) {
     else if (route.includes("/Help")) pageTitle = "Help Center";
     return { route, filters, pageTitle };
   };
+
+  const loadSessions = useCallback(async () => {
+    setSessionsLoading(true);
+    try {
+      const data = await AiSession.list(50);
+      setSessions(data);
+    } catch (e) {
+      console.error("Failed to load sessions:", e);
+    }
+    setSessionsLoading(false);
+  }, []);
+
+  const loadSession = useCallback(async (id) => {
+    try {
+      const msgs = await AiMessage.listBySession(id);
+      setMessages(msgs.map(m => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        timestamp: new Date(m.created_at),
+      })));
+      setSessionId(id);
+    } catch (e) {
+      console.error("Failed to load session:", e);
+    }
+  }, []);
 
   const sendMessage = useCallback(async (text) => {
     const question = text.trim();
@@ -121,9 +151,11 @@ export function AIProvider({ children }) {
 
       const models = MODELS.fast;
       let lastError = null;
+      let accumulated = "";
 
       for (const model of models) {
         try {
+          accumulated = "";
           const response = await fetch(OPENROUTER_BASE_URL, {
             method: "POST",
             headers: {
@@ -149,7 +181,6 @@ export function AIProvider({ children }) {
 
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
-          let accumulated = "";
 
           while (true) {
             const { done, value } = await reader.read();
@@ -189,6 +220,22 @@ export function AIProvider({ children }) {
         }
       }
 
+      // Save to DB
+      try {
+        let currentSessionId = sessionId;
+        if (!currentSessionId) {
+          const newSession = await AiSession.create(question.slice(0, 50), "fast");
+          currentSessionId = newSession.id;
+          setSessionId(currentSessionId);
+        }
+        await AiMessage.create(currentSessionId, "user", question);
+        await AiMessage.create(currentSessionId, "assistant", accumulated);
+        await AiSession.update(currentSessionId, { updated_at: new Date().toISOString() });
+        loadSessions();
+      } catch (dbErr) {
+        console.error("Failed to save chat:", dbErr);
+      }
+
       // All models failed
       if (lastError && !messages.find(m => m.id === assistantId)?.content) {
         throw lastError;
@@ -224,6 +271,28 @@ export function AIProvider({ children }) {
     setThinking(false);
   }, []);
 
+  const renameSession = useCallback(async (id, title) => {
+    try {
+      await AiSession.update(id, { title });
+      setSessions(prev => prev.map(s => s.id === id ? { ...s, title } : s));
+    } catch (e) {
+      console.error("Failed to rename session:", e);
+    }
+  }, []);
+
+  const deleteSession = useCallback(async (id) => {
+    try {
+      await AiSession.delete(id);
+      setSessions(prev => prev.filter(s => s.id !== id));
+      if (sessionId === id) {
+        setMessages([]);
+        setSessionId(null);
+      }
+    } catch (e) {
+      console.error("Failed to delete session:", e);
+    }
+  }, [sessionId]);
+
   const value = {
     messages,
     sessionId,
@@ -237,6 +306,12 @@ export function AIProvider({ children }) {
     togglePanel,
     startNewChat,
     stopStreaming,
+    sessions,
+    sessionsLoading,
+    loadSessions,
+    loadSession,
+    renameSession,
+    deleteSession,
   };
 
   return <AIContext.Provider value={value}>{children}</AIContext.Provider>;

@@ -57,6 +57,7 @@ import Performance from './pages/Performance';
 import Settings from './pages/Settings';
 import Admin from './pages/Admin';
 import Help from './pages/Help';
+import Chat from './pages/Chat';
 import __Layout from './Layout.jsx';
 
 
@@ -71,6 +72,7 @@ export const PAGES = {
     "Settings": Settings,
     "Admin": Admin,
     "Help": Help,
+    "Chat": Chat,
 }
 
 export const pagesConfig = {

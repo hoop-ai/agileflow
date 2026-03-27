@@ -27,6 +27,7 @@ import {
   Sun,
   Moon,
   LogOut,
+  Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,6 +76,7 @@ const navigationItems = [
   { title: "Backlog", url: createPageUrl("Backlog"), icon: ListOrdered },
   { title: "Calendar", url: createPageUrl("Calendar"), icon: CalendarIconMenu },
   { title: "Analytics", url: createPageUrl("Analytics"), icon: TrendingUp },
+  { title: "AI Chat", url: createPageUrl("Chat"), icon: Bot },
 ];
 
 function SearchDialog({ open, onOpenChange }) {

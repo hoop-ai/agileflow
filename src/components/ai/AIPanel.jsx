@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { PanelRightClose, Plus, Send, Square, Sparkles } from "lucide-react";
+import { ExternalLink, PanelRightClose, Plus, Send, Square, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAI } from "@/components/ai/AIProvider";
 import { ChatMessage } from "@/components/ai/ChatMessage";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 export function AIPanel() {
+  const navigate = useNavigate();
   const {
     messages,
     streaming,
@@ -16,11 +18,18 @@ export function AIPanel() {
     closePanel,
     startNewChat,
     stopStreaming,
+    sessionId,
+    loadSessions,
   } = useAI();
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const [inputValue, setInputValue] = useState("");
+
+  // Load sessions when panel opens
+  useEffect(() => {
+    if (panelOpen) loadSessions();
+  }, [panelOpen, loadSessions]);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -87,6 +96,18 @@ export function AIPanel() {
               title="New conversation"
             >
               <Plus className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                closePanel();
+                navigate(sessionId ? `/Chat?session=${sessionId}` : "/Chat");
+              }}
+              className="flex h-7 items-center gap-1 rounded-full px-2 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
+              title="Open full chat page"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Expand</span>
             </button>
             <button
               type="button"
