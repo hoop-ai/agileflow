@@ -70,9 +70,9 @@ export default function QuickActions({ onCreateBoard }) {
             const inner = (
               <div className="flex items-center gap-3 w-full">
                 <action.icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-medium text-foreground">{action.title}</p>
-                  <p className="text-xs text-muted-foreground">{action.description}</p>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-medium text-foreground truncate">{action.title}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{action.description}</p>
                 </div>
               </div>
             );
