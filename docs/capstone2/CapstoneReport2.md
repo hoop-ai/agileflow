@@ -301,6 +301,33 @@ Supabase provides the complete backend infrastructure:
 **Tier 3 — AI Services (OpenRouter):**
 The AI layer communicates with the OpenRouter API gateway to access multiple LLM providers. The client sends structured prompts (with system instructions, conversation history, and tool definitions) and receives streaming responses. Tool calls are executed client-side against the Supabase data layer, with results fed back to the LLM for synthesis.
 
+**Figure 1. AgileFlow System Architecture**
+```mermaid
+flowchart LR
+    User[User in Browser] --> UI[React SPA on Vercel]
+
+    subgraph Frontend["Frontend Layer"]
+        UI --> Router[React Router]
+        UI --> State[React Query and Context Providers]
+        UI --> Views[Dashboard, Board, Backlog, Analytics, Chat]
+    end
+
+    State --> SB[Supabase Platform]
+    State --> OR[OpenRouter API]
+
+    subgraph Backend["Supabase Layer"]
+        SB --> Auth[Supabase Auth]
+        SB --> Api[PostgREST API]
+        Api --> RLS[Row Level Security]
+        RLS --> DB[(PostgreSQL)]
+        DB --> Triggers[SQL Triggers and Policies]
+    end
+
+    OR --> Models[LLM Model Cascade]
+    Models --> Tools[Client-side Tool Execution]
+    Tools --> SB
+```
+
 ### 2.4.1. Process Diagram
 
 The AgileFlow process flow begins when a user authenticates via Supabase Auth. Upon successful login, the system loads the user's profile and permissions, then renders the Dashboard with aggregated KPI data fetched from the boards and items tables.
@@ -366,6 +393,8 @@ flowchart TD
     G4 --> G5["Validate committed points against sprint capacity"]
     G5 --> G6["Persist sprint plan"]
 ```
+
+
 # 3. WORK PLAN
 
 The Work Plan for AgileFlow covers the 12-week core development cycle (January 6 - March 27, 2026), during which the Supabase backend was built, an AI collaboration engine was developed, multiple board views were implemented, and a comprehensive testing infrastructure was established.
@@ -374,6 +403,7 @@ The Work Plan for AgileFlow covers the 12-week core development cycle (January 6
 
 The AgileFlow WBS is divided into two parallel streams: Software Engineering (technical implementation) and Management Engineering (process analysis, documentation, and validation).
 
+**Figure 3. Work Breakdown Structure**
 ```mermaid
 flowchart TD
     A["1.0 AgileFlow"]
@@ -481,7 +511,50 @@ The AgileFlow project network follows a parallel processing model with identifie
 - Help center (1.4.3), admin panel (1.4.4), and performance page (1.4.5) are independent of each other
 - Management Engineering documentation runs continuously alongside technical implementation
 
+**Figure 4. Project Network Diagram**
+```mermaid
+flowchart LR
+    A["1.1.1 Schema Design"] --> B["1.1.2 Entity Services"]
+    B --> C["1.1.3 Auth System"]
+    C --> D["1.1.4 RLS Policies"]
+    D --> E["1.2.2 AI Tool Framework"]
+    E --> F["1.2.5 Chat Persistence"]
+    F --> G["1.5.2 E2E Tests"]
+    G --> H["1.6.1 Vercel Deployment"]
+
+    B --> P1["1.3 Multi-View Boards"]
+    B --> P2["1.2.3 Assignment Algorithm"]
+    B --> P3["1.4.1 RBAC"]
+    B --> P4["1.4.2 Analytics"]
+    P1 --> G
+    P2 --> G
+    P3 --> G
+    P4 --> G
+```
+
 ## 3.4. Gantt Chart
+
+**Figure 5. Gantt Chart (Development Timeline)**
+```mermaid
+gantt
+    title AgileFlow Development Timeline
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %d
+
+    section Engineering
+    Backend Infrastructure      :done, 2026-01-06, 2026-01-26
+    Multi-View Boards           :done, 2026-01-20, 2026-02-14
+    AI Engine                   :done, 2026-01-27, 2026-03-01
+    RBAC and Analytics          :done, 2026-02-03, 2026-02-28
+    Help, Admin, Performance    :done, 2026-02-17, 2026-03-08
+    Testing                     :done, 2026-03-03, 2026-03-20
+    Deployment and Documentation:done, 2026-03-10, 2026-03-27
+
+    section Management Engineering
+    Process Analysis            :done, 2026-01-06, 2026-01-31
+    Risk and UAT                :done, 2026-02-10, 2026-03-15
+    Final Documentation         :done, 2026-03-03, 2026-03-27
+```
 
 **Table 3. AgileFlow Development Timeline (12 Weeks)**
 
@@ -555,6 +628,8 @@ AgileFlow was developed almost entirely using free-tier services and open-source
 | R6 | **Browser Compatibility** — UI rendering differences across Chrome, Firefox, Safari | Low | Low | Playwright cross-browser testing. Tailwind CSS handles vendor prefixes via Autoprefixer. Radix UI components are cross-browser tested. |
 | R7 | **Security Vulnerabilities** — Unauthorized data access, XSS, injection attacks | Low | High | Defense-in-depth: Supabase Auth (JWT) + RLS (database-level) + service-layer auth + frontend RBAC. No raw SQL queries (Supabase SDK parameterizes). HTTPS enforced by Vercel. |
 | R8 | **Scope Creep** — Feature requests exceeding available development time | High | Medium | Strict sprint planning with capacity limits. PRD with phased implementation priorities. Weekly team check-ins to re-prioritize. |
+
+
 # 4. SUB-SYSTEMS
 
 AgileFlow Phase 2 consists of three core sub-systems: the Frontend Client Application (React SPA), the Backend Data Service (Supabase), and the AI Collaboration & Analytics Engine. Each sub-system is documented below with its requirements, technologies, architecture, and evaluation plan.
@@ -699,6 +774,26 @@ The following libraries were selected based on the literature survey and the pro
 | Browse Help | User navigates the help center documentation. | Any User |
 | Manage Users | Super Admin searches, invites, and assigns roles to users. | Super Admin, System |
 
+**Figure 9. Manage Sprint Backlog Use-Case Diagram**
+```mermaid
+flowchart LR
+    User[Member or Admin] --> UC1([Create user story])
+    User --> UC2([Estimate story points])
+    User --> UC3([Open sprint planning modal])
+    User --> UC4([Select backlog stories])
+    User --> UC5([Request AI sprint suggestion])
+    User --> UC6([Commit stories to sprint])
+
+    System[System] --> UC2
+    System --> UC4
+    System --> UC6
+    AI[AI Assistant] --> UC5
+
+    UC3 --> UC4
+    UC4 --> UC6
+    UC5 --> UC6
+```
+
 **Use-Case Scenario: Execute Task (Drag & Drop)**
 
 | Field | Detail |
@@ -710,6 +805,25 @@ The following libraries were selected based on the literature survey and the pro
 | **Post-Condition** | Task status is updated in the database and reflected in all views. |
 | **Normal Flow** | 1. User drags a task card from the "To Do" column to "In Progress." 2. The SPA immediately updates the UI (optimistic update). 3. The SPA sends a PATCH request to Supabase to update the item's status field. 4. Supabase validates the JWT, checks RLS policies, and persists the change. 5. React Query invalidates the board cache and refetches to confirm server state. |
 | **Alternative Flow** | Step 4a: User does not have write permission (viewer role). System returns 403. The SPA reverts the card to its original column and displays an error toast. |
+
+**Figure 10. Execute Task (Drag & Drop) Sequence Diagram**
+```mermaid
+sequenceDiagram
+    participant User
+    participant Board as Board Page
+    participant Cache as React Query Cache
+    participant Service as Entity Service
+    participant Supabase
+
+    User->>Board: Drag task from To Do to In Progress
+    Board->>Cache: Apply optimistic update
+    Board->>Service: updateTask(status)
+    Service->>Supabase: PATCH item data
+    Supabase-->>Service: Updated row
+    Service-->>Board: Success
+    Board->>Cache: Invalidate and refetch board
+    Cache-->>Board: Confirmed server state
+```
 
 **Use-Case Scenario: Switch Board View**
 
@@ -723,17 +837,87 @@ The following libraries were selected based on the literature survey and the pro
 | **Normal Flow** | 1. User clicks a view tab (Kanban / Timeline / Calendar). 2. The Board page updates the active view state variable. 3. React renders the corresponding view component (KanbanView, TimelineView, or CalendarView). 4. The view component reads board data from the shared React Query cache (no additional API call). 5. Items are displayed according to the view's visualization logic. |
 | **Alternative Flow** | Step 5a: Timeline view requires date columns. If no date columns exist on the board, the view displays an empty state message: "Add a date or timeline column to see tasks on the timeline." |
 
+**Figure 8. Board View Switching - Kanban, Timeline, Calendar**
+```mermaid
+flowchart LR
+    Board[Board Page] --> Tabs[View Tabs]
+    Data[Shared board data in React Query] --> Kanban[KanbanView]
+    Data --> Timeline[TimelineView]
+    Data --> Calendar[CalendarView]
+
+    Tabs --> Kanban
+    Tabs --> Timeline
+    Tabs --> Calendar
+
+    Kanban --> Shared[Same tasks and columns]
+    Timeline --> Shared
+    Calendar --> Shared
+```
+
+**Figure 11. Sprint Planning Sequence Diagram**
+```mermaid
+sequenceDiagram
+    participant User
+    participant Backlog as Backlog Page
+    participant Modal as Sprint Planning Modal
+    participant Service as Sprint Service
+    participant Supabase
+
+    User->>Backlog: Open sprint planning
+    Backlog->>Modal: Load backlog stories and sprint capacity
+    User->>Modal: Select stories or request AI suggestion
+    Modal->>Modal: Validate total story points
+    Modal->>Service: updateSprint() and updateStories()
+    Service->>Supabase: Persist sprint assignment
+    Supabase-->>Service: Saved sprint plan
+    Service-->>Backlog: Updated sprint data
+```
+
 **Interface Designs**
 
 The Dashboard serves as the landing page after authentication. It presents a greeting with time-based text ("Good morning/afternoon/evening"), a statistics overview (board count, pending tasks, in-progress percentage, completion rate), a list of recent boards, an activity feed showing the latest task updates, and quick-action buttons for creating boards, tasks, and events.
 
 The Board Workspace is the primary work area. A toolbar at the top provides view-switching tabs, filter/sort/group controls, and a search bar. Below the toolbar, the active view renders: Kanban shows drag-and-drop columns grouped by status; Timeline shows a Gantt-style chart with horizontal bars colored by priority; Calendar shows a monthly grid with task indicators on their due dates. An "Add Group" button allows creating new task sections, and an AI panel can be opened as a right-side drawer.
 
+**Figure 12. AgileFlow Dashboard Interface**
+```mermaid
+flowchart TB
+    subgraph Shell["Application Shell"]
+        Sidebar[Sidebar Navigation]
+        Topbar[Top Bar and Search]
+    end
+
+    Topbar --> Stats[Statistics Overview]
+    Topbar --> Quick[Quick Actions]
+    Stats --> Boards[Recent Boards]
+    Stats --> Activity[Activity Feed]
+    Quick --> Events[Create Board, Task, or Event]
+    Boards --> Detail[Board or Backlog Navigation]
+```
+
 ### 4.1.4. Software Architecture
 
 **Component Hierarchy**
 
 The frontend architecture consists of four distinct layers:
+
+**Figure 6. Frontend Component Hierarchy Diagram**
+```mermaid
+flowchart TD
+    App[App Root]
+    App --> Providers[Providers]
+    Providers --> Layout[Layout]
+    Layout --> Pages[Page Components]
+    Pages --> Dashboard[Dashboard]
+    Pages --> Board[Board]
+    Pages --> Backlog[Backlog]
+    Pages --> Analytics[Analytics]
+    Pages --> Chat[Chat]
+    Pages --> Help[Help]
+    Board --> Views[Kanban, Timeline, Calendar Views]
+    Views --> Cells[Board Cells and Modals]
+    Analytics --> Widgets[Charts and Insight Popovers]
+```
 
 **Layer 1 — Providers (Root):** The application entry point wraps the entire component tree with context providers:
 - `QueryClientProvider` (TanStack React Query) — manages server state caching
@@ -766,6 +950,20 @@ The frontend architecture consists of four distinct layers:
 **Process Chart (Data Flow)**
 
 The application follows a unidirectional data flow pattern:
+
+**Figure 7. Frontend Data Flow Process Chart**
+```mermaid
+flowchart LR
+    User[User action] --> Handler[Event handler]
+    Handler --> Optimistic[Optimistic cache update]
+    Optimistic --> Mutation[React Query mutation]
+    Mutation --> Service[Entity service layer]
+    Service --> Supabase[Supabase API]
+    Supabase --> Invalidate[Invalidate related cache keys]
+    Invalidate --> Refetch[Background refetch]
+    Refetch --> UI[UI sync with server state]
+    Supabase -->|Error| Rollback[Rollback cache and show toast]
+```
 
 1. **User Interaction** — The user triggers an action (e.g., drops a task card, submits a form).
 2. **Event Handler** — A page-level handler calls a React Query mutation function.
@@ -827,6 +1025,8 @@ If the server returns an error (e.g., 403 Forbidden due to RLS), the optimistic 
 - Standard: WCAG 2.1 Level AA compliance.
 - Scope: Automated audits run against all 11 pages in both light and dark mode.
 - Checks: Color contrast ratios, ARIA labels, keyboard navigation, focus management in modals, semantic HTML structure.
+
+
 ## 4.2. Backend Data Service (Supabase)
 
 The Backend sub-system provides data persistence, authentication, and authorization via Supabase — an open-source Backend-as-a-Service platform built on PostgreSQL. Unlike traditional server-based architectures, AgileFlow communicates directly from the React client to Supabase's auto-generated REST API, eliminating the need for custom middleware.
@@ -883,12 +1083,26 @@ Row Level Security (RLS) is a PostgreSQL feature that embeds authorization logic
 | PL/pgSQL | Built-in | Server-side trigger functions (e.g., handle_new_user) |
 | Supavisor | Built-in | Connection pooling (replaces PgBouncer on free tier) |
 
+**Figure 13. Supabase Backend Architecture Diagram**
+```mermaid
+flowchart LR
+    Client[React Client] --> SDK[Supabase JS SDK]
+    SDK --> Auth[Supabase Auth]
+    SDK --> Rest[PostgREST API]
+    Rest --> RLS[Row Level Security]
+    RLS --> DB[(PostgreSQL)]
+    DB --> Json[JSONB columns]
+    DB --> Triggers[Triggers and policies]
+    DB --> Pool[Supavisor connection pooling]
+```
+
 ### 4.2.3. Conceptualization
 
 **Database Entity-Relationship Diagram (ERD)**
 
 The AgileFlow database consists of 10 tables with the following relationships:
 
+**Figure 14. Database Entity-Relationship Diagram (ERD)**
 ```mermaid
 erDiagram
     AUTH_USERS ||--|| PROFILES : owns
@@ -1015,6 +1229,18 @@ This hybrid approach (relational structure for entities + JSONB for flexible att
 
 Every client request to Supabase follows this path:
 
+**Figure 17. API Request Processing Flow (Serverless)**
+```mermaid
+flowchart LR
+    A[Client SDK call] --> B[Attach JWT token]
+    B --> C[PostgREST receives request]
+    C --> D[Parse filters, sort, and limit]
+    D --> E[Evaluate RLS policies]
+    E --> F[Execute SQL query]
+    F --> G[Serialize JSON response]
+    G --> H[Supabase SDK returns objects]
+```
+
 1. **Client SDK Call** — The entity service (e.g., `Board.list()`) calls `supabase.from('boards').select('*')`.
 2. **JWT Injection** — The Supabase JS SDK automatically attaches the user's JWT token to the `Authorization` header.
 3. **PostgREST** — Supabase's PostgREST layer receives the HTTP request, parses the query parameters (filters, sorts, limits), and translates them into a SQL query.
@@ -1023,6 +1249,18 @@ Every client request to Supabase follows this path:
 6. **Response** — Results are serialized as JSON and returned to the client via the PostgREST response. The Supabase SDK deserializes them into JavaScript objects.
 
 **Row Level Security Policy Summary**
+
+**Figure 15. Row Level Security (RLS) Policy Flow**
+```mermaid
+flowchart TD
+    Request[Authenticated request] --> JWT[Extract auth.uid from JWT]
+    JWT --> Target[Determine target table and operation]
+    Target --> Policy[Evaluate SELECT, INSERT, UPDATE, or DELETE policy]
+    Policy --> Allowed{Policy passes?}
+    Allowed -->|Yes| Query[Execute filtered query]
+    Allowed -->|No| Denied[Reject with authorization error]
+    Query --> Response[Return permitted rows only]
+```
 
 | Table | SELECT Policy | INSERT Policy | UPDATE Policy | DELETE Policy |
 |---|---|---|---|---|
@@ -1075,6 +1313,23 @@ Each service validates authentication before executing queries, picks only valid
 | VITE_SUPABASE_ANON_KEY | Public anon key for client-side authentication |
 | VITE_OPENROUTER_API_KEY | API key for AI assistant (OpenRouter) |
 
+**Figure 16. Authentication Flow - Supabase Auth**
+```mermaid
+sequenceDiagram
+    participant User
+    participant Client as React Client
+    participant Auth as Supabase Auth
+    participant DB as PostgreSQL
+
+    User->>Client: Submit email and password
+    Client->>Auth: signInWithPassword()
+    Auth->>DB: Validate credentials
+    DB-->>Auth: User record and hash check
+    Auth-->>Client: JWT + refresh token
+    Client->>Client: Persist session
+    Client-->>User: Protected app loads
+```
+
 ### 4.2.6. Evaluation
 
 **Functional Test Cases**
@@ -1098,6 +1353,8 @@ Each service validates authentication before executing queries, picks only valid
 | ST-2 | Cross-user data access | Manual | RLS blocks SELECT on another user's boards (empty result set). |
 | ST-3 | Viewer write attempt | Manual | RLS blocks INSERT/UPDATE for team members with "viewer" role. |
 | ST-4 | SQL injection via SDK | Code review | Supabase SDK parameterizes all queries; no raw SQL paths exist. |
+
+
 ## 4.3. AI Collaboration & Analytics Engine
 
 The AI sub-system provides intelligent collaboration features through the OpenRouter API, a unified gateway to multiple large language model (LLM) providers. It encompasses a conversational assistant with tool-calling capabilities, an intelligent task assignment algorithm, streaming response delivery, persistent chat sessions, and analytics dashboards augmented by AI-generated explanations.
@@ -1180,6 +1437,27 @@ The AI assistant has access to 16 tools organized by domain:
 
 The tool-calling flow follows an iterative pattern:
 
+**Figure 19. AI Tool-Calling Sequence Diagram**
+```mermaid
+sequenceDiagram
+    participant User
+    participant AIProvider
+    participant OpenRouter
+    participant Tool as Client Tool Layer
+    participant Supabase
+
+    User->>AIProvider: Natural-language request
+    AIProvider->>OpenRouter: Prompt + tool definitions + context
+    OpenRouter-->>AIProvider: tool call request
+    AIProvider->>Tool: Execute requested tool
+    Tool->>Supabase: CRUD or query operation
+    Supabase-->>Tool: Tool result
+    Tool-->>AIProvider: Structured result
+    AIProvider->>OpenRouter: Follow-up with tool result
+    OpenRouter-->>AIProvider: Final assistant response
+    AIProvider-->>User: Streamed answer
+```
+
 1. **User Message** — The user sends a natural-language message (e.g., "Create a task called 'Fix login bug' on the Development board and assign it to Khalid").
 2. **Prompt Construction** — The AIProvider builds a prompt containing:
    - System instructions (platform description, capabilities)
@@ -1202,6 +1480,23 @@ The tool-calling flow follows an iterative pattern:
 **Task Assignment Scoring Algorithm**
 
 The assignment engine in `src/lib/ai-assignment.js` calculates a suitability score for each team member:
+
+**Figure 20. AI Task Assignment Scoring Algorithm Flow**
+```mermaid
+flowchart TD
+    Task[Task title and description] --> Keywords[Extract keywords]
+    Keywords --> Profiles[Load team member profiles]
+    Keywords --> Workload[Load active task counts]
+    Keywords --> History[Load completion history]
+    Profiles --> Competency[Compute competency score]
+    Workload --> Availability[Compute availability score]
+    History --> Performance[Compute performance score]
+    Competency --> Weighted[Apply weights 0.40, 0.35, 0.25]
+    Availability --> Weighted
+    Performance --> Weighted
+    Weighted --> Rank[Rank candidates]
+    Rank --> Explain[Return recommendation and reasoning]
+```
 
 ```
 Suitability = w1 * Competency + w2 * Availability + w3 * Performance
@@ -1233,6 +1528,20 @@ The `suggestSprintComposition` function selects backlog stories for a sprint:
 
 The AI system is implemented as a React Context (`AIProvider`) that wraps the application:
 
+**Figure 18. AI Assistant Architecture Diagram**
+```mermaid
+flowchart TD
+    User[User] --> Chat[Chat Page and AI Panel]
+    Chat --> Provider[AIProvider Context]
+    Provider --> State[Session state and message history]
+    Provider --> Models[Model cascade selector]
+    Provider --> Tools[Tool registry and execution loop]
+    Provider --> Stream[Streaming renderer]
+    Models --> OpenRouter[OpenRouter API]
+    Tools --> Supabase[Supabase data services]
+    Stream --> Widgets[Chat UI, follow-up chips, insight popovers]
+```
+
 - **AIProvider** (`src/lib/AIContext.jsx`) — Manages AI state: active session, message history, streaming state, model selection, tool execution loop.
 - **Chat Page** (`src/pages/Chat.jsx`) — Full-page chat interface with session sidebar, message list, and input.
 - **AI Panel** (`src/components/utils/AIAssistant.jsx`) — Slide-out panel accessible from any page.
@@ -1256,6 +1565,18 @@ The cascade is tried sequentially. If a model returns an error (rate limit, serv
 **Streaming Pipeline**
 
 For streaming responses, the system:
+
+**Figure 21. AI Streaming Response Pipeline**
+```mermaid
+flowchart LR
+    Prompt[Prompt with stream true] --> API[OpenRouter streaming endpoint]
+    API --> Body[ReadableStream body]
+    Body --> SSE[SSE chunk parser]
+    SSE --> Delta[Content deltas]
+    Delta --> UI[Append to visible message]
+    UI --> Done[Detect DONE sentinel]
+    Done --> Persist[Persist final message in ai_messages]
+```
 1. Sends the prompt with `stream: true` to the OpenRouter API.
 2. Reads the response body as a `ReadableStream`.
 3. Processes Server-Sent Events (SSE) chunks, extracting `data: {...}` payloads.
@@ -1266,6 +1587,19 @@ For streaming responses, the system:
 ### 4.3.5. Analytics Dashboard
 
 The Analytics page (`src/pages/Analytics.jsx`) provides data-driven insights through Recharts visualizations:
+
+**Figure 22. Analytics Dashboard - Sprint Velocity and Burndown**
+```mermaid
+flowchart TB
+    Analytics[Analytics Page] --> Velocity[Sprint Velocity line chart]
+    Analytics --> Burndown[Burndown area chart]
+    Analytics --> Status[Status and priority distributions]
+    Analytics --> Workload[Team workload chart]
+    Velocity --> AskAI1[Ask AI explanation]
+    Burndown --> AskAI2[Ask AI explanation]
+    Status --> AskAI3[Ask AI explanation]
+    Workload --> AskAI4[Ask AI explanation]
+```
 
 | Widget | Chart Type | Data Source | Description |
 |---|---|---|---|
@@ -1296,6 +1630,8 @@ Each analytics widget includes an "Ask AI" button that sends the widget's data t
 | AT-8 | Sprint suggestion | Manual | suggestSprintPlan returns prioritized stories fitting within sprint capacity. |
 | AT-9 | Analytics explanation | Manual | Clicking "Ask AI" on a chart widget produces a natural-language summary of the data. |
 | AT-10 | Error handling | Manual | Invalid tool parameters (e.g., non-existent board_id) return a friendly error, not a crash. |
+
+
 # 5. SYSTEM INTEGRATION AND EVALUATION
 
 ## 5.1. System Integration
@@ -1306,13 +1642,25 @@ AgileFlow integrates its three sub-systems — Frontend (React SPA), Backend (Su
 
 The integration follows a client-centric architecture where the React SPA serves as the orchestration layer. All cross-system communication originates from the browser:
 
+**Figure 23. AgileFlow Data Flow Diagram (DFD Level 1) - Updated**
 ```mermaid
 flowchart LR
-    U[User] --> SPA[React SPA]
-    SPA -->|HTTPS REST + JWT| SB[Supabase Data and Auth]
-    SB --> SPA
-    SPA -->|HTTPS REST + SSE + API key| OR[OpenRouter AI]
-    OR --> SPA
+    User[User] --> P1[Manage Boards and Tasks]
+    User --> P2[Plan Sprint]
+    User --> P3[Chat with AI]
+    User --> P4[View Analytics]
+
+    P1 --> D1[(Boards and Items)]
+    P2 --> D2[(Sprints and User Stories)]
+    P3 --> D3[(AI Sessions and Messages)]
+    P4 --> D1
+    P4 --> D2
+
+    P1 <--> SB[Supabase Platform]
+    P2 <--> SB
+    P3 <--> SB
+    P4 <--> SB
+    P3 <--> OR[OpenRouter API]
 ```
 
 **Key Integration Points:**
@@ -1414,6 +1762,7 @@ AgileFlow uses a four-layer testing strategy:
 
 ### 5.2.2. Test Coverage Matrix
 
+**Figure 24. Integration Test Coverage Matrix**
 | Module | Unit Tests | E2E Tests | A11y Audit | Responsive |
 |---|---|---|---|---|
 | Authentication (Login/Signup) | Entity mock | Full flow | Login page | All breakpoints |
@@ -1465,6 +1814,25 @@ The SVaP (`/.claude/docs/validation-plan.md`) defines non-functional acceptance 
 | Security | RLS data isolation | No cross-user data leaks | Verified | Pass |
 | Security | Auth session handling | Proper token lifecycle | Verified | Pass |
 
+**Figure 25. Deployment Pipeline - Vercel CI/CD**
+```mermaid
+sequenceDiagram
+    participant Developer
+    participant GitHub
+    participant Vercel
+    participant User
+
+    Developer->>GitHub: Push commit to main
+    GitHub->>Vercel: Trigger deployment webhook
+    Vercel->>Vercel: Install dependencies
+    Vercel->>Vercel: Build Vite production bundle
+    Vercel->>Vercel: Publish to edge CDN
+    Vercel-->>GitHub: Deployment status and URL
+    GitHub-->>Developer: CI or CD result
+    User->>Vercel: Open production URL
+    Vercel-->>User: Serve latest deployment
+```
+
 ### 5.2.4. Known Limitations
 
 | # | Limitation | Impact | Mitigation |
@@ -1474,6 +1842,8 @@ The SVaP (`/.claude/docs/validation-plan.md`) defines non-functional acceptance 
 | 3 | Supabase free tier auto-pause | Project pauses after 7 days of inactivity | Team accesses app at least weekly. Wake-up takes ~60 seconds. |
 | 4 | No offline support | App requires internet connection | SPA architecture with local caching (React Query) provides fast perceived performance. |
 | 5 | Client-side analytics computation | Large datasets (1,000+ tasks) may slow analytics | Current usage (50-200 tasks) performs well within 200ms target. Pagination can be added for scale. |
+
+
 # 6. CONCLUSION AND FUTURE WORK
 
 ## 6.1. Summary

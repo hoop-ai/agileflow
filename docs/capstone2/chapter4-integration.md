@@ -8,13 +8,25 @@ AgileFlow integrates its three sub-systems — Frontend (React SPA), Backend (Su
 
 The integration follows a client-centric architecture where the React SPA serves as the orchestration layer. All cross-system communication originates from the browser:
 
+**Figure 23. AgileFlow Data Flow Diagram (DFD Level 1) - Updated**
 ```mermaid
 flowchart LR
-    U[User] --> SPA[React SPA]
-    SPA -->|HTTPS REST + JWT| SB[Supabase Data and Auth]
-    SB --> SPA
-    SPA -->|HTTPS REST + SSE + API key| OR[OpenRouter AI]
-    OR --> SPA
+    User[User] --> P1[Manage Boards and Tasks]
+    User --> P2[Plan Sprint]
+    User --> P3[Chat with AI]
+    User --> P4[View Analytics]
+
+    P1 --> D1[(Boards and Items)]
+    P2 --> D2[(Sprints and User Stories)]
+    P3 --> D3[(AI Sessions and Messages)]
+    P4 --> D1
+    P4 --> D2
+
+    P1 <--> SB[Supabase Platform]
+    P2 <--> SB
+    P3 <--> SB
+    P4 <--> SB
+    P3 <--> OR[OpenRouter API]
 ```
 
 **Key Integration Points:**
@@ -116,6 +128,7 @@ AgileFlow uses a four-layer testing strategy:
 
 ### 5.2.2. Test Coverage Matrix
 
+**Figure 24. Integration Test Coverage Matrix**
 | Module | Unit Tests | E2E Tests | A11y Audit | Responsive |
 |---|---|---|---|---|
 | Authentication (Login/Signup) | Entity mock | Full flow | Login page | All breakpoints |
@@ -166,6 +179,25 @@ The SVaP (`/.claude/docs/validation-plan.md`) defines non-functional acceptance 
 | Accessibility | WCAG 2.1 AA | Zero critical violations | Verified | Pass |
 | Security | RLS data isolation | No cross-user data leaks | Verified | Pass |
 | Security | Auth session handling | Proper token lifecycle | Verified | Pass |
+
+**Figure 25. Deployment Pipeline - Vercel CI/CD**
+```mermaid
+sequenceDiagram
+    participant Developer
+    participant GitHub
+    participant Vercel
+    participant User
+
+    Developer->>GitHub: Push commit to main
+    GitHub->>Vercel: Trigger deployment webhook
+    Vercel->>Vercel: Install dependencies
+    Vercel->>Vercel: Build Vite production bundle
+    Vercel->>Vercel: Publish to edge CDN
+    Vercel-->>GitHub: Deployment status and URL
+    GitHub-->>Developer: CI or CD result
+    User->>Vercel: Open production URL
+    Vercel-->>User: Serve latest deployment
+```
 
 ### 5.2.4. Known Limitations
 

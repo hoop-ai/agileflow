@@ -80,6 +80,27 @@ The AI assistant has access to 16 tools organized by domain:
 
 The tool-calling flow follows an iterative pattern:
 
+**Figure 19. AI Tool-Calling Sequence Diagram**
+```mermaid
+sequenceDiagram
+    participant User
+    participant AIProvider
+    participant OpenRouter
+    participant Tool as Client Tool Layer
+    participant Supabase
+
+    User->>AIProvider: Natural-language request
+    AIProvider->>OpenRouter: Prompt + tool definitions + context
+    OpenRouter-->>AIProvider: tool call request
+    AIProvider->>Tool: Execute requested tool
+    Tool->>Supabase: CRUD or query operation
+    Supabase-->>Tool: Tool result
+    Tool-->>AIProvider: Structured result
+    AIProvider->>OpenRouter: Follow-up with tool result
+    OpenRouter-->>AIProvider: Final assistant response
+    AIProvider-->>User: Streamed answer
+```
+
 1. **User Message** — The user sends a natural-language message (e.g., "Create a task called 'Fix login bug' on the Development board and assign it to Khalid").
 2. **Prompt Construction** — The AIProvider builds a prompt containing:
    - System instructions (platform description, capabilities)
@@ -102,6 +123,23 @@ The tool-calling flow follows an iterative pattern:
 **Task Assignment Scoring Algorithm**
 
 The assignment engine in `src/lib/ai-assignment.js` calculates a suitability score for each team member:
+
+**Figure 20. AI Task Assignment Scoring Algorithm Flow**
+```mermaid
+flowchart TD
+    Task[Task title and description] --> Keywords[Extract keywords]
+    Keywords --> Profiles[Load team member profiles]
+    Keywords --> Workload[Load active task counts]
+    Keywords --> History[Load completion history]
+    Profiles --> Competency[Compute competency score]
+    Workload --> Availability[Compute availability score]
+    History --> Performance[Compute performance score]
+    Competency --> Weighted[Apply weights 0.40, 0.35, 0.25]
+    Availability --> Weighted
+    Performance --> Weighted
+    Weighted --> Rank[Rank candidates]
+    Rank --> Explain[Return recommendation and reasoning]
+```
 
 ```
 Suitability = w1 * Competency + w2 * Availability + w3 * Performance
@@ -133,6 +171,20 @@ The `suggestSprintComposition` function selects backlog stories for a sprint:
 
 The AI system is implemented as a React Context (`AIProvider`) that wraps the application:
 
+**Figure 18. AI Assistant Architecture Diagram**
+```mermaid
+flowchart TD
+    User[User] --> Chat[Chat Page and AI Panel]
+    Chat --> Provider[AIProvider Context]
+    Provider --> State[Session state and message history]
+    Provider --> Models[Model cascade selector]
+    Provider --> Tools[Tool registry and execution loop]
+    Provider --> Stream[Streaming renderer]
+    Models --> OpenRouter[OpenRouter API]
+    Tools --> Supabase[Supabase data services]
+    Stream --> Widgets[Chat UI, follow-up chips, insight popovers]
+```
+
 - **AIProvider** (`src/lib/AIContext.jsx`) — Manages AI state: active session, message history, streaming state, model selection, tool execution loop.
 - **Chat Page** (`src/pages/Chat.jsx`) — Full-page chat interface with session sidebar, message list, and input.
 - **AI Panel** (`src/components/utils/AIAssistant.jsx`) — Slide-out panel accessible from any page.
@@ -156,6 +208,18 @@ The cascade is tried sequentially. If a model returns an error (rate limit, serv
 **Streaming Pipeline**
 
 For streaming responses, the system:
+
+**Figure 21. AI Streaming Response Pipeline**
+```mermaid
+flowchart LR
+    Prompt[Prompt with stream true] --> API[OpenRouter streaming endpoint]
+    API --> Body[ReadableStream body]
+    Body --> SSE[SSE chunk parser]
+    SSE --> Delta[Content deltas]
+    Delta --> UI[Append to visible message]
+    UI --> Done[Detect DONE sentinel]
+    Done --> Persist[Persist final message in ai_messages]
+```
 1. Sends the prompt with `stream: true` to the OpenRouter API.
 2. Reads the response body as a `ReadableStream`.
 3. Processes Server-Sent Events (SSE) chunks, extracting `data: {...}` payloads.
@@ -166,6 +230,19 @@ For streaming responses, the system:
 ### 4.3.5. Analytics Dashboard
 
 The Analytics page (`src/pages/Analytics.jsx`) provides data-driven insights through Recharts visualizations:
+
+**Figure 22. Analytics Dashboard - Sprint Velocity and Burndown**
+```mermaid
+flowchart TB
+    Analytics[Analytics Page] --> Velocity[Sprint Velocity line chart]
+    Analytics --> Burndown[Burndown area chart]
+    Analytics --> Status[Status and priority distributions]
+    Analytics --> Workload[Team workload chart]
+    Velocity --> AskAI1[Ask AI explanation]
+    Burndown --> AskAI2[Ask AI explanation]
+    Status --> AskAI3[Ask AI explanation]
+    Workload --> AskAI4[Ask AI explanation]
+```
 
 | Widget | Chart Type | Data Source | Description |
 |---|---|---|---|

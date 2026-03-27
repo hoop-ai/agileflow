@@ -54,12 +54,26 @@ Row Level Security (RLS) is a PostgreSQL feature that embeds authorization logic
 | PL/pgSQL | Built-in | Server-side trigger functions (e.g., handle_new_user) |
 | Supavisor | Built-in | Connection pooling (replaces PgBouncer on free tier) |
 
+**Figure 13. Supabase Backend Architecture Diagram**
+```mermaid
+flowchart LR
+    Client[React Client] --> SDK[Supabase JS SDK]
+    SDK --> Auth[Supabase Auth]
+    SDK --> Rest[PostgREST API]
+    Rest --> RLS[Row Level Security]
+    RLS --> DB[(PostgreSQL)]
+    DB --> Json[JSONB columns]
+    DB --> Triggers[Triggers and policies]
+    DB --> Pool[Supavisor connection pooling]
+```
+
 ### 4.2.3. Conceptualization
 
 **Database Entity-Relationship Diagram (ERD)**
 
 The AgileFlow database consists of 10 tables with the following relationships:
 
+**Figure 14. Database Entity-Relationship Diagram (ERD)**
 ```mermaid
 erDiagram
     AUTH_USERS ||--|| PROFILES : owns
@@ -186,6 +200,18 @@ This hybrid approach (relational structure for entities + JSONB for flexible att
 
 Every client request to Supabase follows this path:
 
+**Figure 17. API Request Processing Flow (Serverless)**
+```mermaid
+flowchart LR
+    A[Client SDK call] --> B[Attach JWT token]
+    B --> C[PostgREST receives request]
+    C --> D[Parse filters, sort, and limit]
+    D --> E[Evaluate RLS policies]
+    E --> F[Execute SQL query]
+    F --> G[Serialize JSON response]
+    G --> H[Supabase SDK returns objects]
+```
+
 1. **Client SDK Call** — The entity service (e.g., `Board.list()`) calls `supabase.from('boards').select('*')`.
 2. **JWT Injection** — The Supabase JS SDK automatically attaches the user's JWT token to the `Authorization` header.
 3. **PostgREST** — Supabase's PostgREST layer receives the HTTP request, parses the query parameters (filters, sorts, limits), and translates them into a SQL query.
@@ -194,6 +220,18 @@ Every client request to Supabase follows this path:
 6. **Response** — Results are serialized as JSON and returned to the client via the PostgREST response. The Supabase SDK deserializes them into JavaScript objects.
 
 **Row Level Security Policy Summary**
+
+**Figure 15. Row Level Security (RLS) Policy Flow**
+```mermaid
+flowchart TD
+    Request[Authenticated request] --> JWT[Extract auth.uid from JWT]
+    JWT --> Target[Determine target table and operation]
+    Target --> Policy[Evaluate SELECT, INSERT, UPDATE, or DELETE policy]
+    Policy --> Allowed{Policy passes?}
+    Allowed -->|Yes| Query[Execute filtered query]
+    Allowed -->|No| Denied[Reject with authorization error]
+    Query --> Response[Return permitted rows only]
+```
 
 | Table | SELECT Policy | INSERT Policy | UPDATE Policy | DELETE Policy |
 |---|---|---|---|---|
@@ -245,6 +283,23 @@ Each service validates authentication before executing queries, picks only valid
 | VITE_SUPABASE_URL | Supabase project URL (e.g., https://xxxx.supabase.co) |
 | VITE_SUPABASE_ANON_KEY | Public anon key for client-side authentication |
 | VITE_OPENROUTER_API_KEY | API key for AI assistant (OpenRouter) |
+
+**Figure 16. Authentication Flow - Supabase Auth**
+```mermaid
+sequenceDiagram
+    participant User
+    participant Client as React Client
+    participant Auth as Supabase Auth
+    participant DB as PostgreSQL
+
+    User->>Client: Submit email and password
+    Client->>Auth: signInWithPassword()
+    Auth->>DB: Validate credentials
+    DB-->>Auth: User record and hash check
+    Auth-->>Client: JWT + refresh token
+    Client->>Client: Persist session
+    Client-->>User: Protected app loads
+```
 
 ### 4.2.6. Evaluation
 
